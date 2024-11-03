@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Project {
+  id          String      @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  language    String      @default("en")
+  paragraphs  Paragraph[]
+  assets      Asset[]
+  settings    Settings?
+  isArchived  Boolean     @default(false)
+  lastSync    DateTime?
+}
+
+model Paragraph {
+  id          String       @id @default(uuid())
+  number      Int
+  title       String
+  content     String
+  tags        String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id])
+  fromLinks   Connection[] @relation("FromParagraph")
+  toLinks     Connection[] @relation("ToParagraph")
+  x           Float?       // Position in story map
+  y           Float?       // Position in story map
+}
+
+model Connection {
+  id            String    @id @default(uuid())
+  fromId        String
+  toId          String
+  condition     String?   // Condition for this connection
+  fromParagraph Paragraph @relation("FromParagraph", fields: [fromId], references: [id])
+  toParagraph   Paragraph @relation("ToParagraph", fields: [toId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Asset {
+  id        String   @id @default(uuid())
+  name      String
+  type      String   // image, audio, etc.
+  path      String   // Local file path
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Settings {
+  id           String   @id @default(uuid())
+  theme        String   @default("light")
+  fontSize     Int      @default(16)
+  projectId    String   @unique
+  project      Project  @relation(fields: [projectId], references: [id])
+  autoSave     Boolean  @default(true)
+  backupFreq   Int      @default(15) // minutes
+  lastBackup   DateTime @default(now())
+  syncEnabled  Boolean  @default(true)
+}
+
+// For tracking sync status and conflicts
+model SyncLog {
+  id        String   @id @default(uuid())
+  operation String   // create, update, delete
+  entityId  String   // ID of the entity that was changed
+  entityType String  // Project, Paragraph, etc.
+  status    String   // pending, completed, failed
+  timestamp DateTime @default(now())
+  error     String?
+}

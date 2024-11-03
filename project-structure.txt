@@ -1,0 +1,44 @@
+📦 gamebook-studio
+├── 📂 public
+│   └── 🖼️ logo.png
+├── 📂 src
+│   ├── 📂 components
+│   │   ├── 📄 BookEditor.tsx
+│   │   ├── 📄 CreateNewProject.tsx
+│   │   ├── 📄 CustomPopup.tsx
+│   │   ├── 📄 Dashboard.tsx
+│   │   ├── 📄 ExportPage.tsx
+│   │   ├── 📄 Footer.tsx
+│   │   ├── 📄 Header.tsx
+│   │   ├── 📄 Help.tsx
+│   │   ├── 📄 ImageEditor.tsx
+│   │   ├── 📄 Library.tsx
+│   │   ├── 📄 Notification.tsx
+│   │   ├── 📄 ParagraphEditor.tsx
+│   │   ├── 📄 Settings.tsx
+│   │   ├── 📄 Sidebar.tsx
+│   │   ├── 📄 StoryMap.tsx
+│   │   └── 📄 ThemeEditor.tsx
+│   ├── 📂 utils
+│   │   ├── 📄 autoBackup.ts
+│   │   └── 📄 storage.ts
+│   ├── 📄 App.tsx
+│   ├── 📄 index.css
+│   ├── 📄 main.tsx
+│   ├── 📄 types.ts
+│   └── 📄 vite-env.d.ts
+├── 📄 .gitignore
+├── 📄 eslint.config.js
+├── 📄 index.html
+├── 📄 package.json
+├── 📄 postcss.config.js
+├── 📄 tailwind.config.js
+├── 📄 tsconfig.app.json
+├── 📄 tsconfig.json
+└── 📄 tsconfig.node.json
+
+Legenda:
+📦 Root del progetto
+📂 Directory
+📄 File
+🖼️ File immagine

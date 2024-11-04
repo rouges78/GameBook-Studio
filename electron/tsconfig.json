@@ -12,7 +12,15 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "path": ["../node_modules/path-browserify"],
+      "fs": ["../node_modules/browserify-fs"],
+      "crypto": ["../node_modules/crypto-browserify"],
+      "stream": ["../node_modules/stream-browserify"],
+      "util": ["../node_modules/util"],
+      "os": ["../node_modules/os-browserify/browser"]
+    }
   },
   "include": [
     "*.ts"

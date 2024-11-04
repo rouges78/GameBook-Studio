@@ -26,14 +26,30 @@ electron_1.contextBridge.exposeInMainWorld('electron', {
     'db:saveProject': (project) => electron_1.ipcRenderer.invoke('db:saveProject', project),
     'db:deleteProject': (bookTitle) => electron_1.ipcRenderer.invoke('db:deleteProject', bookTitle),
     'db:debugDatabase': () => electron_1.ipcRenderer.invoke('db:debugDatabase'),
+    // Telemetry handlers
+    'telemetry-events': (events) => electron_1.ipcRenderer.invoke('telemetry-events', events),
+    'telemetry-status': () => electron_1.ipcRenderer.invoke('telemetry-status'),
+    'telemetry-toggle': (enabled) => electron_1.ipcRenderer.invoke('telemetry-toggle', enabled),
+    'telemetry:getData': () => electron_1.ipcRenderer.invoke('telemetry:getData'),
+    // Dialog handlers
+    dialog: {
+        showOpenDialog: (options) => electron_1.ipcRenderer.invoke('dialog:showOpenDialog', options),
+        showSaveDialog: (options) => electron_1.ipcRenderer.invoke('dialog:showSaveDialog', options)
+    },
     // Event listeners
     on: (channel, callback) => {
-        const subscription = (_event, data) => callback(data);
+        const subscription = (_event, data) => {
+            callback(data);
+        };
         electron_1.ipcRenderer.on(channel, subscription);
-        return () => electron_1.ipcRenderer.off(channel, subscription);
+        return () => {
+            electron_1.ipcRenderer.removeListener(channel, subscription);
+        };
     },
     off: (channel, callback) => {
-        const subscription = (_event, data) => callback(data);
-        electron_1.ipcRenderer.off(channel, subscription);
+        const subscription = (_event, data) => {
+            callback(data);
+        };
+        electron_1.ipcRenderer.removeListener(channel, subscription);
     }
 });

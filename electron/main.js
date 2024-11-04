@@ -164,7 +164,7 @@ ipcMain.handle('telemetry-events', async (event, events) => {
   }
 });
 
-ipcMain.handle('get-telemetry-data', async () => {
+ipcMain.handle('telemetry:getData', async () => {
   try {
     log.info('Fetching telemetry data...');
     const data = await telemetryService.getAllTelemetryData();

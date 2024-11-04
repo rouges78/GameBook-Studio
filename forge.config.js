@@ -39,7 +39,18 @@ module.exports = {
             config: path.join(__dirname, 'vite.config.mjs'),
           },
         ],
+        // Add Node.js built-in modules configuration
+        resolve: {
+          alias: {
+            path: require.resolve('path-browserify'),
+            fs: require.resolve('browserify-fs'),
+            crypto: require.resolve('crypto-browserify'),
+            stream: require.resolve('stream-browserify'),
+            util: require.resolve('util'),
+            os: require.resolve('os-browserify/browser')
+          }
+        }
       },
     },
   ],
-};
+}

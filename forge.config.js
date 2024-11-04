@@ -29,7 +29,7 @@ module.exports = {
       config: {
         build: [
           {
-            entry: path.join(__dirname, 'electron/main.ts'),
+            entry: path.join(__dirname, 'electron/main.js'),
             config: path.join(__dirname, 'vite.config.mjs'),
           },
         ],

@@ -31,18 +31,18 @@ export default defineConfig({
     }
   },
   server: {
-    port: 5173,
-    strictPort: true,
+    port: parseInt(process.env.VITE_PORT) || 5173, // Usa la variabile d'ambiente
+    strictPort: false, // Consenti di cambiare porta se già occupata
     open: false,
     hmr: {
       protocol: 'ws',
       host: 'localhost',
-      port: 5173
+      port: parseInt(process.env.VITE_PORT) || 5173
     }
   },
   preview: {
-    port: 5173,
-    strictPort: true,
+    port: parseInt(process.env.VITE_PORT) || 5173,
+    strictPort: false,
     open: false
   },
   clearScreen: false,

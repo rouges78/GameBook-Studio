@@ -1,5 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Node, Link, ExtendedParagraph, ImageAdjustments, MapSettings } from '../types';
+import { useInertiaScroll } from './useInertiaScroll';
+
+const MIN_ZOOM = 0.25;
+const MAX_ZOOM = 4;
 
 export const useStoryMap = (
   paragraphs: ExtendedParagraph[],
@@ -42,6 +46,47 @@ export const useStoryMap = (
   const fileInputRef = useRef<HTMLInputElement>(null);
   const originalImageDimensions = useRef<{ width: number; height: number } | null>(null);
   const isInitialized = useRef(false);
+
+  // Get bounds for panning and zooming
+  const getBounds = useCallback(() => {
+    const bounds = {
+      minX: 0,
+      minY: 0,
+      maxX: imageAdjustments.width || viewBox.width,
+      maxY: imageAdjustments.height || viewBox.height
+    };
+    return bounds;
+  }, [imageAdjustments.width, imageAdjustments.height, viewBox.width, viewBox.height]);
+
+  // Handle inertia scrolling
+  const handleInertiaScroll = useCallback((dx: number, dy: number) => {
+    const bounds = getBounds();
+    
+    setViewBox(prev => {
+      // Calculate new viewBox position
+      const newX = prev.x - dx;
+      const newY = prev.y - dy;
+
+      // Calculate maximum allowed pan distances
+      const maxX = Math.max(0, bounds.maxX - prev.width);
+      const maxY = Math.max(0, bounds.maxY - prev.height);
+
+      // Constrain the viewBox within the bounds
+      const constrainedX = Math.max(0, Math.min(maxX, newX));
+      const constrainedY = Math.max(0, Math.min(maxY, newY));
+
+      return {
+        ...prev,
+        x: constrainedX,
+        y: constrainedY
+      };
+    });
+  }, [getBounds]);
+
+  const { startTracking, updateTracking, stopTracking } = useInertiaScroll(
+    handleInertiaScroll,
+    { friction: 0.95, minVelocity: 0.1 }
+  );
 
   // Save map settings
   const saveMapSettings = useCallback(() => {
@@ -142,38 +187,48 @@ export const useStoryMap = (
     return () => clearInterval(backupInterval);
   }, [isAutoBackupEnabled, handleManualSave]);
 
-  const getBounds = useCallback(() => {
-    const bounds = {
-      minX: 0,
-      minY: 0,
-      maxX: imageAdjustments.width || viewBox.width,
-      maxY: imageAdjustments.height || viewBox.height
-    };
-    return bounds;
-  }, [imageAdjustments.width, imageAdjustments.height, viewBox.width, viewBox.height]);
-
-  const handleZoom = useCallback((delta: number) => {
+  const handleZoom = useCallback((delta: number, clientX?: number, clientY?: number) => {
     setZoom(prev => {
-      const newZoom = prev + delta;
-      if (newZoom >= 0.5 && newZoom <= 2) {
-        const centerX = viewBox.x + viewBox.width / 2;
-        const centerY = viewBox.y + viewBox.height / 2;
-        
-        const scale = newZoom / prev;
-        const newWidth = viewBox.width / scale;
-        const newHeight = viewBox.height / scale;
-        
-        setViewBox({
-          x: centerX - newWidth / 2,
-          y: centerY - newHeight / 2,
-          width: newWidth,
-          height: newHeight
-        });
-        return newZoom;
-      }
-      return prev;
+      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, prev + delta));
+      if (newZoom === prev) return prev;
+
+      const rect = svgRef.current?.getBoundingClientRect();
+      if (!rect) return newZoom;
+
+      // If clientX/Y are provided, zoom towards that point
+      // Otherwise, zoom towards the center
+      const pointX = clientX ?? (rect.left + rect.width / 2);
+      const pointY = clientY ?? (rect.top + rect.height / 2);
+
+      // Convert client coordinates to SVG coordinates
+      const svgX = (pointX - rect.left) * viewBox.width / rect.width + viewBox.x;
+      const svgY = (pointY - rect.top) * viewBox.height / rect.height + viewBox.y;
+
+      const scale = newZoom / prev;
+      const newWidth = viewBox.width / scale;
+      const newHeight = viewBox.height / scale;
+
+      // Calculate new viewBox position to maintain the zoom point
+      const dx = svgX - viewBox.x;
+      const dy = svgY - viewBox.y;
+      const newX = svgX - dx / scale;
+      const newY = svgY - dy / scale;
+
+      // Apply bounds to prevent zooming outside the map
+      const bounds = getBounds();
+      const maxX = Math.max(0, bounds.maxX - newWidth);
+      const maxY = Math.max(0, bounds.maxY - newHeight);
+      
+      setViewBox({
+        x: Math.max(0, Math.min(maxX, newX)),
+        y: Math.max(0, Math.min(maxY, newY)),
+        width: newWidth,
+        height: newHeight
+      });
+
+      return newZoom;
     });
-  }, [viewBox]);
+  }, [viewBox, getBounds]);
 
   const handleNodeDragStart = useCallback((event: React.MouseEvent, id: number) => {
     if (!isDragMode || nodes.find(n => n.id === id)?.locked) return;
@@ -252,8 +307,9 @@ export const useStoryMap = (
         x: event.clientX,
         y: event.clientY
       });
+      startTracking({ x: event.clientX, y: event.clientY });
     }
-  }, [nodes, viewBox]);
+  }, [nodes, viewBox, startTracking]);
 
   const handleMapPan = useCallback((event: React.MouseEvent) => {
     if (!isPanning) return;
@@ -261,37 +317,19 @@ export const useStoryMap = (
     const dx = (event.clientX - panStart.x) / zoom;
     const dy = (event.clientY - panStart.y) / zoom;
 
-    const bounds = getBounds();
-    
-    setViewBox(prev => {
-      // Calculate new viewBox position
-      const newX = prev.x - dx;
-      const newY = prev.y - dy;
-
-      // Calculate maximum allowed pan distances
-      const maxX = Math.max(0, bounds.maxX - prev.width);
-      const maxY = Math.max(0, bounds.maxY - prev.height);
-
-      // Constrain the viewBox within the bounds
-      const constrainedX = Math.max(0, Math.min(maxX, newX));
-      const constrainedY = Math.max(0, Math.min(maxY, newY));
-
-      return {
-        ...prev,
-        x: constrainedX,
-        y: constrainedY
-      };
-    });
+    handleInertiaScroll(dx, dy);
+    updateTracking({ x: event.clientX, y: event.clientY });
 
     setPanStart({
       x: event.clientX,
       y: event.clientY
     });
-  }, [isPanning, panStart, zoom, getBounds]);
+  }, [isPanning, panStart, zoom, handleInertiaScroll, updateTracking]);
 
   const handleMapPanEnd = useCallback(() => {
     setIsPanning(false);
-  }, []);
+    stopTracking();
+  }, [stopTracking]);
 
   const toggleNodeLock = useCallback((id: number) => {
     setNodes(prev =>

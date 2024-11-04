@@ -15,7 +15,7 @@ interface Project {
 
 interface DashboardProps {
   isDarkMode: boolean;
-  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 'settings' | 'help' | 'export') => void;
+  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 'settings' | 'help' | 'export' | 'backupManager') => void;
   setIsDarkMode: (value: boolean) => void;
   language: 'it' | 'en';
   setLanguage: (value: 'it' | 'en') => void;

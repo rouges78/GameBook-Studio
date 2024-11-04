@@ -4,13 +4,12 @@
 This guide outlines the process and format for creating handover documents between Cline sessions. These documents ensure continuity and transparency throughout the development process of GameBook Studio.
 
 ## Handover Document Location
-All handover documents are stored in the `/handover_docs` directory using the naming format: `YYYY-MM-DD_handover.md`
+All handover documents are stored in the `/handover_docs` directory using the naming format: `DD-MM-YYYY-HH24MI_handover.md`
 
 ## Template Structure
 
 ### Date and Time of Handover
 Include the exact date and time of completing the handover.
-Example: `February 13, 2024, 10:00 PM`
 
 ### Project Overview
 This is a Gamebook Studio application built with React, TypeScript and Vite. It's a comprehensive tool for creating interactive gamebooks/choose-your-own-adventure stories with features like:
@@ -57,7 +56,7 @@ Include specific details about:
 
 ## Instructions for Creating a Handover Document
 
-1. Create a new file in the `/handover_docs` directory using the format: `YYYY-MM-DD_handover.md`
+1. Create a new file in the `/handover_docs` directory using the format: `DD-MM-YYYY-HH24MI_handover.md`
 2. Fill in all sections of the template
 3. Be specific and clear in all documentation
 4. Include relevant file paths and technical details
@@ -71,7 +70,7 @@ When beginning a new session:
 2. Understand the current project status and pending tasks
 3. Note any unresolved issues or requirements
 4. Begin work based on the "Next Steps" section
-5. Create a new handover document at the end of your session
+5. Always create a new handover document at the end of your session
 
 ## Best Practices
 

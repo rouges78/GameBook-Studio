@@ -5,9 +5,9 @@ import { Book, Sun, Moon } from 'lucide-react';
 interface HeaderProps {
   isDarkMode: boolean;
   version: string;
-  edition: string;
-  update: string;
-  revision: string;
+  edition?: string;
+  update?: string;
+  revision?: string;
   onThemeToggle?: () => void;
 }
 

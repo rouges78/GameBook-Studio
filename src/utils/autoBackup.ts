@@ -19,6 +19,7 @@ export const startAutoBackup = (intervalMinutes: number = 5) => {
 
   backupInterval = setInterval(async () => {
     try {
+      // First save all projects to the database
       const projects = await getProjects();
       for (const project of projects) {
         await saveProject({
@@ -26,7 +27,10 @@ export const startAutoBackup = (intervalMinutes: number = 5) => {
           lastEdited: new Date().toISOString(),
         });
       }
-      console.log('Auto backup completed at', new Date().toLocaleString());
+
+      // Then create a backup using the Electron IPC
+      const version = await window.electron['backup:create'](projects);
+      console.log('Auto backup completed at', new Date().toLocaleString(), 'Version:', version);
     } catch (error) {
       console.error('Auto backup failed:', error);
     }
@@ -46,22 +50,8 @@ export const stopAutoBackup = () => {
 export const createBackup = async () => {
   try {
     const projects = await getProjects();
-    const backupData = {
-      timestamp: new Date().toISOString(),
-      projects,
-    };
-    
-    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `gamebook-backup-${new Date().toISOString()}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
+    const version = await window.electron['backup:create'](projects);
+    console.log('Manual backup created:', version);
     return true;
   } catch (error) {
     console.error('Failed to create backup:', error);
@@ -69,22 +59,67 @@ export const createBackup = async () => {
   }
 };
 
-export const restoreBackup = async (file: File): Promise<boolean> => {
+export const restoreBackup = async (version: string): Promise<boolean> => {
   try {
-    const content = await file.text();
-    const backupData = JSON.parse(content);
+    const projects = await window.electron['backup:restore'](version);
     
-    if (!backupData.projects || !Array.isArray(backupData.projects)) {
-      throw new Error('Invalid backup file format');
-    }
-    
-    for (const project of backupData.projects) {
+    // Save restored projects to database
+    for (const project of projects) {
       await saveProject(project);
     }
     
     return true;
   } catch (error) {
     console.error('Failed to restore backup:', error);
+    return false;
+  }
+};
+
+export const listBackups = async () => {
+  try {
+    return await window.electron['backup:list']();
+  } catch (error) {
+    console.error('Failed to list backups:', error);
+    return [];
+  }
+};
+
+export const exportBackup = async (version: string): Promise<boolean> => {
+  try {
+    const result = await window.electron.dialog.showSaveDialog({
+      defaultPath: `gamebook-backup-${version}.json`,
+      filters: [
+        { name: 'JSON Files', extensions: ['json'] }
+      ]
+    });
+
+    if (!result.canceled && result.filePath) {
+      await window.electron['backup:export'](version, result.filePath);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Failed to export backup:', error);
+    return false;
+  }
+};
+
+export const importBackup = async (): Promise<boolean> => {
+  try {
+    const result = await window.electron.dialog.showOpenDialog({
+      filters: [
+        { name: 'JSON Files', extensions: ['json'] }
+      ]
+    });
+
+    if (!result.canceled && result.filePaths && result.filePaths.length > 0) {
+      const version = await window.electron['backup:import'](result.filePaths[0]);
+      console.log('Backup imported:', version);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Failed to import backup:', error);
     return false;
   }
 };

@@ -10,10 +10,16 @@ import Settings from './components/Settings';
 import Help from './components/Help';
 import ExportPage from './components/ExportPage';
 import Notification from './components/Notification';
+import UpdateNotification from './components/UpdateNotification';
+import UpdateErrorBoundary from './components/UpdateNotification/ErrorBoundary';
+import BackupManager from './components/BackupManager';
+import { TelemetryDashboard } from './components/TelemetryDashboard';
+import { useAutoUpdater } from './hooks/useAutoUpdater';
 import { saveProject, getProjects, deleteProject, debugDatabase, migrateProjectData } from './utils/storage';
 import { startAutoBackup, stopAutoBackup } from './utils/autoBackup';
 import packageJson from '../package.json';
-import { Project } from './components/ParagraphEditor/types';
+import type { Project, Paragraph as EditorParagraph } from './components/ParagraphEditor/types';
+import type { Paragraph as ExportParagraph } from './components/ExportPage/types';
 
 interface Theme {
   primaryColor: string;
@@ -53,8 +59,11 @@ export const ThemeContext = createContext<{
   setTheme: () => {},
 });
 
+type PageType = 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 
+                'settings' | 'help' | 'export' | 'backupManager' | 'telemetryDashboard';
+
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 'settings' | 'help' | 'export'>('dashboard');
+  const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [language, setLanguage] = useState<'it' | 'en'>('it');
   const [projects, setProjects] = useState<Project[]>([]);
@@ -76,6 +85,33 @@ const App: React.FC = () => {
     iconSet: 'default',
     layout: 'grid',
   });
+
+  const {
+    updateAvailable,
+    updateInfo,
+    downloadProgress,
+    isDownloading,
+    updateDownloaded,
+    error,
+    isRetrying,
+    startDownload,
+    installUpdate,
+    dismissUpdate,
+    retryOperation
+  } = useAutoUpdater();
+
+  const transformParagraphsForExport = (paragraphs: EditorParagraph[]): ExportParagraph[] => {
+    return paragraphs.map((p, index) => ({
+      id: Number(p.id),
+      title: `Paragraph ${index + 1}`,
+      content: p.text,
+      actions: p.choices.map(choice => ({
+        text: choice.text,
+        'N.Par.': choice.destination
+      })),
+      type: 'normale'
+    }));
+  };
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -163,9 +199,6 @@ const App: React.FC = () => {
         <Header 
           isDarkMode={isDarkMode} 
           version={packageJson.version}
-          edition={packageJson.edition}
-          update={packageJson.update}
-          revision={packageJson.revision}
         />
         {currentPage === 'dashboard' && (
           <Dashboard
@@ -245,10 +278,16 @@ const App: React.FC = () => {
             setCurrentPage={setCurrentPage}
             bookTitle={currentProject.bookTitle}
             author={currentProject.author}
-            paragraphs={currentProject.paragraphs}
+            paragraphs={transformParagraphsForExport(currentProject.paragraphs)}
             isDarkMode={isDarkMode}
             language={language}
           />
+        )}
+        {currentPage === 'backupManager' && (
+          <BackupManager />
+        )}
+        {currentPage === 'telemetryDashboard' && (
+          <TelemetryDashboard isDarkMode={isDarkMode} />
         )}
         <Footer
           projectCount={projects.length}
@@ -263,6 +302,20 @@ const App: React.FC = () => {
             isDarkMode={isDarkMode}
           />
         )}
+        <UpdateErrorBoundary>
+          <UpdateNotification
+            updateAvailable={updateAvailable}
+            updateInfo={updateInfo}
+            downloadProgress={downloadProgress}
+            isDownloading={isDownloading}
+            error={error}
+            isRetrying={isRetrying}
+            onStartDownload={startDownload}
+            onInstallUpdate={installUpdate}
+            onDismiss={dismissUpdate}
+            onRetry={retryOperation}
+          />
+        </UpdateErrorBoundary>
       </div>
     </ThemeContext.Provider>
   );

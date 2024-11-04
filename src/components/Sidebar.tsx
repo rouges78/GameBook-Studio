@@ -1,12 +1,12 @@
 import React from 'react';
-import { Moon, Sun, BookOpen, Palette, Settings, HelpCircle, LogOut } from 'lucide-react';
+import { Moon, Sun, BookOpen, Palette, Settings, HelpCircle, LogOut, Database, BarChart } from 'lucide-react';
 
 interface SidebarProps {
   isDarkMode: boolean;
   setIsDarkMode: (value: boolean) => void;
   language: 'it' | 'en';
   setLanguage: (value: 'it' | 'en') => void;
-  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 'settings' | 'help') => void;
+  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 'settings' | 'help' | 'export' | 'backupManager' | 'telemetryDashboard') => void;
   onLogout: () => void;
 }
 
@@ -30,6 +30,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       settings: "Impostazioni",
       help: "Aiuto",
       logout: "Esci",
+      backupManager: "Gestione Backup",
+      telemetryDashboard: "Dashboard Telemetria"
     },
     en: {
       preferences: "Preferences",
@@ -42,6 +44,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       settings: "Settings",
       help: "Help",
       logout: "Logout",
+      backupManager: "Backup Manager",
+      telemetryDashboard: "Telemetry Dashboard"
     }
   };
 
@@ -104,6 +108,28 @@ const Sidebar: React.FC<SidebarProps> = ({
         >
           <BookOpen size={18} className="mr-2" />
           {t.library}
+        </button>
+        <button
+          onClick={() => setCurrentPage('backupManager')}
+          className={`w-full mb-4 ${
+            isDarkMode 
+              ? 'bg-cyan-600 hover:bg-cyan-700 text-white' 
+              : 'bg-gray-500 hover:bg-gray-600 text-gray-50'
+          } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
+        >
+          <Database size={18} className="mr-2" />
+          {t.backupManager}
+        </button>
+        <button
+          onClick={() => setCurrentPage('telemetryDashboard')}
+          className={`w-full mb-4 ${
+            isDarkMode 
+              ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
+              : 'bg-gray-500 hover:bg-gray-600 text-gray-50'
+          } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
+        >
+          <BarChart size={18} className="mr-2" />
+          {t.telemetryDashboard}
         </button>
         <button
           onClick={() => setCurrentPage('themeEditor')}

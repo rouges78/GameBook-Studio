@@ -22,5 +22,5 @@
     "vite.config.ts",
     "electron/**/*.ts",
     "src/types.ts"
-  ]
+, "electron/main.js"  ]
 }

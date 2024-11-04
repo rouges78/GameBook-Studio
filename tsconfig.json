@@ -41,7 +41,7 @@
     "src/**/*.tsx",
     "src/**/*.d.ts",
     "electron/**/*.ts"
-  ],
+, "electron/main.js"  ],
   "references": [
     {
       "path": "./tsconfig.node.json"

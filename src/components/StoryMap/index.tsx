@@ -1,11 +1,17 @@
-import React from 'react';
-import { StoryMapProps } from './types';
+import React, { useState } from 'react';
+import { StoryMapProps, Node } from './types';
 import { translations } from './translations';
 import { useStoryMap } from './hooks/useStoryMap';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useToast, ToastManager } from './components/Toast';
 import { StoryMapControls } from './components/StoryMapControls';
 import { StoryMapCanvas } from './components/StoryMapCanvas';
 import { ImageControls } from './components/ImageControls';
 import { ActionButtons } from './components/ActionButtons';
+import { MiniMap } from './components/MiniMap';
+import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp';
+
+const ZOOM_STEP = 0.1;
 
 const StoryMap: React.FC<StoryMapProps> = ({
   paragraphs,
@@ -29,13 +35,15 @@ const StoryMap: React.FC<StoryMapProps> = ({
     onUpdateParagraphs,
     onUpdateMapSettings
   );
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const { messages, showToast, removeMessage } = useToast();
   const t = translations[language];
 
   const handleClose = () => {
     // First update paragraphs to save positions
     if (onUpdateParagraphs) {
       const updatedParagraphs = paragraphs.map(p => {
-        const node = state.nodes.find(n => n.id === p.id);
+        const node = state.nodes.find((n: Node) => n.id === p.id);
         if (!node) return p;
         return {
           ...p,
@@ -59,9 +67,100 @@ const StoryMap: React.FC<StoryMapProps> = ({
     // Then save nodes to ensure positions are included
     if (onSave) {
       onSave(state.nodes);
+      showToast('Changes saved successfully', 'success');
     }
     onClose();
   };
+
+  const handleViewBoxChange = (x: number, y: number) => {
+    actions.setViewBox({
+      ...state.viewBox,
+      x,
+      y
+    });
+  };
+
+  const handleZoomIn = () => {
+    const newZoom = state.zoom + ZOOM_STEP;
+    if (newZoom <= 4) {
+      actions.handleZoom(ZOOM_STEP);
+      showToast('Zoomed in', 'info');
+    } else {
+      showToast('Maximum zoom reached', 'warning');
+    }
+  };
+
+  const handleZoomOut = () => {
+    const newZoom = state.zoom - ZOOM_STEP;
+    if (newZoom >= 0.25) {
+      actions.handleZoom(-ZOOM_STEP);
+      showToast('Zoomed out', 'info');
+    } else {
+      showToast('Minimum zoom reached', 'warning');
+    }
+  };
+
+  const handleZoomReset = () => {
+    actions.setZoom(1);
+    showToast('Zoom reset to 100%', 'success');
+  };
+
+  const handleToggleGrid = () => {
+    actions.setShowGrid(!state.showGrid);
+    showToast(
+      state.showGrid ? 'Grid hidden' : 'Grid shown',
+      'info'
+    );
+  };
+
+  const handleToggleDragMode = () => {
+    actions.setIsDragMode(!state.isDragMode);
+    showToast(
+      state.isDragMode ? 'Drag mode disabled' : 'Drag mode enabled',
+      'info'
+    );
+  };
+
+  const handleSave = async () => {
+    try {
+      await actions.handleManualSave();
+      showToast('Map saved successfully', 'success');
+    } catch (error) {
+      showToast('Failed to save map', 'error');
+    }
+  };
+
+  const handleNodeLock = (id: number) => {
+    const node = state.nodes.find(n => n.id === id);
+    if (node) {
+      actions.toggleNodeLock(id);
+      showToast(
+        node.locked ? 'Node unlocked' : 'Node locked',
+        'info'
+      );
+    }
+  };
+
+  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      await actions.handleBackgroundUpload(event);
+      showToast('Background image uploaded successfully', 'success');
+    } catch (error) {
+      showToast('Failed to upload background image', 'error');
+    }
+  };
+
+  // Keyboard shortcuts handlers
+  useKeyboardShortcuts({
+    onZoomIn: handleZoomIn,
+    onZoomOut: handleZoomOut,
+    onZoomReset: handleZoomReset,
+    onToggleGrid: handleToggleGrid,
+    onToggleDragMode: handleToggleDragMode,
+    onSave: handleSave,
+    onEscape: handleClose,
+    isEnabled: true
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#0A1929] overflow-hidden">
@@ -71,11 +170,11 @@ const StoryMap: React.FC<StoryMapProps> = ({
         ref={state.fileInputRef}
         className="hidden"
         accept="image/*"
-        onChange={actions.handleBackgroundUpload}
+        onChange={handleBackgroundUpload}
       />
 
       {/* Header */}
-      <div className="flex-none h-14 border-b border-gray-700">
+      <div className="flex-none h-14 border-b border-gray-700 flex items-center justify-between px-4">
         <StoryMapControls
           selectedNode={state.selectedNode}
           selectedAction={state.selectedAction}
@@ -87,15 +186,16 @@ const StoryMap: React.FC<StoryMapProps> = ({
           fileInputRef={state.fileInputRef}
           onClose={handleClose}
           onZoom={actions.handleZoom}
-          onToggleGrid={() => actions.setShowGrid(!state.showGrid)}
-          onToggleDragMode={() => actions.setIsDragMode(!state.isDragMode)}
+          onToggleGrid={handleToggleGrid}
+          onToggleDragMode={handleToggleDragMode}
           onToggleLines={() => actions.setUseCurvedLines(!state.useCurvedLines)}
-          onSave={actions.handleManualSave}
+          onSave={handleSave}
           onEditParagraph={onEditParagraph}
           onDeleteParagraph={onDeleteParagraph}
-          onToggleNodeLock={actions.toggleNodeLock}
+          onToggleNodeLock={handleNodeLock}
           onActionSelect={actions.handleActionSelect}
         />
+        <KeyboardShortcutsHelp />
       </div>
 
       {/* Main Canvas Area */}
@@ -121,6 +221,16 @@ const StoryMap: React.FC<StoryMapProps> = ({
           onZoom={actions.handleZoom}
         />
 
+        {/* MiniMap */}
+        <MiniMap
+          nodes={state.nodes}
+          links={state.links}
+          viewBox={state.viewBox}
+          mapWidth={state.imageAdjustments.width}
+          mapHeight={state.imageAdjustments.height}
+          onViewBoxChange={handleViewBoxChange}
+        />
+
         {state.backgroundImage && (
           <div className="absolute bottom-4 right-4 z-10">
             <ImageControls
@@ -130,6 +240,12 @@ const StoryMap: React.FC<StoryMapProps> = ({
             />
           </div>
         )}
+
+        {/* Toast Messages */}
+        <ToastManager
+          messages={messages}
+          onMessageComplete={removeMessage}
+        />
       </div>
 
       {/* Footer */}

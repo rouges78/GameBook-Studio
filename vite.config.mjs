@@ -6,6 +6,7 @@ import { dirname, resolve } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// https://vitejs.dev/config/
 export default defineConfig({
   base: './',
   resolve: {
@@ -14,25 +15,31 @@ export default defineConfig({
       '@components': resolve(__dirname, './src/components'),
       '@contexts': resolve(__dirname, './src/contexts'),
       '@hooks': resolve(__dirname, './src/hooks'),
-      '@utils': resolve(__dirname, './src/utils')
-    },
+      '@utils': resolve(__dirname, './src/utils'),
+      // Add browser-compatible Node.js modules
+      path: 'path-browserify',
+      fs: 'browserify-fs',
+      crypto: 'crypto-browserify',
+      stream: 'stream-browserify',
+      util: 'util',
+      os: 'os-browserify/browser'
+    }
   },
-  plugins: [
-    react()
-  ],
+  plugins: [react()],
   build: {
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html')
-      }
+      external: [
+        'electron',
+        'electron-updater'
+      ]
     }
   },
   server: {
-    port: parseInt(process.env.VITE_PORT) || 5173, // Usa la variabile d'ambiente
-    strictPort: false, // Consenti di cambiare porta se già occupata
+    port: parseInt(process.env.VITE_PORT) || 5173,
+    strictPort: false,
     open: false,
     hmr: {
       protocol: 'ws',
@@ -53,7 +60,24 @@ export default defineConfig({
       'framer-motion',
       '@headlessui/react',
       '@heroicons/react',
-      'lucide-react'
+      'lucide-react',
+      // Add browser-compatible Node.js modules
+      'path-browserify',
+      'browserify-fs',
+      'crypto-browserify',
+      'stream-browserify',
+      'util',
+      'os-browserify/browser'
+    ],
+    exclude: [
+      'electron',
+      'electron-updater'
     ]
+  },
+  // Handle Node.js built-in modules
+  define: {
+    '__dirname': 'undefined',
+    '__filename': 'undefined',
+    'process.env': '{}'
   }
-});
+})

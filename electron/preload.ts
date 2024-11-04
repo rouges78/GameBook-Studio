@@ -41,7 +41,13 @@ contextBridge.exposeInMainWorld('electron', {
     'telemetry-status': () => ipcRenderer.invoke('telemetry-status'),
     'telemetry-toggle': (enabled: Parameters<IpcApi['telemetry-toggle']>[0]) => 
         ipcRenderer.invoke('telemetry-toggle', enabled),
-    'get-telemetry-data': () => ipcRenderer.invoke('get-telemetry-data'),
+    'telemetry:getData': () => ipcRenderer.invoke('telemetry:getData'),
+
+    // Dialog handlers
+    dialog: {
+        showOpenDialog: (options: any) => ipcRenderer.invoke('dialog:showOpenDialog', options),
+        showSaveDialog: (options: any) => ipcRenderer.invoke('dialog:showSaveDialog', options)
+    },
 
     // Event listeners
     on: <K extends keyof IpcEventMap>(channel: K, callback: IpcEvents[K]) => {
@@ -61,19 +67,3 @@ contextBridge.exposeInMainWorld('electron', {
         ipcRenderer.removeListener(channel, subscription);
     }
 });
-
-// Type declaration for TypeScript
-declare global {
-    interface Window {
-        electron: IpcApi & {
-            on: <K extends keyof IpcEventMap>(
-                channel: K, 
-                callback: IpcEvents[K]
-            ) => () => void;
-            off: <K extends keyof IpcEventMap>(
-                channel: K, 
-                callback: IpcEvents[K]
-            ) => void;
-        };
-    }
-}

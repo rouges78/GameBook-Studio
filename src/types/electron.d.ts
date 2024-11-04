@@ -29,6 +29,18 @@ interface DialogResult {
   filePaths?: string[];
 }
 
+interface TelemetryEvent {
+  category: string;
+  action: string;
+  label?: string;
+  value?: number;
+  metadata?: Record<string, any>;
+  timestamp: number;
+  appVersion: string;
+  platform: string;
+  arch: string;
+}
+
 interface ElectronAPI {
   // File operations
   'dialog:openFile': () => Promise<{ path: string; content: string; } | null>;
@@ -58,6 +70,9 @@ interface ElectronAPI {
   'db:deleteProject': (bookTitle: string) => Promise<void>;
   'db:debugDatabase': () => Promise<Project[]>;
 
+  // Telemetry operations
+  'telemetry:getData': () => Promise<TelemetryEvent[]>;
+
   // Dialog operations
   dialog: {
     showOpenDialog: (options: any) => Promise<DialogResult>;
@@ -75,4 +90,4 @@ declare global {
   }
 }
 
-export { UpdateInfo, BackupMetadata, BackupSettings, DialogResult, ElectronAPI };
+export { UpdateInfo, BackupMetadata, BackupSettings, DialogResult, TelemetryEvent, ElectronAPI };

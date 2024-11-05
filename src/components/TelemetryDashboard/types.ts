@@ -9,6 +9,19 @@ export interface CategoryFilters {
   [key: string]: boolean;
 }
 
+export interface PaginationParams {
+  page: number;
+  pageSize: number;
+}
+
+export interface PaginationMetadata {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
 export interface ErrorPattern {
   pattern: string;
   count: number;
@@ -59,6 +72,25 @@ export interface ProcessedTelemetryData {
   errorPatterns: ErrorPatterns;
   updateErrors: UpdateErrors;
   systemMetrics: SystemMetrics;
+  pagination?: PaginationMetadata;
+}
+
+export interface VirtualizationConfig {
+  itemHeight: number;
+  overscan: number;
+  containerHeight: number;
+  totalItems: number;
+}
+
+export interface VirtualizedItem {
+  index: number;
+  style: {
+    position: 'absolute';
+    top: number;
+    left: 0;
+    width: '100%';
+    height: number;
+  };
 }
 
 export interface TelemetryStats {

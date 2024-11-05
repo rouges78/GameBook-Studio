@@ -1,5 +1,6 @@
 import pako from 'pako';
 import { getWorkerUrl } from './workerConfig';
+import { circuitBreaker } from './circuitBreaker';
 
 type WorkerTask = {
   id: string;
@@ -84,6 +85,7 @@ export class WorkerPool {
       if (activeTask) {
         activeTask.endTime = performance.now();
         this.recordTaskMetrics(activeTask, 'completed');
+        circuitBreaker.recordSuccess();
         
         // Decompress response if needed
         let result = event.data;
@@ -103,6 +105,7 @@ export class WorkerPool {
       if (activeTask) {
         activeTask.endTime = performance.now();
         this.recordTaskMetrics(activeTask, 'failed');
+        circuitBreaker.recordFailure();
         activeTask.reject(new Error(event.message));
         this.activeWorkers.set(worker, null);
         
@@ -156,7 +159,7 @@ export class WorkerPool {
   }
 
   private async processNextTask(worker: Worker): Promise<void> {
-    if (this.taskQueue.length === 0) return;
+    if (this.taskQueue.length === 0 || !circuitBreaker.canExecute()) return;
 
     const memoryUsage = this.getMemoryUsage();
     if (memoryUsage && memoryUsage > this.memoryThresholds.critical) {
@@ -219,6 +222,11 @@ export class WorkerPool {
 
   public async executeTask<T>(taskData: any): Promise<T> {
     return new Promise((resolve, reject) => {
+      if (!circuitBreaker.canExecute()) {
+        reject(new Error('Circuit breaker is open, task execution prevented'));
+        return;
+      }
+
       const size = new Blob([JSON.stringify(taskData)]).size;
       
       const task: WorkerTask = {

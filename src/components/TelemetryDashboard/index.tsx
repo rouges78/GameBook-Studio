@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { TelemetryEvent } from '../../types/electron';
 import {
   DateRangeFilters,
@@ -206,7 +207,19 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
   return (
     <div className={`p-6 ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'}`}>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Telemetry Dashboard</h1>
+        <div className="flex items-center space-x-4">
+          <Link
+            to="/settings"
+            className={`text-sm ${
+              isDarkMode
+                ? 'text-blue-400 hover:text-blue-300'
+                : 'text-blue-600 hover:text-blue-500'
+            }`}
+          >
+            ← Torna alle impostazioni
+          </Link>
+          <h1 className="text-2xl font-bold">Telemetry Dashboard</h1>
+        </div>
         <button
           onClick={handleExport}
           className={`px-4 py-2 rounded-lg ${

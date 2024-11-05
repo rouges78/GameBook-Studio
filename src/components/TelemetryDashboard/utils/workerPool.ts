@@ -1,4 +1,5 @@
 import pako from 'pako';
+import { getWorkerUrl } from './workerConfig';
 
 type WorkerTask = {
   id: string;
@@ -308,8 +309,7 @@ let poolInstance: WorkerPool | null = null;
 
 export const getWorkerPool = (poolSize = navigator.hardwareConcurrency || 4) => {
   if (!poolInstance) {
-    const workerUrl = new URL('./dataProcessor.worker.ts', import.meta.url);
-    poolInstance = new WorkerPool(poolSize, workerUrl.href);
+    poolInstance = new WorkerPool(poolSize, getWorkerUrl());
   }
   return poolInstance;
 };

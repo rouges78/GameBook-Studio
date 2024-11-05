@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -13,17 +13,56 @@ import {
   Legend
 } from 'recharts';
 import { ErrorAnalysisProps, PIE_CHART_COLORS } from '../types';
+import { ErrorInspectionModal } from './ErrorInspectionModal';
+import { TelemetryEvent } from '../../../types/electron';
 
 export const ErrorAnalysis: React.FC<ErrorAnalysisProps> = ({
   errorPatterns,
   updateErrors,
+  rawEvents,
   isDarkMode
 }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPattern, setSelectedPattern] = useState<string | null>(null);
+
+  const selectedError = useMemo(() => {
+    if (!selectedPattern || !rawEvents) return undefined;
+    
+    const events = rawEvents.filter(event => 
+      event.category === 'error' && 
+      event.metadata?.pattern === selectedPattern
+    );
+
+    return {
+      pattern: selectedPattern,
+      events
+    };
+  }, [selectedPattern, rawEvents]);
+
+  const handlePatternClick = (pattern: string) => {
+    setSelectedPattern(pattern);
+    setIsModalOpen(true);
+  };
+
+  const buttonClasses = `px-2 py-1 text-sm rounded-md transition-colors ${
+    isDarkMode 
+      ? 'bg-gray-600 hover:bg-gray-500 text-gray-100' 
+      : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+  }`;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       {/* Error Trends Chart */}
       <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-        <h2 className="text-xl font-semibold mb-3">Error Trends</h2>
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-xl font-semibold">Error Trends</h2>
+          <button
+            onClick={() => handlePatternClick('time-based')}
+            className={buttonClasses}
+          >
+            Analyze Trends
+          </button>
+        </div>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={errorPatterns.trends}>
@@ -52,7 +91,15 @@ export const ErrorAnalysis: React.FC<ErrorAnalysisProps> = ({
 
       {/* Error Impact Analysis */}
       <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-        <h2 className="text-xl font-semibold mb-3">Error Impact Analysis</h2>
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-xl font-semibold">Error Impact Analysis</h2>
+          <button
+            onClick={() => handlePatternClick('impact')}
+            className={buttonClasses}
+          >
+            View Details
+          </button>
+        </div>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -64,6 +111,8 @@ export const ErrorAnalysis: React.FC<ErrorAnalysisProps> = ({
                 cy="50%"
                 outerRadius={80}
                 label
+                onClick={(data) => handlePatternClick(data.pattern)}
+                className="cursor-pointer"
               >
                 {errorPatterns.correlations.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]} />
@@ -84,7 +133,15 @@ export const ErrorAnalysis: React.FC<ErrorAnalysisProps> = ({
 
       {/* Update Errors Summary */}
       <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} md:col-span-2`}>
-        <h2 className="text-xl font-semibold mb-3">Update Errors Summary</h2>
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-xl font-semibold">Update Errors Summary</h2>
+          <button
+            onClick={() => handlePatternClick('update')}
+            className={buttonClasses}
+          >
+            Analyze Updates
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <h3 className="font-semibold mb-2">Total Errors</h3>
@@ -98,7 +155,11 @@ export const ErrorAnalysis: React.FC<ErrorAnalysisProps> = ({
             <h3 className="font-semibold mb-2">Error Types</h3>
             <div className="space-y-1">
               {Object.entries(updateErrors.byType).map(([type, count]) => (
-                <div key={type} className="flex justify-between">
+                <div 
+                  key={type} 
+                  className="flex justify-between cursor-pointer hover:bg-opacity-50 rounded px-2 py-1"
+                  onClick={() => handlePatternClick(type)}
+                >
                   <span>{type}:</span>
                   <span>{count}</span>
                 </div>
@@ -107,6 +168,17 @@ export const ErrorAnalysis: React.FC<ErrorAnalysisProps> = ({
           </div>
         </div>
       </div>
+
+      <ErrorInspectionModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedPattern(null);
+        }}
+        errorPatterns={errorPatterns}
+        selectedError={selectedError}
+        isDarkMode={isDarkMode}
+      />
     </div>
   );
 };

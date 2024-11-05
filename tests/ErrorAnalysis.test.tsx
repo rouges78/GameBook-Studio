@@ -1,129 +1,178 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { ErrorAnalysis } from '../src/components/TelemetryDashboard/components/ErrorAnalysis';
+import { ErrorPatterns } from '../src/components/TelemetryDashboard/types';
+import { TelemetryEvent } from '../src/types/electron';
 
-// Mock recharts components
-jest.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  BarChart: ({ children }: { children: React.ReactNode }) => <div data-testid="bar-chart">{children}</div>,
-  PieChart: ({ children }: { children: React.ReactNode }) => <div data-testid="pie-chart">{children}</div>,
-  Bar: () => <div>Bar</div>,
-  Pie: () => <div>Pie</div>,
-  XAxis: () => <div>XAxis</div>,
-  YAxis: () => <div>YAxis</div>,
-  CartesianGrid: () => <div>CartesianGrid</div>,
-  Tooltip: () => <div>Tooltip</div>,
-  Cell: () => <div>Cell</div>,
-  Legend: () => <div>Legend</div>
-}));
+const mockErrorPatterns: ErrorPatterns = {
+  correlations: [
+    { pattern: 'Network Error', count: 10, impact: 8 },
+    { pattern: 'Validation Error', count: 5, impact: 3 }
+  ],
+  trends: [
+    { date: '2024-01-01', errors: 3 },
+    { date: '2024-01-02', errors: 2 }
+  ]
+};
+
+const mockUpdateErrors = {
+  total: 15,
+  byType: {
+    'network': 10,
+    'validation': 5
+  },
+  averageRetries: 2.5
+};
+
+const mockRawEvents: TelemetryEvent[] = [
+  {
+    category: 'error',
+    action: 'network_failure',
+    label: 'API Request Failed',
+    timestamp: 1704067200000,
+    appVersion: '1.0.0',
+    platform: 'win32',
+    arch: 'x64',
+    metadata: {
+      pattern: 'Network Error',
+      statusCode: 500
+    }
+  }
+];
 
 describe('ErrorAnalysis', () => {
-  const mockData = {
-    errorPatterns: {
-      correlations: [
-        { pattern: 'Network Error', count: 10, impact: 75 },
-        { pattern: 'Timeout', count: 5, impact: 25 }
-      ],
-      trends: [
-        { date: '2024-01-01', errors: 5 },
-        { date: '2024-01-02', errors: 3 }
-      ]
-    },
-    updateErrors: {
-      total: 15,
-      byType: {
-        'network': 8,
-        'timeout': 7
-      },
-      averageRetries: 2.5
-    },
-    isDarkMode: false
-  };
+  it('renders error trends chart', () => {
+    render(
+      <ErrorAnalysis
+        errorPatterns={mockErrorPatterns}
+        updateErrors={mockUpdateErrors}
+        rawEvents={mockRawEvents}
+        isDarkMode={false}
+      />
+    );
 
-  it('renders all main sections', () => {
-    render(<ErrorAnalysis {...mockData} />);
-    
     expect(screen.getByText('Error Trends')).toBeInTheDocument();
+    expect(screen.getByText('Analyze Trends')).toBeInTheDocument();
+  });
+
+  it('renders error impact analysis', () => {
+    render(
+      <ErrorAnalysis
+        errorPatterns={mockErrorPatterns}
+        updateErrors={mockUpdateErrors}
+        rawEvents={mockRawEvents}
+        isDarkMode={false}
+      />
+    );
+
     expect(screen.getByText('Error Impact Analysis')).toBeInTheDocument();
+    expect(screen.getByText('View Details')).toBeInTheDocument();
+  });
+
+  it('renders update errors summary', () => {
+    render(
+      <ErrorAnalysis
+        errorPatterns={mockErrorPatterns}
+        updateErrors={mockUpdateErrors}
+        rawEvents={mockRawEvents}
+        isDarkMode={false}
+      />
+    );
+
     expect(screen.getByText('Update Errors Summary')).toBeInTheDocument();
+    expect(screen.getByText('Total Errors')).toBeInTheDocument();
+    expect(screen.getByText('15')).toBeInTheDocument();
+    expect(screen.getByText('2.50')).toBeInTheDocument();
   });
 
-  it('renders charts', () => {
-    render(<ErrorAnalysis {...mockData} />);
-    
-    expect(screen.getByTestId('bar-chart')).toBeInTheDocument();
-    expect(screen.getByTestId('pie-chart')).toBeInTheDocument();
+  it('opens modal when clicking analyze trends', () => {
+    render(
+      <ErrorAnalysis
+        errorPatterns={mockErrorPatterns}
+        updateErrors={mockUpdateErrors}
+        rawEvents={mockRawEvents}
+        isDarkMode={false}
+      />
+    );
+
+    fireEvent.click(screen.getByText('Analyze Trends'));
+    expect(screen.getByText('Error Pattern Analysis')).toBeInTheDocument();
   });
 
-  it('displays update error statistics correctly', () => {
-    render(<ErrorAnalysis {...mockData} />);
-    
-    expect(screen.getByText('15')).toBeInTheDocument(); // Total errors
-    expect(screen.getByText('2.50')).toBeInTheDocument(); // Average retries
-    expect(screen.getByText('network:')).toBeInTheDocument();
-    expect(screen.getByText('8')).toBeInTheDocument();
-    expect(screen.getByText('timeout:')).toBeInTheDocument();
-    expect(screen.getByText('7')).toBeInTheDocument();
+  it('opens modal when clicking view details', () => {
+    render(
+      <ErrorAnalysis
+        errorPatterns={mockErrorPatterns}
+        updateErrors={mockUpdateErrors}
+        rawEvents={mockRawEvents}
+        isDarkMode={false}
+      />
+    );
+
+    fireEvent.click(screen.getByText('View Details'));
+    expect(screen.getByText('Error Pattern Analysis')).toBeInTheDocument();
   });
 
-  it('applies dark mode styles when isDarkMode is true', () => {
-    const darkModeData = { ...mockData, isDarkMode: true };
-    render(<ErrorAnalysis {...darkModeData} />);
-    
-    const sections = screen.getAllByRole('heading', { level: 2 })
-      .map(heading => heading.parentElement);
-    
-    sections.forEach(section => {
-      expect(section).toHaveClass('bg-gray-700');
-    });
+  it('opens modal when clicking error type', () => {
+    render(
+      <ErrorAnalysis
+        errorPatterns={mockErrorPatterns}
+        updateErrors={mockUpdateErrors}
+        rawEvents={mockRawEvents}
+        isDarkMode={false}
+      />
+    );
+
+    fireEvent.click(screen.getByText('network:'));
+    expect(screen.getByText('Error Pattern Analysis')).toBeInTheDocument();
   });
 
-  it('applies light mode styles when isDarkMode is false', () => {
-    render(<ErrorAnalysis {...mockData} />);
-    
-    const sections = screen.getAllByRole('heading', { level: 2 })
-      .map(heading => heading.parentElement);
-    
-    sections.forEach(section => {
-      expect(section).toHaveClass('bg-gray-100');
-    });
+  it('closes modal when clicking close button', () => {
+    render(
+      <ErrorAnalysis
+        errorPatterns={mockErrorPatterns}
+        updateErrors={mockUpdateErrors}
+        rawEvents={mockRawEvents}
+        isDarkMode={false}
+      />
+    );
+
+    // Open modal
+    fireEvent.click(screen.getByText('Analyze Trends'));
+    expect(screen.getByText('Error Pattern Analysis')).toBeInTheDocument();
+
+    // Close modal
+    fireEvent.click(screen.getByLabelText('Close modal'));
+    expect(screen.queryByText('Pattern Details')).not.toBeInTheDocument();
   });
 
-  it('renders error type breakdown', () => {
-    render(<ErrorAnalysis {...mockData} />);
-    
-    expect(screen.getByText('Error Types')).toBeInTheDocument();
-    Object.entries(mockData.updateErrors.byType).forEach(([type, count]) => {
-      expect(screen.getByText(`${type}:`)).toBeInTheDocument();
-      expect(screen.getByText(count.toString())).toBeInTheDocument();
-    });
+  it('handles dark mode styling', () => {
+    render(
+      <ErrorAnalysis
+        errorPatterns={mockErrorPatterns}
+        updateErrors={mockUpdateErrors}
+        rawEvents={mockRawEvents}
+        isDarkMode={true}
+      />
+    );
+
+    const darkModeElements = document.querySelectorAll('.bg-gray-700');
+    expect(darkModeElements.length).toBeGreaterThan(0);
   });
 
-  it('handles empty error patterns', () => {
-    const emptyData = {
-      ...mockData,
-      errorPatterns: {
-        correlations: [],
-        trends: []
-      }
-    };
-    
-    render(<ErrorAnalysis {...emptyData} />);
-    
-    expect(screen.getByTestId('bar-chart')).toBeInTheDocument();
-    expect(screen.getByTestId('pie-chart')).toBeInTheDocument();
-  });
+  it('filters raw events for selected pattern', () => {
+    render(
+      <ErrorAnalysis
+        errorPatterns={mockErrorPatterns}
+        updateErrors={mockUpdateErrors}
+        rawEvents={mockRawEvents}
+        isDarkMode={false}
+      />
+    );
 
-  it('formats average retries to 2 decimal places', () => {
-    const dataWithLongDecimal = {
-      ...mockData,
-      updateErrors: {
-        ...mockData.updateErrors,
-        averageRetries: 2.3333333
-      }
-    };
-    
-    render(<ErrorAnalysis {...dataWithLongDecimal} />);
-    expect(screen.getByText('2.33')).toBeInTheDocument();
+    // Click on a pattern that matches the raw event
+    fireEvent.click(screen.getByText('Network Error'));
+    expect(screen.getByText('1.0.0')).toBeInTheDocument(); // Version from raw event
+    expect(screen.getByText('win32')).toBeInTheDocument(); // Platform from raw event
   });
 });

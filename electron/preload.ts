@@ -3,6 +3,9 @@ import type { IpcApi, IpcEvents, IpcEventMap } from './types';
 
 // Expose IPC handlers to the renderer process
 contextBridge.exposeInMainWorld('electron', {
+    // Window operations
+    'window:close': () => ipcRenderer.invoke('window:close'),
+
     // Update handlers
     'update:check': () => ipcRenderer.invoke('update:check'),
     'update:start-download': () => ipcRenderer.invoke('update:start-download'),

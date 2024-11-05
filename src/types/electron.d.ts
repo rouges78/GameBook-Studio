@@ -50,41 +50,44 @@ type ErrorEventCallback = (error: { message: string; code: string }) => void;
 type GenericEventCallback = () => void;
 
 interface ElectronAPI {
+  // Window operations
+  closeWindow: () => void;
+
   // File operations
   'dialog:openFile': () => Promise<{ path: string; content: string; } | null>;
   'dialog:saveFile': (content: string) => Promise<string | null>;
   
-  // Update operations
+  // Update handlers
   'update:check': () => Promise<any>;
   'update:start-download': () => Promise<void>;
   'update:install': () => void;
   
-  // Backup operations
-  'backup:create': (projects: any[]) => Promise<string>;
+  // Backup handlers
+  'backup:create': () => Promise<string>;
   'backup:restore': (version: string) => Promise<any[]>;
   'backup:list': () => Promise<BackupMetadata[]>;
   'backup:export': (version: string, exportPath: string) => Promise<void>;
   'backup:import': (importPath: string) => Promise<string>;
   
-  // Backup settings operations
+  // Backup settings handlers
   'backup:getSettings': () => Promise<BackupSettings>;
   'backup:updateSettings': (settings: BackupSettings) => Promise<void>;
   'backup:runCleanup': () => Promise<void>;
 
-  // Database operations
+  // Database handlers
   'db:getProjects': () => Promise<Project[]>;
   'db:getProject': (bookTitle: string) => Promise<Project | undefined>;
   'db:saveProject': (project: Project) => Promise<void>;
   'db:deleteProject': (bookTitle: string) => Promise<void>;
   'db:debugDatabase': () => Promise<Project[]>;
 
-  // Telemetry operations
+  // Telemetry handlers
   'telemetry:getData': () => Promise<TelemetryEvent[]>;
   'telemetry-events': (events: TelemetryEvent[]) => Promise<void>;
   'telemetry-status': () => Promise<boolean>;
   'telemetry-toggle': (enabled: boolean) => Promise<boolean>;
 
-  // Dialog operations
+  // Dialog handlers
   dialog: {
     showOpenDialog: (options: any) => Promise<DialogResult>;
     showSaveDialog: (options: any) => Promise<DialogResult>;

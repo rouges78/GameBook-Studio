@@ -15,7 +15,7 @@ interface Project {
 
 interface DashboardProps {
   isDarkMode: boolean;
-  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 'settings' | 'help' | 'export' | 'backupManager') => void;
+  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 'settings' | 'help' | 'export' | 'backupManager' | 'telemetryDashboard') => void;
   setIsDarkMode: (value: boolean) => void;
   language: 'it' | 'en';
   setLanguage: (value: 'it' | 'en') => void;
@@ -59,9 +59,9 @@ const ProjectBox: React.FC<ProjectBoxProps> = React.memo(({ project, isDarkMode,
         whileHover="hover"
         className="flex flex-col"
       >
-        <div className="border-2 rounded-lg overflow-hidden aspect-[3/4] border-gray-300 bg-gray-100">
+        <div className="border-2 rounded-lg overflow-hidden aspect-[3/4] border-gray-600 bg-gray-800">
           <div className="flex items-center justify-center h-full">
-            <p className="text-sm text-gray-600 text-center">
+            <p className="text-sm text-gray-300 text-center">
               {t.noProject}
             </p>
           </div>
@@ -79,7 +79,7 @@ const ProjectBox: React.FC<ProjectBoxProps> = React.memo(({ project, isDarkMode,
       className="flex flex-col cursor-pointer h-full"
       onClick={() => onProjectSelect(project)}
     >
-      <div className="border-2 rounded-lg overflow-hidden aspect-[3/4] group relative transition-colors duration-200 hover:border-gray-400 hover:shadow-lg border-gray-300 bg-gray-100">
+      <div className="border-2 rounded-lg overflow-hidden aspect-[3/4] group relative transition-colors duration-200 hover:border-gray-400 hover:shadow-lg border-gray-600 bg-gray-800">
         {project.coverImage ? (
           <div className="w-full h-full">
             <img 
@@ -90,12 +90,12 @@ const ProjectBox: React.FC<ProjectBoxProps> = React.memo(({ project, isDarkMode,
             />
           </div>
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-700">
             <motion.div
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.5 }}
             >
-              <FileText size={32} className="text-gray-500" />
+              <FileText size={32} className="text-gray-300" />
             </motion.div>
           </div>
         )}
@@ -106,13 +106,13 @@ const ProjectBox: React.FC<ProjectBoxProps> = React.memo(({ project, isDarkMode,
         transition={{ delay: 0.2 }}
         className="text-center mt-2"
       >
-        <h3 className="text-sm font-bold text-gray-800 mb-0.5 truncate">
+        <h3 className="text-sm font-bold text-gray-200 mb-0.5 truncate">
           {project.bookTitle}
         </h3>
-        <p className="text-xs text-gray-600 truncate">
+        <p className="text-xs text-gray-300 truncate">
           {t.by} {project.author}
         </p>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <p className="text-xs text-gray-400 mt-0.5">
           {t.lastEdit}: {new Date(project.lastEdited).toLocaleDateString()} - {project.paragraphs.length} {t.paragraphs}
         </p>
       </motion.div>
@@ -270,23 +270,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  const textVariants: Variants = {
-    initial: { 
-      opacity: 0,
-      y: 20,
-      filter: "blur(8px)"
-    },
-    animate: { 
-      opacity: 1,
-      y: 0,
-      filter: "blur(0px)",
-      transition: {
-        duration: 0.8,
-        ease: "easeOut"
-      }
-    }
-  };
-
   return (
     <div className="flex h-screen">
       <Suspense fallback={<div className="w-64 bg-gray-700 animate-pulse" />}>
@@ -300,15 +283,13 @@ const Dashboard: React.FC<DashboardProps> = ({
         />
       </Suspense>
 
-      <div className="flex-1 bg-gray-50 flex flex-col">
+      <div className="flex-1 bg-gray-900 flex flex-col">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex-none h-12 bg-gray-700 flex items-center px-6"
-        >
-          <h1 className="text-xl font-bold text-gray-50">GameBook Studio</h1>
-        </motion.div>
+          className="flex-none h-12 bg-gray-800 flex items-center px-6"
+        />
 
         {/* Main Content */}
         <div className="flex-1 flex p-6">
@@ -324,7 +305,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               className="absolute inset-0"
               style={{ 
                 filter: "blur(40px)",
-                background: "radial-gradient(circle, rgba(251,146,60,0.3) 0%, rgba(251,146,60,0) 70%)"
+                background: "radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(59,130,246,0) 70%)"
               }}
             />
             <motion.div
@@ -333,7 +314,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               className="absolute inset-0"
               style={{ 
                 filter: "blur(60px)",
-                background: "radial-gradient(circle, rgba(234,88,12,0.2) 0%, rgba(234,88,12,0) 60%)",
+                background: "radial-gradient(circle, rgba(37,99,235,0.2) 0%, rgba(37,99,235,0) 60%)",
                 transform: "scale(1.2)"
               }}
             />
@@ -352,22 +333,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 }}
                 loading="lazy"
               />
-              {logoAnimationComplete && (
-                <motion.div
-                  variants={textVariants}
-                  className="absolute inset-0 flex items-center justify-center"
-                >
-                  <motion.div
-                    className="text-4xl font-bold text-gray-800 text-center"
-                    style={{ 
-                      textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                      letterSpacing: "0.05em"
-                    }}
-                  >
-                    GameBook Studio
-                  </motion.div>
-                </motion.div>
-              )}
             </motion.div>
           </motion.div>
 
@@ -381,19 +346,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
                 whileHover={{ scale: 1.02 }}
-                className="p-6 rounded-lg bg-gray-100 shadow-md flex flex-col justify-center border border-gray-200"
+                className="p-6 rounded-lg bg-gray-800 shadow-md flex flex-col justify-center border border-gray-700"
               >
                 <motion.div
                   whileHover={{ rotate: 180 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Plus size={36} className="mx-auto mb-4 text-gray-600" />
+                  <Plus size={36} className="mx-auto mb-4 text-gray-300" />
                 </motion.div>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleCreateNewProject}
-                  className="w-full bg-gray-600 hover:bg-gray-700 text-gray-50 font-bold py-3 px-6 rounded-lg transition-colors shadow-md"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-gray-50 font-bold py-3 px-6 rounded-lg transition-colors shadow-md"
                 >
                   {t.createNewProject}
                 </motion.button>
@@ -405,19 +370,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
                 whileHover={{ scale: 1.02 }}
-                className="p-6 rounded-lg bg-gray-100 shadow-md flex flex-col justify-center border border-gray-200"
+                className="p-6 rounded-lg bg-gray-800 shadow-md flex flex-col justify-center border border-gray-700"
               >
                 <motion.div
                   whileHover={{ rotate: -30 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <FolderOpen size={36} className="mx-auto mb-4 text-gray-600" />
+                  <FolderOpen size={36} className="mx-auto mb-4 text-gray-300" />
                 </motion.div>
                 <motion.button 
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleLoadProject}
-                  className="w-full bg-gray-600 hover:bg-gray-700 text-gray-50 font-bold py-3 px-6 rounded-lg transition-colors shadow-md"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-gray-50 font-bold py-3 px-6 rounded-lg transition-colors shadow-md"
                 >
                   {t.loadProject}
                 </motion.button>
@@ -436,13 +401,13 @@ const Dashboard: React.FC<DashboardProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="h-[60%] p-6 rounded-lg bg-gray-100 shadow-md border border-gray-200 overflow-hidden"
+              className="h-[60%] p-6 rounded-lg bg-gray-800 shadow-md border border-gray-700 overflow-hidden"
             >
               <motion.h2
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="text-lg font-bold mb-6 text-gray-800 text-center"
+                className="text-lg font-bold mb-6 text-gray-100 text-center"
               >
                 {t.recentProjects}
               </motion.h2>
@@ -470,10 +435,10 @@ const Dashboard: React.FC<DashboardProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="flex-none h-10 bg-gray-700 text-gray-100 flex items-center justify-between px-6"
+          className="flex-none h-10 bg-gray-800 text-gray-100 flex items-center justify-between px-6"
         >
           <div className="text-sm">Version: 0.1.0</div>
-          <div className="text-sm">© 2023 GameBook Studio. All Rights Reserved.</div>
+          <div className="text-sm">© 2023</div>
         </motion.div>
       </div>
     </div>

@@ -51,13 +51,17 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const t = translations[language];
 
+  const handleLogout = () => {
+    window.electron?.closeWindow();
+  };
+
   return (
-    <aside className={`w-64 p-6 flex flex-col ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>
+    <aside className={`w-64 p-6 flex flex-col ${isDarkMode ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>
       <h2 className="text-xl font-bold mb-6">{t.preferences}</h2>
       <div className="mb-6">
         <label className="flex items-center justify-between cursor-pointer">
           <span className="flex items-center">
-            {isDarkMode ? <Moon size={18} className="mr-2" /> : <Sun size={18} className="mr-2" />}
+            {isDarkMode ? <Moon size={18} className="mr-2 text-blue-400" /> : <Sun size={18} className="mr-2 text-blue-500" />}
             {t.darkMode}
           </span>
           <button
@@ -113,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           onClick={() => setCurrentPage('backupManager')}
           className={`w-full mb-4 ${
             isDarkMode 
-              ? 'bg-cyan-600 hover:bg-cyan-700 text-white' 
+              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
               : 'bg-gray-500 hover:bg-gray-600 text-gray-50'
           } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
         >
@@ -124,7 +128,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           onClick={() => setCurrentPage('telemetryDashboard')}
           className={`w-full mb-4 ${
             isDarkMode 
-              ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
+              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
               : 'bg-gray-500 hover:bg-gray-600 text-gray-50'
           } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
         >
@@ -135,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           onClick={() => setCurrentPage('themeEditor')}
           className={`w-full mb-4 ${
             isDarkMode 
-              ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
               : 'bg-gray-500 hover:bg-gray-600 text-gray-50'
           } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
         >
@@ -157,7 +161,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           onClick={() => setCurrentPage('help')}
           className={`w-full mb-4 ${
             isDarkMode 
-              ? 'bg-green-600 hover:bg-green-700 text-white' 
+              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
               : 'bg-gray-500 hover:bg-gray-600 text-gray-50'
           } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
         >
@@ -166,7 +170,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
       <button
-        onClick={onLogout}
+        onClick={handleLogout}
         className={`w-full ${
           isDarkMode 
             ? 'bg-red-600 hover:bg-red-700 text-white' 

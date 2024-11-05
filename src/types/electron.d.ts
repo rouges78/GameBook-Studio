@@ -1,4 +1,4 @@
-import { Project } from '../components/ParagraphEditor/types';
+import type { Project } from '../components/ParagraphEditor/types';
 
 interface UpdateInfo {
   version: string;
@@ -13,6 +13,7 @@ interface BackupSettings {
     monthly: number; // Number of monthly backups to keep
   };
   autoCleanup: boolean;
+  compression: boolean; // Added compression setting
 }
 
 interface BackupMetadata {
@@ -20,6 +21,8 @@ interface BackupMetadata {
   timestamp: string;
   checksum: string;
   size: number;
+  compressedSize?: number; // Added optional compressed size
+  compressed?: boolean; // Added compression flag
   retentionCategory?: 'daily' | 'weekly' | 'monthly';
 }
 
@@ -40,6 +43,11 @@ interface TelemetryEvent {
   platform: string;
   arch: string;
 }
+
+type UpdateEventCallback = (info: UpdateInfo) => void;
+type ProgressEventCallback = (progress: number) => void;
+type ErrorEventCallback = (error: { message: string; code: string }) => void;
+type GenericEventCallback = () => void;
 
 interface ElectronAPI {
   // File operations
@@ -83,8 +91,17 @@ interface ElectronAPI {
   };
 
   // Event listeners
-  on: (channel: string, callback: (...args: any[]) => void) => void;
-  off: (channel: string, callback: (...args: any[]) => void) => void;
+  on(channel: 'update-available', callback: UpdateEventCallback): void;
+  on(channel: 'update-download-progress', callback: ProgressEventCallback): void;
+  on(channel: 'update-downloaded', callback: GenericEventCallback): void;
+  on(channel: 'update-error', callback: ErrorEventCallback): void;
+  on(channel: string, callback: (...args: any[]) => void): void;
+
+  off(channel: 'update-available', callback: UpdateEventCallback): void;
+  off(channel: 'update-download-progress', callback: ProgressEventCallback): void;
+  off(channel: 'update-downloaded', callback: GenericEventCallback): void;
+  off(channel: 'update-error', callback: ErrorEventCallback): void;
+  off(channel: string, callback: (...args: any[]) => void): void;
 }
 
 declare global {

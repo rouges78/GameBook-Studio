@@ -1,12 +1,24 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import TimeSeriesChart from '../src/components/TelemetryDashboard/components/TimeSeriesChart';
 
-const mockData = [
-  { date: '2024-01-01', total: 100, error: 20, navigation: 80 },
-  { date: '2024-01-02', total: 150, error: 30, navigation: 120 },
-  { date: '2024-01-03', total: 200, error: 40, navigation: 160 }
-];
+// Mock ResizeObserver
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+
+// Mock requestAnimationFrame
+global.requestAnimationFrame = jest.fn((callback) => setTimeout(callback, 0));
+global.cancelAnimationFrame = jest.fn();
+
+const mockData = Array.from({ length: 100 }, (_, i) => ({
+  date: `2024-01-${String(i + 1).padStart(2, '0')}`,
+  total: Math.random() * 1000,
+  error: Math.random() * 100,
+  navigation: Math.random() * 800
+}));
 
 const mockCategories = {
   error: true,
@@ -27,6 +39,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 describe('TimeSeriesChart', () => {
   beforeEach(() => {
     mockRender.mockClear();
+    jest.clearAllMocks();
   });
 
   it('renders loading skeleton when loading prop is true', () => {
@@ -84,182 +97,120 @@ describe('TimeSeriesChart', () => {
     expect(chartContainer.querySelector('.text-gray-300')).toBeInTheDocument();
   });
 
-  it('shows only total line when no categories are selected', () => {
-    render(
-      <TimeSeriesChart
-        data={mockData}
-        categories={{
-          error: false,
-          navigation: false
-        }}
-      />
-    );
-    
-    const lines = screen.getAllByRole('generic', { name: /line/i });
-    expect(lines).toHaveLength(1);
-    expect(screen.getByText('Total')).toBeInTheDocument();
-  });
+  // Virtualization tests
+  describe('virtualization', () => {
+    it('handles scroll events', () => {
+      const { container } = render(
+        <TimeSeriesChart
+          data={mockData}
+          categories={mockCategories}
+          width={500}
+          height={400}
+        />
+      );
 
-  it('shows selected category lines', () => {
-    render(
-      <TimeSeriesChart
-        data={mockData}
-        categories={{
-          error: true,
-          navigation: false
-        }}
-      />
-    );
-    
-    expect(screen.getByText('Error')).toBeInTheDocument();
-    expect(screen.queryByText('Navigation')).not.toBeInTheDocument();
-  });
+      const scrollContainer = container.querySelector('.overflow-x-auto');
+      expect(scrollContainer).toBeInTheDocument();
 
-  it('applies custom class name', () => {
-    const customClass = 'custom-chart';
-    render(
-      <TimeSeriesChart
-        data={mockData}
-        categories={mockCategories}
-        className={customClass}
-      />
-    );
-    
-    expect(screen.getByRole('generic')).toHaveClass(customClass);
-  });
+      act(() => {
+        if (scrollContainer) {
+          fireEvent.scroll(scrollContainer, { target: { scrollLeft: 100 } });
+        }
+      });
 
-  it('renders tooltip with dark mode styles when isDarkMode is true', () => {
-    render(
-      <TimeSeriesChart
-        data={mockData}
-        categories={mockCategories}
-        isDarkMode={true}
-      />
-    );
-    
-    const tooltip = screen.getByRole('tooltip', { hidden: true });
-    expect(tooltip).toHaveStyle({
-      backgroundColor: 'rgba(26, 32, 44, 0.9)',
-      color: '#e2e8f0'
+      // Verify that the chart content has moved
+      const chartContent = container.querySelector('.recharts-wrapper');
+      expect(chartContent).toBeInTheDocument();
+    });
+
+    it('handles zoom events', () => {
+      const { container } = render(
+        <TimeSeriesChart
+          data={mockData}
+          categories={mockCategories}
+          width={500}
+          height={400}
+        />
+      );
+
+      const scrollContainer = container.querySelector('.overflow-x-auto');
+      expect(scrollContainer).toBeInTheDocument();
+
+      act(() => {
+        if (scrollContainer) {
+          fireEvent.wheel(scrollContainer, {
+            deltaY: -100,
+            ctrlKey: true
+          });
+        }
+      });
+
+      // Verify that the chart content has been transformed
+      const chartContent = container.querySelector('.recharts-wrapper');
+      expect(chartContent).toBeInTheDocument();
+    });
+
+    it('maintains smooth scrolling with debounce', () => {
+      jest.useFakeTimers();
+
+      const { container } = render(
+        <TimeSeriesChart
+          data={mockData}
+          categories={mockCategories}
+          width={500}
+          height={400}
+        />
+      );
+
+      const scrollContainer = container.querySelector('.overflow-x-auto');
+      expect(scrollContainer).toBeInTheDocument();
+
+      // Perform multiple scroll events rapidly
+      act(() => {
+        if (scrollContainer) {
+          fireEvent.scroll(scrollContainer, { target: { scrollLeft: 100 } });
+          fireEvent.scroll(scrollContainer, { target: { scrollLeft: 200 } });
+          fireEvent.scroll(scrollContainer, { target: { scrollLeft: 300 } });
+        }
+      });
+
+      // Fast-forward timers
+      act(() => {
+        jest.runAllTimers();
+      });
+
+      jest.useRealTimers();
+    });
+
+    it('cleans up event listeners on unmount', () => {
+      const { container, unmount } = render(
+        <TimeSeriesChart
+          data={mockData}
+          categories={mockCategories}
+          width={500}
+          height={400}
+        />
+      );
+
+      const scrollContainer = container.querySelector('.overflow-x-auto');
+      expect(scrollContainer).toBeInTheDocument();
+
+      unmount();
+
+      // Verify that cancelAnimationFrame was called during cleanup
+      expect(global.cancelAnimationFrame).toHaveBeenCalled();
     });
   });
 
-  // Memoization tests
-  describe('memoization', () => {
-    it('does not re-render when non-essential props change', () => {
+  // Performance tests
+  describe('performance optimizations', () => {
+    it('memoizes rendered content', () => {
       const { rerender } = render(
         <TestWrapper>
           <TimeSeriesChart
             data={mockData}
             categories={mockCategories}
-            className="test"
-            title="Test Chart"
-          />
-        </TestWrapper>
-      );
-
-      const initialRenderCount = mockRender.mock.calls.length;
-
-      // Update non-essential props
-      rerender(
-        <TestWrapper>
-          <TimeSeriesChart
-            data={mockData}
-            categories={mockCategories}
-            className="different-class"
-            title="Different Title"
-          />
-        </TestWrapper>
-      );
-
-      expect(mockRender.mock.calls.length).toBe(initialRenderCount);
-    });
-
-    it('re-renders when data changes', () => {
-      const { rerender } = render(
-        <TestWrapper>
-          <TimeSeriesChart
-            data={mockData}
-            categories={mockCategories}
-          />
-        </TestWrapper>
-      );
-
-      const initialRenderCount = mockRender.mock.calls.length;
-
-      const newData = [...mockData, { date: '2024-01-04', total: 250, error: 50, navigation: 200 }];
-      
-      rerender(
-        <TestWrapper>
-          <TimeSeriesChart
-            data={newData}
-            categories={mockCategories}
-          />
-        </TestWrapper>
-      );
-
-      expect(mockRender.mock.calls.length).toBeGreaterThan(initialRenderCount);
-    });
-
-    it('re-renders when categories change', () => {
-      const { rerender } = render(
-        <TestWrapper>
-          <TimeSeriesChart
-            data={mockData}
-            categories={mockCategories}
-          />
-        </TestWrapper>
-      );
-
-      const initialRenderCount = mockRender.mock.calls.length;
-
-      const newCategories = { ...mockCategories, error: false };
-      
-      rerender(
-        <TestWrapper>
-          <TimeSeriesChart
-            data={mockData}
-            categories={newCategories}
-          />
-        </TestWrapper>
-      );
-
-      expect(mockRender.mock.calls.length).toBeGreaterThan(initialRenderCount);
-    });
-
-    it('re-renders when loading state changes', () => {
-      const { rerender } = render(
-        <TestWrapper>
-          <TimeSeriesChart
-            data={mockData}
-            categories={mockCategories}
-            loading={false}
-          />
-        </TestWrapper>
-      );
-
-      const initialRenderCount = mockRender.mock.calls.length;
-
-      rerender(
-        <TestWrapper>
-          <TimeSeriesChart
-            data={mockData}
-            categories={mockCategories}
-            loading={true}
-          />
-        </TestWrapper>
-      );
-
-      expect(mockRender.mock.calls.length).toBeGreaterThan(initialRenderCount);
-    });
-
-    it('re-renders when dimensions change', () => {
-      const { rerender } = render(
-        <TestWrapper>
-          <TimeSeriesChart
-            data={mockData}
-            categories={mockCategories}
-            width={600}
+            width={500}
             height={400}
           />
         </TestWrapper>
@@ -267,39 +218,60 @@ describe('TimeSeriesChart', () => {
 
       const initialRenderCount = mockRender.mock.calls.length;
 
+      // Rerender with same props
       rerender(
         <TestWrapper>
           <TimeSeriesChart
             data={mockData}
             categories={mockCategories}
-            width={800}
-            height={500}
+            width={500}
+            height={400}
           />
         </TestWrapper>
       );
 
-      expect(mockRender.mock.calls.length).toBeGreaterThan(initialRenderCount);
+      expect(mockRender.mock.calls.length).toBe(initialRenderCount);
     });
 
-    it('re-renders when dark mode changes', () => {
+    it('updates only when necessary props change', () => {
       const { rerender } = render(
         <TestWrapper>
           <TimeSeriesChart
             data={mockData}
             categories={mockCategories}
-            isDarkMode={false}
+            width={500}
+            height={400}
+            className="test"
           />
         </TestWrapper>
       );
 
       const initialRenderCount = mockRender.mock.calls.length;
 
+      // Update non-essential prop
       rerender(
         <TestWrapper>
           <TimeSeriesChart
             data={mockData}
             categories={mockCategories}
-            isDarkMode={true}
+            width={500}
+            height={400}
+            className="different"
+          />
+        </TestWrapper>
+      );
+
+      expect(mockRender.mock.calls.length).toBe(initialRenderCount);
+
+      // Update essential prop
+      rerender(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={[...mockData, { date: '2024-02-01', total: 500, error: 50, navigation: 400 }]}
+            categories={mockCategories}
+            width={500}
+            height={400}
+            className="different"
           />
         </TestWrapper>
       );

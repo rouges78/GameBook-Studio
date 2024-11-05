@@ -1,41 +1,64 @@
 import React from 'react';
-import { CategoryFiltersProps } from '../types';
+import FiltersSkeleton from './FiltersSkeleton';
+
+interface CategoryFilters {
+  [key: string]: boolean;
+}
+
+interface CategoryFiltersProps {
+  categories: CategoryFilters;
+  onToggle?: (category: string) => void;
+  onCategoryChange?: (category: string) => void;
+  loading?: boolean;
+  isDarkMode?: boolean;
+  className?: string;
+}
 
 export const CategoryFilters: React.FC<CategoryFiltersProps> = ({
   categories,
   onToggle,
-  isDarkMode
+  onCategoryChange,
+  loading = false,
+  isDarkMode = false,
+  className = ''
 }) => {
+  const handleChange = (category: string) => {
+    if (onCategoryChange) {
+      onCategoryChange(category);
+    }
+    if (onToggle) {
+      onToggle(category);
+    }
+  };
+
+  if (loading) {
+    return <FiltersSkeleton className={className} />;
+  }
+
   return (
-    <div className="mb-4">
-      <h3 className="font-semibold mb-2">Event Categories</h3>
-      <div className="flex flex-wrap gap-2">
-        {Object.entries(categories).map(([category, isEnabled]) => (
-          <button
-            key={category}
-            onClick={() => onToggle(category)}
-            className={`px-3 py-1 rounded-full text-sm ${
-              isEnabled
-                ? isDarkMode
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-blue-500 text-white'
-                : isDarkMode
-                ? 'bg-gray-600 text-gray-400'
-                : 'bg-gray-300 text-gray-600'
-            }`}
-            title={`${isEnabled ? 'Hide' : 'Show'} ${category} events`}
-            aria-pressed={isEnabled}
-          >
-            <span className="flex items-center">
-              <span className={`w-2 h-2 rounded-full mr-2 ${isEnabled ? 'bg-white' : 'bg-gray-400'}`} />
+    <div className={`space-y-4 ${className}`} role="region" aria-label="Category filters">
+      <h3 className="text-lg font-semibold dark:text-gray-200">Categories</h3>
+      <div className="space-y-3">
+        {Object.entries(categories).map(([category, isChecked]) => (
+          <div key={category} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id={`category-${category}`}
+              checked={isChecked}
+              onChange={() => handleChange(category)}
+              className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:checked:bg-indigo-600"
+            />
+            <label
+              htmlFor={`category-${category}`}
+              className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize"
+            >
               {category}
-            </span>
-          </button>
+            </label>
+          </div>
         ))}
-      </div>
-      <div className="mt-2 text-sm text-gray-500">
-        Click a category to toggle its visibility in the charts
       </div>
     </div>
   );
 };
+
+export default CategoryFilters;

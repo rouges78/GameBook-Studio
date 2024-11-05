@@ -1,134 +1,156 @@
 import React from 'react';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  Legend
-} from 'recharts';
-import { SystemMetricsProps, PIE_CHART_COLORS } from '../types';
+import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid';
+import MetricsSkeleton from './MetricsSkeleton';
+
+interface MetricItem {
+  title: string;
+  value: number;
+  change: number;
+  unit?: string;
+}
+
+interface MetricsObject {
+  performance?: {
+    avgResponseTime: number;
+    errorRate: number;
+    totalCrashes: number;
+  };
+  byPlatform?: {
+    [key: string]: number;
+  };
+  byVersion?: {
+    [key: string]: number;
+  };
+  byArch?: {
+    [key: string]: number;
+  };
+}
+
+interface SystemMetricsProps {
+  metrics: MetricItem[] | MetricsObject;
+  loading?: boolean;
+  isDarkMode?: boolean;
+  className?: string;
+}
+
+const transformMetricsObject = (metricsObj: MetricsObject): MetricItem[] => {
+  const transformedMetrics: MetricItem[] = [];
+
+  if (metricsObj.performance) {
+    transformedMetrics.push(
+      {
+        title: 'Average Response Time',
+        value: metricsObj.performance.avgResponseTime,
+        change: 0,
+        unit: 'ms'
+      },
+      {
+        title: 'Error Rate',
+        value: metricsObj.performance.errorRate,
+        change: 0,
+        unit: '%'
+      },
+      {
+        title: 'Total Crashes',
+        value: metricsObj.performance.totalCrashes,
+        change: 0
+      }
+    );
+  }
+
+  if (metricsObj.byPlatform) {
+    Object.entries(metricsObj.byPlatform).forEach(([platform, value]) => {
+      transformedMetrics.push({
+        title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} Usage`,
+        value,
+        change: 0,
+        unit: '%'
+      });
+    });
+  }
+
+  if (metricsObj.byVersion) {
+    Object.entries(metricsObj.byVersion).forEach(([version, value]) => {
+      transformedMetrics.push({
+        title: `Version ${version}`,
+        value,
+        change: 0,
+        unit: '%'
+      });
+    });
+  }
+
+  if (metricsObj.byArch) {
+    Object.entries(metricsObj.byArch).forEach(([arch, value]) => {
+      transformedMetrics.push({
+        title: `${arch.toUpperCase()} Architecture`,
+        value,
+        change: 0,
+        unit: '%'
+      });
+    });
+  }
+
+  return transformedMetrics;
+};
 
 export const SystemMetrics: React.FC<SystemMetricsProps> = ({
   metrics,
-  isDarkMode
+  loading = false,
+  isDarkMode = false,
+  className = ''
 }) => {
-  const formatDistributionData = (data: Record<string, number>) =>
-    Object.entries(data).map(([name, value]) => ({
-      name,
-      value
-    }));
+  if (loading) {
+    return <MetricsSkeleton className={className} />;
+  }
+
+  const metricsArray = Array.isArray(metrics) ? metrics : transformMetricsObject(metrics);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      {/* Performance Metrics Card */}
-      <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-        <h2 className="text-xl font-semibold mb-3">Performance Metrics</h2>
-        <div className="space-y-4">
-          <div>
-            <h3 className="font-semibold mb-1">Response Time</h3>
-            <p className="text-2xl">
-              {metrics.performance.avgResponseTime.toFixed(2)}
-              <span className="text-sm ml-1">ms</span>
+    <div 
+      className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${className}`}
+      role="region"
+      aria-label="System metrics"
+    >
+      {metricsArray.map((metric, index) => (
+        <div
+          key={index}
+          className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm"
+          data-testid="metric-card"
+        >
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            {metric.title}
+          </h3>
+          <div className="mt-2 flex items-baseline">
+            <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+              {metric.value}
+              {metric.unit && (
+                <span className="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  {metric.unit}
+                </span>
+              )}
             </p>
           </div>
-          <div>
-            <h3 className="font-semibold mb-1">Error Rate</h3>
-            <p className="text-2xl">
-              {metrics.performance.errorRate.toFixed(2)}
-              <span className="text-sm ml-1">%</span>
-            </p>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-1">Total Crashes</h3>
-            <p className="text-2xl">{metrics.performance.totalCrashes}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Platform Distribution */}
-      <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-        <h2 className="text-xl font-semibold mb-3">Platform Distribution</h2>
-        <div className="h-[200px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={formatDistributionData(metrics.byPlatform)}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label={(entry) => `${entry.name}: ${entry.value}`}
+          {metric.change !== 0 && (
+            <div className="mt-2 flex items-center">
+              {metric.change > 0 ? (
+                <ArrowUpIcon className="w-4 h-4 text-green-500" aria-hidden="true" />
+              ) : (
+                <ArrowDownIcon className="w-4 h-4 text-red-500" aria-hidden="true" />
+              )}
+              <span
+                className={`text-sm font-medium ml-1 ${
+                  metric.change > 0 ? 'text-green-500' : 'text-red-500'
+                }`}
               >
-                {formatDistributionData(metrics.byPlatform).map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: isDarkMode ? '#1a202c' : '#ffffff',
-                  border: '1px solid #cbd5e0',
-                  color: isDarkMode ? '#e2e8f0' : '#4a5568'
-                }}
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Version Distribution */}
-      <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-        <h2 className="text-xl font-semibold mb-3">Version Distribution</h2>
-        <div className="h-[200px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={formatDistributionData(metrics.byVersion)}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label={(entry) => `${entry.name}: ${entry.value}`}
-              >
-                {formatDistributionData(metrics.byVersion).map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: isDarkMode ? '#1a202c' : '#ffffff',
-                  border: '1px solid #cbd5e0',
-                  color: isDarkMode ? '#e2e8f0' : '#4a5568'
-                }}
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Architecture Distribution */}
-      <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} md:col-span-3`}>
-        <h2 className="text-xl font-semibold mb-3">Architecture Distribution</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {formatDistributionData(metrics.byArch).map(({ name, value }, index) => (
-            <div
-              key={name}
-              className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'}`}
-              style={{ borderLeft: `4px solid ${PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]}` }}
-            >
-              <h3 className="font-semibold mb-2">{name}</h3>
-              <p className="text-2xl">{value}</p>
-              <p className="text-sm text-gray-500">
-                {((value / Object.values(metrics.byArch).reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%
-              </p>
+                {Math.abs(metric.change)}%
+              </span>
             </div>
-          ))}
+          )}
         </div>
-      </div>
+      ))}
     </div>
   );
 };
+
+export default SystemMetrics;

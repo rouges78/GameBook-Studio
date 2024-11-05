@@ -43,10 +43,6 @@ const ProjectBox: React.FC<ProjectBoxProps> = React.memo(({ project, isDarkMode,
         delay: index * 0.1,
         ease: "easeOut"
       }
-    },
-    hover: {
-      scale: 1.05,
-      transition: { duration: 0.2 }
     }
   };
 
@@ -56,7 +52,6 @@ const ProjectBox: React.FC<ProjectBoxProps> = React.memo(({ project, isDarkMode,
         variants={boxVariants}
         initial="hidden"
         animate="visible"
-        whileHover="hover"
         className="flex flex-col"
       >
         <div className="border-2 rounded-lg overflow-hidden aspect-[3/4] border-gray-600 bg-gray-800">
@@ -75,11 +70,10 @@ const ProjectBox: React.FC<ProjectBoxProps> = React.memo(({ project, isDarkMode,
       variants={boxVariants}
       initial="hidden"
       animate="visible"
-      whileHover="hover"
-      className="flex flex-col cursor-pointer h-full"
+      className="flex flex-col cursor-pointer h-full group"
       onClick={() => onProjectSelect(project)}
     >
-      <div className="border-2 rounded-lg overflow-hidden aspect-[3/4] group relative transition-colors duration-200 hover:border-gray-400 hover:shadow-lg border-gray-600 bg-gray-800">
+      <div className="border-2 rounded-lg overflow-hidden aspect-[3/4] relative transition-colors duration-200 hover:border-gray-400 hover:shadow-lg border-gray-600 bg-gray-800 group-hover:ring-4 group-hover:ring-blue-500/30">
         {project.coverImage ? (
           <div className="w-full h-full">
             <img 
@@ -435,9 +429,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="flex-none h-10 bg-gray-800 text-gray-100 flex items-center justify-between px-6"
+          className="flex-none h-10 bg-gray-800 text-gray-100 flex items-center justify-end px-6"
         >
-          <div className="text-sm">Version: 0.1.0</div>
           <div className="text-sm">© 2023</div>
         </motion.div>
       </div>

@@ -18,6 +18,7 @@ type TaskMetrics = {
   status: 'completed' | 'failed';
   timestamp: number;
   memoryUsage?: number;
+  cpuUsage?: number;
 };
 
 type PoolStats = {
@@ -31,6 +32,7 @@ type PoolStats = {
     successRate: number;
     peakMemoryUsage?: number;
     currentMemoryUsage?: number;
+    currentCpuUsage?: number;
     taskHistory: TaskMetrics[];
   };
 };
@@ -53,6 +55,10 @@ export class WorkerPool {
   private readonly maxRestarts = 3;
   private compressionThreshold = 50 * 1024; // 50KB
   private gcInterval: number;
+  private maintenanceInterval: number;
+  private readonly TOTAL_MEMORY = 2 * 1024 * 1024 * 1024; // 2GB as specified in requirements
+  private cpuUsageHistory: number[] = [];
+  private readonly CPU_HISTORY_SIZE = 10;
 
   constructor(poolSize: number, workerUrl: string) {
     this.workers = [];
@@ -61,11 +67,11 @@ export class WorkerPool {
     this.workerUrl = workerUrl;
     this.workerRestartCount = new Map();
 
-    // Memory thresholds in bytes
+    // Memory thresholds based on percentage of total memory (2GB)
     this.memoryThresholds = {
-      warning: 150 * 1024 * 1024,    // 150MB
-      critical: 250 * 1024 * 1024,   // 250MB
-      maximum: 300 * 1024 * 1024     // 300MB
+      warning: this.TOTAL_MEMORY * 0.6,    // 60%
+      critical: this.TOTAL_MEMORY * 0.7,   // 70%
+      maximum: this.TOTAL_MEMORY * 0.8     // 80%
     };
 
     // Initialize workers
@@ -75,6 +81,7 @@ export class WorkerPool {
 
     // Start periodic garbage collection and monitoring
     this.gcInterval = window.setInterval(() => this.performMemoryMaintenance(), 30000);
+    this.maintenanceInterval = window.setInterval(() => this.performSystemMaintenance(), 5000);
   }
 
   private addWorker(): void {
@@ -141,23 +148,6 @@ export class WorkerPool {
     }
   }
 
-  private recordTaskMetrics(task: WorkerTask, status: 'completed' | 'failed'): void {
-    if (!task.startTime || !task.endTime) return;
-
-    const metrics: TaskMetrics = {
-      taskId: task.id,
-      executionTime: task.endTime - task.startTime,
-      status,
-      timestamp: Date.now(),
-      memoryUsage: this.getMemoryUsage()
-    };
-
-    this.taskHistory.unshift(metrics);
-    if (this.taskHistory.length > this.maxHistorySize) {
-      this.taskHistory.pop();
-    }
-  }
-
   private async processNextTask(worker: Worker): Promise<void> {
     if (this.taskQueue.length === 0 || !circuitBreaker.canExecute()) return;
 
@@ -179,44 +169,6 @@ export class WorkerPool {
       } else {
         worker.postMessage(task.data);
       }
-    }
-  }
-
-  private async handleCriticalMemory(): Promise<void> {
-    // Force garbage collection if available
-    if (window.gc) {
-      window.gc();
-    }
-
-    // Terminate and restart workers with high memory usage
-    for (const worker of this.workers) {
-      const task = this.activeWorkers.get(worker);
-      if (task) {
-        task.reject(new Error('Worker terminated due to high memory usage'));
-        await this.restartWorker(worker);
-      }
-    }
-
-    // Clear task history
-    this.taskHistory = [];
-  }
-
-  private async performMemoryMaintenance(): Promise<void> {
-    const memoryUsage = this.getMemoryUsage();
-    if (!memoryUsage) return;
-
-    if (memoryUsage > this.memoryThresholds.warning) {
-      // Clear old task history
-      this.taskHistory = this.taskHistory.slice(0, this.maxHistorySize / 2);
-      
-      // Force garbage collection if available
-      if (window.gc) {
-        window.gc();
-      }
-    }
-
-    if (memoryUsage > this.memoryThresholds.critical) {
-      await this.handleCriticalMemory();
     }
   }
 
@@ -268,14 +220,170 @@ export class WorkerPool {
     });
   }
 
+  private recordTaskMetrics(task: WorkerTask, status: 'completed' | 'failed'): void {
+    if (!task.startTime || !task.endTime) return;
+
+    const metrics: TaskMetrics = {
+      taskId: task.id,
+      executionTime: task.endTime - task.startTime,
+      status,
+      timestamp: Date.now(),
+      memoryUsage: this.getMemoryUsage(),
+      cpuUsage: this.cpuUsageHistory[this.cpuUsageHistory.length - 1]
+    };
+
+    this.taskHistory.unshift(metrics);
+    if (this.taskHistory.length > this.maxHistorySize) {
+      this.taskHistory.pop();
+    }
+  }
+
+  private async handleCriticalMemory(): Promise<void> {
+    // Force garbage collection if available
+    if (window.gc) {
+      window.gc();
+    }
+
+    // Terminate and restart workers with high memory usage
+    const promises = this.workers.map(async worker => {
+      const task = this.activeWorkers.get(worker);
+      if (task) {
+        task.reject(new Error('Worker terminated due to high memory usage'));
+        await this.restartWorker(worker);
+      }
+    });
+
+    await Promise.all(promises);
+
+    // Clear task queue if memory usage is still high
+    if (this.getMemoryUsage() && this.getMemoryUsage()! > this.memoryThresholds.critical) {
+      this.taskQueue = [];
+    }
+  }
+
+  private async performMemoryMaintenance(): Promise<void> {
+    const memoryUsage = this.getMemoryUsage();
+    if (!memoryUsage) return;
+
+    if (memoryUsage > this.memoryThresholds.warning) {
+      // Clear old task history
+      this.taskHistory = this.taskHistory.slice(0, this.maxHistorySize / 2);
+      
+      // Force garbage collection if available
+      if (window.gc) {
+        window.gc();
+      }
+    }
+
+    if (memoryUsage > this.memoryThresholds.critical) {
+      await this.handleCriticalMemory();
+    }
+  }
+
+  public async optimizeMemory(): Promise<void> {
+    // Force garbage collection if available
+    if (window.gc) {
+      window.gc();
+    }
+
+    // Clear task history
+    this.taskHistory = [];
+
+    // Terminate and restart workers with high memory usage
+    const promises = this.workers.map(async worker => {
+      const task = this.activeWorkers.get(worker);
+      if (task) {
+        task.reject(new Error('Worker terminated for memory optimization'));
+        await this.restartWorker(worker);
+      }
+    });
+
+    await Promise.all(promises);
+
+    // Clear task queue if memory usage is still high
+    if (this.getMemoryUsage() && this.getMemoryUsage()! > this.memoryThresholds.critical) {
+      this.taskQueue = [];
+    }
+  }
+
+  public async scheduleMaintenance(): Promise<void> {
+    // Schedule maintenance for next idle period
+    setTimeout(async () => {
+      const memoryUsage = this.getMemoryUsage();
+      if (!memoryUsage || memoryUsage < this.memoryThresholds.warning) return;
+
+      // Perform maintenance tasks
+      await this.performMemoryMaintenance();
+      
+      // Restart workers if needed
+      if (memoryUsage > this.memoryThresholds.critical) {
+        await this.optimizeMemory();
+      }
+    }, 1000);
+  }
+
+  private async performSystemMaintenance(): Promise<void> {
+    // Monitor CPU usage
+    const cpuUsage = await this.getCpuUsage();
+    if (cpuUsage) {
+      this.cpuUsageHistory.push(cpuUsage);
+      if (this.cpuUsageHistory.length > this.CPU_HISTORY_SIZE) {
+        this.cpuUsageHistory.shift();
+      }
+
+      // If CPU usage is consistently high (>70%), reduce worker count
+      const avgCpuUsage = this.cpuUsageHistory.reduce((a, b) => a + b, 0) / this.cpuUsageHistory.length;
+      if (avgCpuUsage > 70 && this.workers.length > 1) {
+        const worker = this.workers[this.workers.length - 1];
+        const task = this.activeWorkers.get(worker);
+        if (task) {
+          task.reject(new Error('Worker terminated due to high CPU usage'));
+        }
+        worker.terminate();
+        this.workers.pop();
+        this.activeWorkers.delete(worker);
+      }
+    }
+
+    // Check memory usage
+    const memoryUsage = this.getMemoryUsage();
+    if (memoryUsage && memoryUsage > this.memoryThresholds.warning) {
+      await this.scheduleMaintenance();
+    }
+  }
+
+  private async getCpuUsage(): Promise<number | undefined> {
+    if (!window.performance || !window.performance.now) return undefined;
+
+    const start = performance.now();
+    const startCpu = await this.getCpuTime();
+    
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const end = performance.now();
+    const endCpu = await this.getCpuTime();
+    
+    if (!startCpu || !endCpu) return undefined;
+    
+    const cpuUsage = ((endCpu - startCpu) / (end - start)) * 100;
+    return Math.min(100, Math.max(0, cpuUsage));
+  }
+
+  private async getCpuTime(): Promise<number | undefined> {
+    if (!window.performance || !performance.now) return undefined;
+    return performance.now();
+  }
+
   public terminate(): void {
     clearInterval(this.gcInterval);
+    clearInterval(this.maintenanceInterval);
     this.workers.forEach(worker => worker.terminate());
     this.workers = [];
     this.taskQueue = [];
     this.activeWorkers.clear();
     this.taskHistory = [];
     this.workerRestartCount.clear();
+    this.cpuUsageHistory = [];
   }
 
   private getMemoryUsage(): number | undefined {
@@ -287,6 +395,10 @@ export class WorkerPool {
 
   public getStats(): PoolStats {
     const currentMemoryUsage = this.getMemoryUsage();
+    const currentCpuUsage = this.cpuUsageHistory.length > 0 
+      ? this.cpuUsageHistory[this.cpuUsageHistory.length - 1]
+      : undefined;
+    
     const completedTasks = this.taskHistory.filter(t => t.status === 'completed');
     const failedTasks = this.taskHistory.filter(t => t.status === 'failed');
     
@@ -306,6 +418,7 @@ export class WorkerPool {
         successRate: totalTasks > 0 ? (completedTasks.length / totalTasks) * 100 : 100,
         peakMemoryUsage: Math.max(...this.taskHistory.map(t => t.memoryUsage || 0)),
         currentMemoryUsage,
+        currentCpuUsage,
         taskHistory: [...this.taskHistory]
       }
     };

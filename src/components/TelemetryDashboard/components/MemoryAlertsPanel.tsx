@@ -29,8 +29,8 @@ ChartJS.register(
 const MAX_MEMORY_POINTS = 20;
 
 export const MemoryAlertsPanel: React.FC = () => {
-  const { alerts, currentMemoryStatus, clearAlertHistory } = useMemoryAlerts();
-  const [memoryHistory, setMemoryHistory] = useState<{ timestamp: number; usage: number }[]>([]);
+  const { alerts, currentMemoryStatus, thresholds, clearAlertHistory } = useMemoryAlerts();
+  const [memoryHistory, setMemoryHistory] = useState<{ timestamp: number; usage: number; percentage: number }[]>([]);
   const [showTrendAnalysis, setShowTrendAnalysis] = useState(false);
 
   useEffect(() => {
@@ -38,7 +38,11 @@ export const MemoryAlertsPanel: React.FC = () => {
     if (alerts.length > 0) {
       const latestAlert = alerts[0];
       setMemoryHistory(prev => {
-        const newHistory = [...prev, { timestamp: latestAlert.timestamp, usage: latestAlert.memoryUsage }];
+        const newHistory = [...prev, {
+          timestamp: latestAlert.timestamp,
+          usage: latestAlert.memoryUsage,
+          percentage: latestAlert.memoryPercentage
+        }];
         return newHistory.slice(-MAX_MEMORY_POINTS);
       });
     }
@@ -68,14 +72,14 @@ export const MemoryAlertsPanel: React.FC = () => {
     if (memoryHistory.length < 2) return null;
 
     const recentPoints = memoryHistory.slice(-5);
-    const firstPoint = recentPoints[0].usage;
-    const lastPoint = recentPoints[recentPoints.length - 1].usage;
-    const trend = ((lastPoint - firstPoint) / firstPoint) * 100;
+    const firstPoint = recentPoints[0].percentage;
+    const lastPoint = recentPoints[recentPoints.length - 1].percentage;
+    const trend = lastPoint - firstPoint;
 
     return {
       percentage: trend.toFixed(1),
       direction: trend > 0 ? 'increasing' : trend < 0 ? 'decreasing' : 'stable',
-      color: trend > 10 ? 'text-red-500' : trend < -10 ? 'text-green-500' : 'text-yellow-500'
+      color: trend > 5 ? 'text-red-500' : trend < -5 ? 'text-green-500' : 'text-yellow-500'
     };
   }, [memoryHistory]);
 
@@ -84,8 +88,8 @@ export const MemoryAlertsPanel: React.FC = () => {
     labels: memoryHistory.map(point => new Date(point.timestamp).toLocaleTimeString()),
     datasets: [
       {
-        label: 'Memory Usage (MB)',
-        data: memoryHistory.map(point => point.usage / (1024 * 1024)),
+        label: 'Memory Usage (%)',
+        data: memoryHistory.map(point => point.percentage),
         fill: true,
         borderColor: 'rgb(59, 130, 246)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -102,16 +106,17 @@ export const MemoryAlertsPanel: React.FC = () => {
       },
       tooltip: {
         callbacks: {
-          label: (context: any) => `Memory: ${context.raw.toFixed(2)} MB`
+          label: (context: any) => `Memory: ${context.raw.toFixed(1)}%`
         }
       }
     },
     scales: {
       y: {
         beginAtZero: true,
+        max: 100,
         title: {
           display: true,
-          text: 'Memory Usage (MB)'
+          text: 'Memory Usage (%)'
         }
       }
     },
@@ -124,8 +129,24 @@ export const MemoryAlertsPanel: React.FC = () => {
     <div className="memory-alerts-panel p-4 bg-white shadow-md rounded-lg">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Memory Alerts</h2>
-        <div className={`px-3 py-1 rounded-full text-sm ${getAlertLevelColor(currentMemoryStatus)}`}>
-          Current Status: {currentMemoryStatus}
+        <div className={`px-3 py-1 rounded-full text-sm ${getAlertLevelColor(currentMemoryStatus.level)}`}>
+          {currentMemoryStatus.percentage.toFixed(1)}% Used
+        </div>
+      </div>
+
+      {/* Threshold Indicators */}
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="text-center p-2 bg-yellow-50 rounded">
+          <div className="text-sm text-yellow-700">Warning</div>
+          <div className="font-bold text-yellow-800">{thresholds.warning}%</div>
+        </div>
+        <div className="text-center p-2 bg-orange-50 rounded">
+          <div className="text-sm text-orange-700">Critical</div>
+          <div className="font-bold text-orange-800">{thresholds.critical}%</div>
+        </div>
+        <div className="text-center p-2 bg-red-50 rounded">
+          <div className="text-sm text-red-700">Maximum</div>
+          <div className="font-bold text-red-800">{thresholds.maximum}%</div>
         </div>
       </div>
 
@@ -155,9 +176,9 @@ export const MemoryAlertsPanel: React.FC = () => {
                       {trendAnalysis.direction} ({trendAnalysis.percentage}%)
                     </span>
                   </p>
-                  {Math.abs(parseFloat(trendAnalysis.percentage)) > 10 && (
+                  {Math.abs(parseFloat(trendAnalysis.percentage)) > 5 && (
                     <p className="mt-1 text-gray-600">
-                      {parseFloat(trendAnalysis.percentage) > 10
+                      {parseFloat(trendAnalysis.percentage) > 5
                         ? 'Consider investigating high memory usage'
                         : 'Memory usage is improving'}
                     </p>
@@ -186,7 +207,7 @@ export const MemoryAlertsPanel: React.FC = () => {
                   </span>
                 </div>
                 <div className="text-sm mt-1">
-                  Memory Usage: {formatMemoryUsage(alert.memoryUsage)}
+                  Memory Usage: {formatMemoryUsage(alert.memoryUsage)} ({alert.memoryPercentage.toFixed(1)}%)
                 </div>
               </div>
             ))}

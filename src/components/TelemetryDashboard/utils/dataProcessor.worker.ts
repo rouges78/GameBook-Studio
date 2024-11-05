@@ -16,6 +16,10 @@ type WorkerMessage = {
       start: string;
       end: string;
     };
+    pagination?: {
+      page: number;
+      pageSize: number;
+    };
   };
 };
 
@@ -52,6 +56,13 @@ interface ProcessedData {
       errorRate: number;
       totalCrashes: number;
     };
+  };
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
   };
 }
 
@@ -205,9 +216,9 @@ const calculateSystemMetrics = (data: TelemetryData[]): ProcessedData['systemMet
   return metrics;
 };
 
-// Process data based on categories and date range
+// Process data based on categories, date range, and pagination
 const processData = (message: WorkerMessage['payload']): ProcessedData => {
-  const { data, categories, dateRange } = message;
+  const { data, categories, dateRange, pagination } = message;
 
   // Filter data by date range first
   const dateFiltered = data.filter(item => 
@@ -229,12 +240,34 @@ const processData = (message: WorkerMessage['payload']): ProcessedData => {
     activeCategories.includes(item.category)
   );
 
+  // Apply pagination if provided
+  let paginatedData = filteredData;
+  let paginationMetadata;
+
+  if (pagination) {
+    const { page, pageSize } = pagination;
+    const totalItems = filteredData.length;
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+
+    paginatedData = filteredData.slice(startIndex, endIndex);
+    paginationMetadata = {
+      currentPage: page,
+      totalPages,
+      totalItems,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1
+    };
+  }
+
   return {
-    filteredData,
-    metrics: calculateMetrics(filteredData),
-    errorPatterns: calculateErrorPatterns(filteredData),
-    updateErrors: calculateUpdateErrors(filteredData),
-    systemMetrics: calculateSystemMetrics(filteredData)
+    filteredData: paginatedData,
+    metrics: calculateMetrics(filteredData), // Calculate metrics from all data
+    errorPatterns: calculateErrorPatterns(filteredData), // Calculate patterns from all data
+    updateErrors: calculateUpdateErrors(filteredData), // Calculate errors from all data
+    systemMetrics: calculateSystemMetrics(filteredData), // Calculate metrics from all data
+    pagination: paginationMetadata
   };
 };
 

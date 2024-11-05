@@ -1,6 +1,6 @@
 import { openDB, IDBPDatabase } from 'idb';
 import type { TelemetryEvent } from '../types/electron';
-import type { ProcessedTelemetryData } from '../components/TelemetryDashboard/types';
+import type { ProcessedTelemetryData, PaginationParams } from '../components/TelemetryDashboard/types';
 
 interface CacheKey {
   dateRange?: {
@@ -8,6 +8,7 @@ interface CacheKey {
     end: string;
   };
   categories: { [key: string]: boolean };
+  pagination?: PaginationParams;
 }
 
 interface CachedResult {
@@ -56,6 +57,7 @@ class TelemetryCache {
     const stringified = JSON.stringify({
       dateRange: key.dateRange || null,
       categories: key.categories,
+      pagination: key.pagination || null,
     });
     // Simple hash function for cache key
     let hash = 0;
@@ -79,7 +81,7 @@ class TelemetryCache {
     }
   }
 
-  async getRawData(startDate?: string, endDate?: string): Promise<TelemetryEvent[]> {
+  async getRawData(startDate?: string, endDate?: string, pagination?: PaginationParams): Promise<TelemetryEvent[]> {
     await this.initPromise;
     if (!this.db) return [];
 
@@ -94,6 +96,13 @@ class TelemetryCache {
         const end = endDate ? new Date(endDate).getTime() : Infinity;
         return eventDate >= start && eventDate <= end;
       });
+    }
+
+    if (pagination) {
+      const { page, pageSize } = pagination;
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      events = events.slice(startIndex, endIndex);
     }
 
     return events;

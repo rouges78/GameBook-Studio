@@ -7,8 +7,10 @@ import {
   SystemMetrics,
   TimeSeriesChart
 } from './components';
-import type { TelemetryStats, DateRange, CategoryFilters as CategoryFiltersType } from './types';
+import type { TelemetryStats, DateRange, CategoryFilters as CategoryFiltersType, PaginationParams } from './types';
 import useDataProcessor from './hooks/useDataProcessor';
+
+const DEFAULT_PAGE_SIZE = 50;
 
 export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
   const [rawData, setRawData] = useState<TelemetryEvent[]>([]);
@@ -21,12 +23,16 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
   const [categoryFilters, setCategoryFilters] = useState<CategoryFiltersType>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Use the Web Worker for data processing
   const {
     processedData,
     isProcessing,
-    error: processingError
+    error: processingError,
+    loadNextPage,
+    loadPreviousPage,
+    resetPagination
   } = useDataProcessor({
     data: rawData.filter(event => {
       if (!debouncedSearchTerm) return true;
@@ -42,7 +48,11 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
     dateRange: dateRange.startDate && dateRange.endDate ? {
       start: dateRange.startDate,
       end: dateRange.endDate
-    } : undefined
+    } : undefined,
+    pagination: {
+      page: currentPage,
+      pageSize: DEFAULT_PAGE_SIZE
+    }
   });
 
   // Debounce search term
@@ -65,6 +75,7 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
       startDate: start.toISOString().split('T')[0],
       endDate: end.toISOString().split('T')[0]
     });
+    resetPagination();
   };
 
   const handleDateChange = (type: 'startDate' | 'endDate', value: string) => {
@@ -72,6 +83,7 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
       ...prev,
       [type]: value
     }));
+    resetPagination();
   };
 
   const handleCategoryToggle = (category: string) => {
@@ -79,6 +91,7 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
       ...prev,
       [category]: !prev[category]
     }));
+    resetPagination();
   };
 
   const handleExport = () => {
@@ -144,7 +157,10 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
   if (isLoading || isProcessing) {
     return (
       <div className={`p-6 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-        Loading telemetry data...
+        <div className="flex items-center justify-center space-x-2">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+          <span>Loading telemetry data...</span>
+        </div>
       </div>
     );
   }
@@ -246,6 +262,41 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
         metrics={processedData.systemMetrics}
         isDarkMode={isDarkMode}
       />
+
+      {/* Pagination Controls */}
+      {processedData.pagination && (
+        <div className={`mt-6 flex justify-between items-center ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+          <button
+            onClick={loadPreviousPage}
+            disabled={!processedData.pagination.hasPreviousPage}
+            className={`px-4 py-2 rounded-lg ${
+              processedData.pagination.hasPreviousPage
+                ? isDarkMode
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-blue-500 hover:bg-blue-600'
+                : 'bg-gray-400 cursor-not-allowed'
+            } text-white`}
+          >
+            Previous
+          </button>
+          <span>
+            Page {processedData.pagination.currentPage} of {processedData.pagination.totalPages}
+          </span>
+          <button
+            onClick={loadNextPage}
+            disabled={!processedData.pagination.hasNextPage}
+            className={`px-4 py-2 rounded-lg ${
+              processedData.pagination.hasNextPage
+                ? isDarkMode
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-blue-500 hover:bg-blue-600'
+                : 'bg-gray-400 cursor-not-allowed'
+            } text-white`}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

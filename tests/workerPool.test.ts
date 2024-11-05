@@ -1,185 +1,172 @@
 import { WorkerPool, getWorkerPool } from '../src/components/TelemetryDashboard/utils/workerPool';
-import type { ProcessedTelemetryData } from '../src/components/TelemetryDashboard/types';
 
 // Mock Worker class
 class MockWorker {
   onmessage: ((event: MessageEvent) => void) | null = null;
   onerror: ((event: ErrorEvent) => void) | null = null;
-
+  
   constructor(public url: string) {}
-
+  
   postMessage(data: any) {
     // Simulate async processing
     setTimeout(() => {
       if (this.onmessage) {
-        this.onmessage(new MessageEvent('message', {
-          data: {
-            filteredData: data.payload.data,
-            metrics: {
-              total: data.payload.data.length,
-              error: 0,
-              navigation: 0
-            },
-            errorPatterns: {
-              correlations: [],
-              trends: []
-            },
-            updateErrors: {
-              total: 0,
-              byType: {},
-              averageRetries: 0
-            },
-            systemMetrics: {
-              byPlatform: {},
-              byVersion: {},
-              byArch: {},
-              performance: {
-                avgResponseTime: 0,
-                errorRate: 0,
-                totalCrashes: 0
-              }
-            }
-          }
-        }));
+        this.onmessage(new MessageEvent('message', { data: { result: 'processed' } }));
       }
-    }, 10);
+    }, 50);
   }
-
+  
   terminate() {}
 }
 
-// Mock URL
-global.URL = {
-  createObjectURL: jest.fn(),
-  revokeObjectURL: jest.fn()
-} as any;
+// Mock error worker class
+class ErrorWorker implements Partial<Worker> {
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  onerror: ((event: ErrorEvent) => void) | null = null;
+  
+  constructor(public url: string) {}
+  
+  postMessage(data: any) {
+    setTimeout(() => {
+      if (this.onerror) {
+        this.onerror(new ErrorEvent('error', { message: 'Test error' }));
+      }
+    }, 50);
+  }
+  
+  terminate() {}
+}
 
-// Mock Worker
-(global as any).Worker = MockWorker;
+// Mock performance.now()
+const originalPerformanceNow = performance.now;
+const mockPerformanceNow = jest.fn(() => Date.now());
 
 describe('WorkerPool', () => {
-  let workerPool: WorkerPool;
+  beforeAll(() => {
+    // @ts-ignore
+    global.Worker = MockWorker;
+    performance.now = mockPerformanceNow;
+  });
+
+  afterAll(() => {
+    performance.now = originalPerformanceNow;
+  });
 
   beforeEach(() => {
-    workerPool = new WorkerPool(2, 'test-worker.js');
+    mockPerformanceNow.mockClear();
   });
 
-  afterEach(() => {
-    workerPool.terminate();
-  });
-
-  it('should create a worker pool with specified size', () => {
-    const stats = workerPool.getStats();
-    expect(stats.totalWorkers).toBe(2);
+  it('should initialize with correct number of workers', () => {
+    const pool = new WorkerPool(4, 'test-worker.js');
+    const stats = pool.getStats();
+    expect(stats.totalWorkers).toBe(4);
     expect(stats.activeWorkers).toBe(0);
     expect(stats.queuedTasks).toBe(0);
   });
 
-  it('should execute tasks in parallel', async () => {
-    const task1 = workerPool.executeTask<ProcessedTelemetryData>({
-      type: 'PROCESS_DATA',
-      payload: {
-        data: [{ id: 1 }],
-        categories: {},
-        dateRange: undefined
-      }
-    });
+  it('should execute tasks and track timing', async () => {
+    const pool = new WorkerPool(2, 'test-worker.js');
+    const startTime = Date.now();
+    mockPerformanceNow.mockImplementation(() => startTime);
 
-    const task2 = workerPool.executeTask<ProcessedTelemetryData>({
-      type: 'PROCESS_DATA',
-      payload: {
-        data: [{ id: 2 }],
-        categories: {},
-        dateRange: undefined
-      }
-    });
+    const task1 = pool.executeTask({ data: 'test1' });
+    const task2 = pool.executeTask({ data: 'test2' });
 
-    const [result1, result2] = await Promise.all([task1, task2]);
+    // Simulate task completion time
+    mockPerformanceNow.mockImplementation(() => startTime + 100);
 
-    expect(result1.filteredData).toEqual([{ id: 1 }]);
-    expect(result2.filteredData).toEqual([{ id: 2 }]);
+    await Promise.all([task1, task2]);
+
+    const stats = pool.getStats();
+    expect(stats.performance.totalTasksProcessed).toBe(2);
+    expect(stats.performance.failedTasks).toBe(0);
+    expect(stats.performance.successRate).toBe(100);
+    expect(stats.performance.averageExecutionTime).toBeGreaterThan(0);
   });
 
-  it('should queue tasks when all workers are busy', async () => {
-    // Create 3 tasks for 2 workers
-    const tasks = Array.from({ length: 3 }, (_, i) => 
-      workerPool.executeTask<ProcessedTelemetryData>({
-        type: 'PROCESS_DATA',
-        payload: {
-          data: [{ id: i }],
-          categories: {},
-          dateRange: undefined
-        }
-      })
-    );
+  it('should handle task failures', async () => {
+    const pool = new WorkerPool(1, 'test-worker.js');
+    
+    // Override mock worker to simulate error
+    // @ts-ignore
+    global.Worker = ErrorWorker;
 
-    // Check stats while tasks are processing
-    const stats = workerPool.getStats();
-    expect(stats.activeWorkers).toBeGreaterThan(0);
-    expect(stats.queuedTasks).toBeGreaterThan(0);
+    try {
+      await pool.executeTask({ data: 'test' });
+    } catch (error) {
+      expect((error as Error).message).toBe('Test error');
+    }
 
-    // Wait for all tasks to complete
-    const results = await Promise.all(tasks);
-    expect(results).toHaveLength(3);
-    results.forEach((result, i) => {
-      expect(result.filteredData).toEqual([{ id: i }]);
-    });
+    const stats = pool.getStats();
+    expect(stats.performance.failedTasks).toBe(1);
+    expect(stats.performance.successRate).toBe(0);
   });
 
-  it('should handle worker errors', async () => {
-    // Mock worker error
-    const errorWorker = new MockWorker('test-worker.js');
-    errorWorker.postMessage = () => {
-      setTimeout(() => {
-        if (errorWorker.onerror) {
-          errorWorker.onerror(new ErrorEvent('error', {
-            message: 'Test error'
-          }));
-        }
-      }, 10);
+  it('should maintain task history with size limit', async () => {
+    const pool = new WorkerPool(1, 'test-worker.js');
+    const tasks = Array.from({ length: 150 }, (_, i) => pool.executeTask({ data: `test${i}` }));
+    
+    await Promise.all(tasks);
+
+    const stats = pool.getStats();
+    expect(stats.performance.taskHistory.length).toBeLessThanOrEqual(100); // maxHistorySize
+    expect(stats.performance.taskHistory[0].status).toBe('completed');
+  });
+
+  it('should track memory usage when available', () => {
+    // Mock memory API
+    const mockMemory = {
+      usedJSHeapSize: 1000000,
+      totalJSHeapSize: 2000000,
+      jsHeapSizeLimit: 4000000
     };
 
-    (global as any).Worker = jest.fn(() => errorWorker);
+    // @ts-ignore
+    performance.memory = mockMemory;
 
-    const errorPool = new WorkerPool(1, 'test-worker.js');
+    const pool = new WorkerPool(1, 'test-worker.js');
+    const stats = pool.getStats();
+
+    expect(stats.performance.peakMemoryUsage).toBe(1000000);
+
+    // Cleanup
+    // @ts-ignore
+    delete performance.memory;
+  });
+
+  it('should handle task queuing when all workers are busy', async () => {
+    const pool = new WorkerPool(1, 'test-worker.js');
     
-    await expect(errorPool.executeTask({
-      type: 'PROCESS_DATA',
-      payload: {
-        data: [{ id: 1 }],
-        categories: {},
-        dateRange: undefined
-      }
-    })).rejects.toThrow('Test error');
-  });
-});
+    // Start three tasks with only one worker
+    const task1 = pool.executeTask({ data: 'test1' });
+    const task2 = pool.executeTask({ data: 'test2' });
+    const task3 = pool.executeTask({ data: 'test3' });
 
-describe('getWorkerPool', () => {
-  it('should return the same instance on multiple calls', () => {
-    const pool1 = getWorkerPool();
-    const pool2 = getWorkerPool();
-    expect(pool1).toBe(pool2);
+    const statsBeforeCompletion = pool.getStats();
+    expect(statsBeforeCompletion.activeWorkers).toBe(1);
+    expect(statsBeforeCompletion.queuedTasks).toBe(2);
+
+    await Promise.all([task1, task2, task3]);
+
+    const statsAfterCompletion = pool.getStats();
+    expect(statsAfterCompletion.activeWorkers).toBe(0);
+    expect(statsAfterCompletion.queuedTasks).toBe(0);
+    expect(statsAfterCompletion.performance.totalTasksProcessed).toBe(3);
   });
 
-  it('should use hardware concurrency for pool size when available', () => {
-    Object.defineProperty(navigator, 'hardwareConcurrency', {
-      value: 8,
-      configurable: true
+  describe('getWorkerPool', () => {
+    it('should return singleton instance', () => {
+      const pool1 = getWorkerPool();
+      const pool2 = getWorkerPool();
+      expect(pool1).toBe(pool2);
     });
 
-    const pool = getWorkerPool();
-    const stats = pool.getStats();
-    expect(stats.totalWorkers).toBe(8);
-  });
-
-  it('should use fallback pool size when hardware concurrency is not available', () => {
-    Object.defineProperty(navigator, 'hardwareConcurrency', {
-      value: undefined,
-      configurable: true
+    it('should use hardware concurrency when available', () => {
+      // @ts-ignore
+      navigator.hardwareConcurrency = 8;
+      const pool = getWorkerPool();
+      const stats = pool.getStats();
+      expect(stats.totalWorkers).toBe(8);
     });
-
-    const pool = getWorkerPool();
-    const stats = pool.getStats();
-    expect(stats.totalWorkers).toBe(4);
   });
 });

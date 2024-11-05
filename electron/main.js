@@ -82,6 +82,13 @@ async function createWindow() {
   }
 }
 
+// IPC handler for window close
+ipcMain.handle('window:close', () => {
+  if (mainWindow) {
+    mainWindow.close();
+  }
+});
+
 function setupAutoUpdater() {
   // Check for updates immediately
   autoUpdater.checkForUpdatesAndNotify();

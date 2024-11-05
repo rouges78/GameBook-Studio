@@ -4,6 +4,9 @@ import type { Project } from '../src/components/ParagraphEditor/types';
 export { UpdateInfo, BackupSettings, BackupMetadata, DialogResult, TelemetryEvent };
 
 export interface IpcApi {
+    // Window operations
+    'window:close': () => void;
+
     // Update handlers
     'update:check': () => Promise<any>;
     'update:start-download': () => Promise<void>;

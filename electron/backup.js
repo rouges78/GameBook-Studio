@@ -1,12 +1,32 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BackupManager = void 0;
 const electron_1 = require("electron");
-const path_1 = __importDefault(require("path"));
-const promises_1 = __importDefault(require("fs/promises"));
+const path = __importStar(require("path"));
+const fs = __importStar(require("fs/promises"));
 const crypto_1 = require("crypto");
 const zlib_1 = require("zlib");
 const util_1 = require("util");
@@ -37,16 +57,16 @@ class BackupManager {
             this.settings = { ...DEFAULT_SETTINGS }; // Clone default settings
         }
         // Initialize other properties
-        this.backupPath = path_1.default.join(electron_1.app.getPath('userData'), BACKUP_DIR);
-        this.settingsPath = path_1.default.join(electron_1.app.getPath('userData'), SETTINGS_FILE);
+        this.backupPath = path.join(electron_1.app.getPath('userData'), BACKUP_DIR);
+        this.settingsPath = path.join(electron_1.app.getPath('userData'), SETTINGS_FILE);
         this.currentDate = new Date();
     }
     async ensureBackupDir() {
         try {
-            await promises_1.default.access(this.backupPath);
+            await fs.access(this.backupPath);
         }
         catch {
-            await promises_1.default.mkdir(this.backupPath, { recursive: true });
+            await fs.mkdir(this.backupPath, { recursive: true });
         }
     }
     async generateChecksum(data) {
@@ -61,9 +81,9 @@ class BackupManager {
     }
     async getBackupFiles() {
         await this.ensureBackupDir();
-        const files = await promises_1.default.readdir(this.backupPath);
+        const files = await fs.readdir(this.backupPath);
         return files
-            .filter(file => file.endsWith('.json') || file.endsWith('.gz'))
+            .filter((file) => file.endsWith('.json') || file.endsWith('.gz'))
             .sort((a, b) => b.localeCompare(a)); // Sort by name descending (newest first)
     }
     determineRetentionCategory(timestamp, referenceDate = this.currentDate) {
@@ -103,7 +123,7 @@ class BackupManager {
     }
     async loadSettings() {
         try {
-            const content = await promises_1.default.readFile(this.settingsPath, 'utf-8');
+            const content = await fs.readFile(this.settingsPath, 'utf-8');
             const loadedSettings = JSON.parse(content);
             // Validate loaded settings structure and merge with defaults
             if (loadedSettings &&
@@ -123,7 +143,7 @@ class BackupManager {
         }
     }
     async saveSettings() {
-        await promises_1.default.writeFile(this.settingsPath, JSON.stringify(this.settings, null, 2));
+        await fs.writeFile(this.settingsPath, JSON.stringify(this.settings, null, 2));
         console.log('Saved settings:', this.settings);
     }
     async getSettings() {
@@ -173,15 +193,15 @@ class BackupManager {
         };
         // Save backup
         const extension = compressed ? 'gz' : 'json';
-        const backupFile = path_1.default.join(this.backupPath, `${version}.${extension}`);
+        const backupFile = path.join(this.backupPath, `${version}.${extension}`);
         if (compressed) {
             // Save metadata separately for compressed backups
-            const metadataFile = path_1.default.join(this.backupPath, `${version}.meta.json`);
-            await promises_1.default.writeFile(metadataFile, JSON.stringify({ metadata: backupData.metadata }, null, 2));
-            await promises_1.default.writeFile(backupFile, finalData);
+            const metadataFile = path.join(this.backupPath, `${version}.meta.json`);
+            await fs.writeFile(metadataFile, JSON.stringify({ metadata: backupData.metadata }, null, 2));
+            await fs.writeFile(backupFile, finalData);
         }
         else {
-            await promises_1.default.writeFile(backupFile, JSON.stringify(backupData, null, 2));
+            await fs.writeFile(backupFile, JSON.stringify(backupData, null, 2));
         }
         // Run cleanup if auto-cleanup is enabled
         if (this.settings.autoCleanup) {
@@ -239,20 +259,20 @@ class BackupManager {
         for (const backup of [...keepDaily, ...keepWeekly, ...keepMonthly]) {
             const isCompressed = backup.compressed;
             const extension = isCompressed ? 'gz' : 'json';
-            const backupFile = path_1.default.join(this.backupPath, `${backup.version}.${extension}`);
-            const metadataFile = path_1.default.join(this.backupPath, `${backup.version}.meta.json`);
+            const backupFile = path.join(this.backupPath, `${backup.version}.${extension}`);
+            const metadataFile = path.join(this.backupPath, `${backup.version}.meta.json`);
             try {
                 if (isCompressed) {
                     const metadata = {
                         metadata: { ...backup }
                     };
-                    await promises_1.default.writeFile(metadataFile, JSON.stringify(metadata, null, 2));
+                    await fs.writeFile(metadataFile, JSON.stringify(metadata, null, 2));
                 }
                 else {
-                    const content = await promises_1.default.readFile(backupFile, 'utf-8');
+                    const content = await fs.readFile(backupFile, 'utf-8');
                     const backupData = JSON.parse(content);
                     backupData.metadata.retentionCategory = backup.retentionCategory;
-                    await promises_1.default.writeFile(backupFile, JSON.stringify(backupData, null, 2));
+                    await fs.writeFile(backupFile, JSON.stringify(backupData, null, 2));
                 }
             }
             catch (error) {
@@ -270,12 +290,12 @@ class BackupManager {
         await Promise.all(toDelete.map(async (backup) => {
             const isCompressed = backup.compressed;
             const extension = isCompressed ? 'gz' : 'json';
-            const backupFile = path_1.default.join(this.backupPath, `${backup.version}.${extension}`);
-            const metadataFile = path_1.default.join(this.backupPath, `${backup.version}.meta.json`);
+            const backupFile = path.join(this.backupPath, `${backup.version}.${extension}`);
+            const metadataFile = path.join(this.backupPath, `${backup.version}.meta.json`);
             try {
-                await promises_1.default.unlink(backupFile);
+                await fs.unlink(backupFile);
                 if (isCompressed) {
-                    await promises_1.default.unlink(metadataFile).catch(() => { }); // Ignore if metadata file doesn't exist
+                    await fs.unlink(metadataFile).catch(() => { }); // Ignore if metadata file doesn't exist
                 }
             }
             catch (err) {
@@ -289,18 +309,18 @@ class BackupManager {
         let backupData = null;
         let compressedData = null;
         for (const ext of possibleExtensions) {
-            const backupFile = path_1.default.join(this.backupPath, `${version}.${ext}`);
-            const metadataFile = path_1.default.join(this.backupPath, `${version}.meta.json`);
+            const backupFile = path.join(this.backupPath, `${version}.${ext}`);
+            const metadataFile = path.join(this.backupPath, `${version}.meta.json`);
             try {
                 if (ext === 'gz') {
                     // Read metadata first for compressed backups
-                    const metadataContent = await promises_1.default.readFile(metadataFile, 'utf-8');
+                    const metadataContent = await fs.readFile(metadataFile, 'utf-8');
                     backupData = JSON.parse(metadataContent);
-                    compressedData = await promises_1.default.readFile(backupFile);
+                    compressedData = await fs.readFile(backupFile);
                     break;
                 }
                 else {
-                    const content = await promises_1.default.readFile(backupFile, 'utf-8');
+                    const content = await fs.readFile(backupFile, 'utf-8');
                     backupData = JSON.parse(content);
                     break;
                 }
@@ -347,12 +367,12 @@ class BackupManager {
                 }
                 let backupData;
                 if (isCompressed) {
-                    const metadataFile = path_1.default.join(this.backupPath, `${version}.meta.json`);
-                    const content = await promises_1.default.readFile(metadataFile, 'utf-8');
+                    const metadataFile = path.join(this.backupPath, `${version}.meta.json`);
+                    const content = await fs.readFile(metadataFile, 'utf-8');
                     backupData = JSON.parse(content);
                 }
                 else {
-                    const content = await promises_1.default.readFile(path_1.default.join(this.backupPath, file), 'utf-8');
+                    const content = await fs.readFile(path.join(this.backupPath, file), 'utf-8');
                     backupData = JSON.parse(content);
                 }
                 // Update retention category based on current date
@@ -372,10 +392,10 @@ class BackupManager {
             metadata: (await this.listBackups()).find(b => b.version === version),
             projects: backup
         };
-        await promises_1.default.writeFile(exportPath, JSON.stringify(backupData, null, 2));
+        await fs.writeFile(exportPath, JSON.stringify(backupData, null, 2));
     }
     async importBackup(importPath) {
-        const content = await promises_1.default.readFile(importPath, 'utf-8');
+        const content = await fs.readFile(importPath, 'utf-8');
         const backupData = JSON.parse(content);
         // Validate backup data
         if (!backupData.projects || !Array.isArray(backupData.projects)) {

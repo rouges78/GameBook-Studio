@@ -190,7 +190,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogout = useCallback(() => {
-    console.log('User logged out');
+    window.electron?.closeWindow();
   }, []);
 
   return (

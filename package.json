@@ -23,6 +23,7 @@
   "dependencies": {
     "@headlessui/react": "^1.7.18",
     "@heroicons/react": "^2.1.1",
+    "@types/react-window": "^1.8.8",
     "better-sqlite3": "^9.4.1",
     "docx": "^8.5.0",
     "electron-log": "^5.2.0",
@@ -40,6 +41,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.0",
+    "react-window": "^1.8.10",
     "recharts": "^2.13.3",
     "uuid": "^9.0.1",
     "xlsx": "^0.18.5",

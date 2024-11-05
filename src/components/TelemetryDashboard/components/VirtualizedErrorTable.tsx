@@ -1,11 +1,7 @@
 import React from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { TelemetryEvent } from '../../../types/electron';
-
-interface VirtualizedErrorTableProps {
-  events: TelemetryEvent[];
-  isDarkMode: boolean;
-}
+import type { TelemetryEvent } from '../../../types/electron';
+import type { VirtualizedErrorTableProps } from '../types';
 
 interface RowProps {
   index: number;
@@ -20,6 +16,10 @@ interface RowProps {
 const Row: React.FC<RowProps> = ({ index, style, data }) => {
   const { events, textColor } = data;
   const event = events[index];
+
+  if (!event) {
+    return null;
+  }
 
   return (
     <div 
@@ -46,6 +46,24 @@ export const VirtualizedErrorTable: React.FC<VirtualizedErrorTableProps> = ({
   const textColor = isDarkMode ? 'text-gray-100' : 'text-gray-800';
   const subTextColor = isDarkMode ? 'text-gray-300' : 'text-gray-600';
 
+  if (!Array.isArray(events) || events.length === 0) {
+    return (
+      <div className={`p-6 text-center ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+        No events to display
+      </div>
+    );
+  }
+
+  const validEvents = events.filter((event): event is TelemetryEvent => {
+    return (
+      event !== null &&
+      typeof event === 'object' &&
+      typeof event.timestamp === 'number' &&
+      typeof event.appVersion === 'string' &&
+      typeof event.platform === 'string'
+    );
+  });
+
   return (
     <div className={`border border-${isDarkMode ? 'gray-700' : 'gray-200'} rounded-lg overflow-hidden`}>
       <div className={`bg-${isDarkMode ? 'gray-700' : 'gray-50'}`}>
@@ -65,11 +83,11 @@ export const VirtualizedErrorTable: React.FC<VirtualizedErrorTableProps> = ({
       <div className={`bg-${isDarkMode ? 'gray-800' : 'white'}`}>
         <List
           height={300}
-          itemCount={events.length}
+          itemCount={validEvents.length}
           itemSize={53} // 53px matches the original row height (py-4 + content)
           width="100%"
           itemData={{
-            events,
+            events: validEvents,
             isDarkMode,
             textColor
           }}

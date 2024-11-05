@@ -137,6 +137,11 @@ export interface ErrorInspectionModalProps {
   isDarkMode: boolean;
 }
 
+export interface VirtualizedErrorTableProps {
+  events: TelemetryEvent[];
+  isDarkMode: boolean;
+}
+
 export const PIE_CHART_COLORS = [
   '#FF6384',
   '#36A2EB',

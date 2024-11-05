@@ -44,6 +44,29 @@ export interface UpdateErrors {
   averageRetries: number;
 }
 
+export interface PerformanceData {
+  timestamp: number;
+  responseTime: number;
+  cpuUsage: number;
+  memoryUsage: number;
+  errorRate: number;
+  circuitBreakerState: 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+}
+
+export interface TrendAnalysis {
+  metric: string;
+  current: number;
+  trend: 'up' | 'down' | 'stable';
+  prediction: number;
+  threshold: number;
+  status: 'healthy' | 'warning' | 'critical';
+}
+
+export interface DetailedPerformanceMetricsProps {
+  data: PerformanceData[];
+  isDarkMode: boolean;
+}
+
 export interface SystemMetrics {
   byPlatform: { [key: string]: number };
   byVersion: { [key: string]: number };
@@ -52,6 +75,7 @@ export interface SystemMetrics {
     avgResponseTime: number;
     errorRate: number;
     totalCrashes: number;
+    detailedMetrics?: PerformanceData[];
   };
 }
 

@@ -1,4 +1,5 @@
 import pako from 'pako';
+import type { PerformanceData } from '../types';
 
 interface TelemetryData {
   date: string;
@@ -58,6 +59,7 @@ interface UncompressedProcessedData {
       avgResponseTime: number;
       errorRate: number;
       totalCrashes: number;
+      detailedMetrics: PerformanceData[];
     };
   };
   pagination?: {
@@ -189,13 +191,24 @@ const calculateSystemMetrics = (data: TelemetryData[]): UncompressedProcessedDat
     performance: {
       avgResponseTime: 0,
       errorRate: 0,
-      totalCrashes: 0
+      totalCrashes: 0,
+      detailedMetrics: [] as PerformanceData[]
     }
   };
 
   let totalResponseTime = 0;
   let responseTimeCount = 0;
   let errorCount = 0;
+
+  // Group performance data by timestamp (5-minute intervals)
+  const performanceByTimestamp = new Map<number, {
+    responseTime: number[];
+    cpuUsage: number[];
+    memoryUsage: number[];
+    errorCount: number;
+    totalEvents: number;
+    circuitBreakerState: 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+  }>();
 
   data.forEach(item => {
     // Platform metrics
@@ -212,8 +225,26 @@ const calculateSystemMetrics = (data: TelemetryData[]): UncompressedProcessedDat
     }
 
     // Performance metrics
+    const timestamp = new Date(item.date).getTime();
+    const interval = Math.floor(timestamp / (5 * 60 * 1000)) * (5 * 60 * 1000); // Round to 5-minute intervals
+
+    if (!performanceByTimestamp.has(interval)) {
+      performanceByTimestamp.set(interval, {
+        responseTime: [],
+        cpuUsage: [],
+        memoryUsage: [],
+        errorCount: 0,
+        totalEvents: 0,
+        circuitBreakerState: 'CLOSED'
+      });
+    }
+
+    const intervalData = performanceByTimestamp.get(interval)!;
+    intervalData.totalEvents++;
+
     if (item.category === 'error' || item.action === 'error') {
       errorCount++;
+      intervalData.errorCount++;
       if (item.metadata?.type === 'crash') {
         metrics.performance.totalCrashes++;
       }
@@ -222,11 +253,43 @@ const calculateSystemMetrics = (data: TelemetryData[]): UncompressedProcessedDat
     if (item.metadata?.responseTime) {
       totalResponseTime += item.metadata.responseTime;
       responseTimeCount++;
+      intervalData.responseTime.push(item.metadata.responseTime);
+    }
+
+    if (item.metadata?.cpuUsage) {
+      intervalData.cpuUsage.push(item.metadata.cpuUsage);
+    }
+
+    if (item.metadata?.memoryUsage) {
+      intervalData.memoryUsage.push(item.metadata.memoryUsage);
+    }
+
+    if (item.metadata?.circuitBreakerState) {
+      intervalData.circuitBreakerState = item.metadata.circuitBreakerState as 'CLOSED' | 'OPEN' | 'HALF_OPEN';
     }
   });
 
+  // Calculate overall metrics
   metrics.performance.avgResponseTime = responseTimeCount > 0 ? totalResponseTime / responseTimeCount : 0;
   metrics.performance.errorRate = data.length > 0 ? (errorCount / data.length) * 100 : 0;
+
+  // Convert interval data to detailed metrics
+  metrics.performance.detailedMetrics = Array.from(performanceByTimestamp.entries())
+    .map(([timestamp, data]) => ({
+      timestamp,
+      responseTime: data.responseTime.length > 0 
+        ? data.responseTime.reduce((a, b) => a + b, 0) / data.responseTime.length 
+        : 0,
+      cpuUsage: data.cpuUsage.length > 0
+        ? data.cpuUsage.reduce((a, b) => a + b, 0) / data.cpuUsage.length
+        : 0,
+      memoryUsage: data.memoryUsage.length > 0
+        ? data.memoryUsage.reduce((a, b) => a + b, 0) / data.memoryUsage.length
+        : 0,
+      errorRate: data.totalEvents > 0 ? (data.errorCount / data.totalEvents) * 100 : 0,
+      circuitBreakerState: data.circuitBreakerState
+    }))
+    .sort((a, b) => a.timestamp - b.timestamp);
 
   return metrics;
 };

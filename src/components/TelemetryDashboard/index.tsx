@@ -8,19 +8,42 @@ import {
   TimeSeriesChart
 } from './components';
 import type { TelemetryStats, DateRange, CategoryFilters as CategoryFiltersType } from './types';
+import useDataProcessor from './hooks/useDataProcessor';
 
 export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
-  const [stats, setStats] = useState<TelemetryStats | null>(null);
+  const [rawData, setRawData] = useState<TelemetryEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>({
     startDate: '',
     endDate: ''
   });
-  const [filteredStats, setFilteredStats] = useState<TelemetryStats | null>(null);
   const [categoryFilters, setCategoryFilters] = useState<CategoryFiltersType>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Use the Web Worker for data processing
+  const {
+    processedData,
+    isProcessing,
+    error: processingError
+  } = useDataProcessor({
+    data: rawData.filter(event => {
+      if (!debouncedSearchTerm) return true;
+      
+      const searchLower = debouncedSearchTerm.toLowerCase();
+      return (
+        event.category.toLowerCase().includes(searchLower) ||
+        event.action.toLowerCase().includes(searchLower) ||
+        (event.metadata && JSON.stringify(event.metadata).toLowerCase().includes(searchLower))
+      );
+    }),
+    categories: categoryFilters,
+    dateRange: dateRange.startDate && dateRange.endDate ? {
+      start: dateRange.startDate,
+      end: dateRange.endDate
+    } : undefined
+  });
 
   // Debounce search term
   useEffect(() => {
@@ -31,11 +54,11 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
   }, [searchTerm]);
 
   const handlePresetRange = (days: number) => {
-    if (!stats) return;
+    if (!rawData.length) return;
     
     const end = new Date();
     const start = days === 0 
-      ? new Date(stats.timeRange.start)
+      ? new Date(Math.min(...rawData.map(event => event.timestamp)))
       : new Date(end.getTime() - (days * 24 * 60 * 60 * 1000));
 
     setDateRange({
@@ -59,17 +82,17 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
   };
 
   const handleExport = () => {
-    if (!filteredStats) return;
+    if (!processedData) return;
 
     const csvContent = [
       // Headers
-      ['Date', ...Object.keys(filteredStats.eventsByCategory), 'Total'].join(','),
+      ['Date', ...Object.keys(processedData.metrics), 'Total'].join(','),
       // Data rows
-      ...filteredStats.timeSeriesData.map(entry => {
+      ...processedData.filteredData.map(entry => {
         const values = [
           entry.date,
-          ...Object.keys(filteredStats.eventsByCategory).map(category => entry[category] || 0),
-          entry.total
+          ...Object.keys(processedData.metrics).map(category => entry[category] || 0),
+          entry.total || 0
         ];
         return values.join(',');
       })
@@ -92,156 +115,15 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
           throw new Error('Invalid telemetry data format');
         }
 
-        const stats: TelemetryStats = {
-          totalEvents: events.length,
-          eventsByCategory: {},
-          updateErrors: {
-            total: 0,
-            byType: {},
-            averageRetries: 0
-          },
-          timeRange: {
-            start: Number.MAX_SAFE_INTEGER,
-            end: 0
-          },
-          timeSeriesData: [],
-          rawEvents: events,
-          systemMetrics: {
-            byPlatform: {},
-            byVersion: {},
-            byArch: {},
-            performance: {
-              avgResponseTime: 0,
-              errorRate: 0,
-              totalCrashes: 0
-            }
-          },
-          errorPatterns: {
-            correlations: [],
-            trends: []
-          }
-        };
-
-        let totalRetries = 0;
-        let errorCount = 0;
-        let totalResponseTime = 0;
-        let responseTimeCount = 0;
-
-        // Create a map to store daily events and errors
-        const dailyEvents: Record<string, Record<string, number>> = {};
-        const dailyErrors: Record<string, number> = {};
-
-        events.forEach((event: TelemetryEvent) => {
-          // Update event categories
-          stats.eventsByCategory[event.category] = (stats.eventsByCategory[event.category] || 0) + 1;
-
-          // Track time range
-          stats.timeRange.start = Math.min(stats.timeRange.start, event.timestamp);
-          stats.timeRange.end = Math.max(stats.timeRange.end, event.timestamp);
-
-          // Update system metrics
-          stats.systemMetrics.byPlatform[event.platform] = (stats.systemMetrics.byPlatform[event.platform] || 0) + 1;
-          stats.systemMetrics.byVersion[event.appVersion] = (stats.systemMetrics.byVersion[event.appVersion] || 0) + 1;
-          stats.systemMetrics.byArch[event.arch] = (stats.systemMetrics.byArch[event.arch] || 0) + 1;
-
-          // Track errors and performance
-          if (event.category === 'error' || event.action === 'error') {
-            errorCount++;
-            const date = new Date(event.timestamp).toISOString().split('T')[0];
-            dailyErrors[date] = (dailyErrors[date] || 0) + 1;
-
-            if (event.metadata?.type === 'crash') {
-              stats.systemMetrics.performance.totalCrashes++;
-            }
-          }
-
-          if (event.metadata?.responseTime) {
-            totalResponseTime += event.metadata.responseTime;
-            responseTimeCount++;
-          }
-
-          // Track update errors
-          if (event.category === 'auto-update' && event.action === 'error') {
-            stats.updateErrors.total++;
-            const errorType = event.metadata?.errorType || 'unknown';
-            stats.updateErrors.byType[errorType] = (stats.updateErrors.byType[errorType] || 0) + 1;
-            
-            if (event.metadata?.attemptNumber) {
-              totalRetries += event.metadata.attemptNumber;
-              errorCount++;
-            }
-          }
-
-          // Group events by day for time series
-          const date = new Date(event.timestamp).toISOString().split('T')[0];
-          if (!dailyEvents[date]) {
-            dailyEvents[date] = {};
-          }
-          if (!dailyEvents[date][event.category]) {
-            dailyEvents[date][event.category] = 0;
-          }
-          dailyEvents[date][event.category]++;
-        });
-
-        // Calculate performance metrics
-        stats.systemMetrics.performance.avgResponseTime = responseTimeCount > 0 
-          ? totalResponseTime / responseTimeCount 
-          : 0;
-        stats.systemMetrics.performance.errorRate = events.length > 0 
-          ? (errorCount / events.length) * 100 
-          : 0;
-
-        // Convert daily events to time series data
-        stats.timeSeriesData = Object.entries(dailyEvents)
-          .map(([date, categories]) => ({
-            date,
-            total: Object.values(categories).reduce((sum, count) => sum + count, 0),
-            ...categories
-          }))
-          .sort((a, b) => a.date.localeCompare(b.date));
-
-        // Convert daily errors to trends
-        stats.errorPatterns.trends = Object.entries(dailyErrors)
-          .map(([date, count]) => ({
-            date,
-            errors: count
-          }))
-          .sort((a, b) => a.date.localeCompare(b.date));
-
-        // Analyze error patterns and correlations
-        const patterns = events
-          .filter(event => event.category === 'error' || event.action === 'error')
-          .reduce((acc: Record<string, { count: number; impact: number }>, event) => {
-            const pattern = `${event.category}:${event.action}${event.metadata?.errorType ? ':' + event.metadata.errorType : ''}`;
-            if (!acc[pattern]) {
-              acc[pattern] = { count: 0, impact: 0 };
-            }
-            acc[pattern].count++;
-            acc[pattern].impact += event.metadata?.severity || 1;
-            return acc;
-          }, {});
-
-        stats.errorPatterns.correlations = Object.entries(patterns)
-          .map(([pattern, data]) => ({
-            pattern,
-            count: data.count,
-            impact: data.impact / data.count
-          }))
-          .sort((a, b) => b.impact - a.impact)
-          .slice(0, 5);
-
-        // Calculate average retries
-        stats.updateErrors.averageRetries = errorCount > 0 ? totalRetries / errorCount : 0;
-
         // Initialize category filters
         const initialFilters: CategoryFiltersType = {};
-        Object.keys(stats.eventsByCategory).forEach(category => {
+        const categories = new Set(events.map(event => event.category));
+        categories.forEach(category => {
           initialFilters[category] = true;
         });
         setCategoryFilters(initialFilters);
 
-        setStats(stats);
-        setFilteredStats(stats);
+        setRawData(events);
         
         // Set initial date range if not set
         if (!dateRange.startDate || !dateRange.endDate) {
@@ -259,126 +141,7 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
     loadTelemetryData();
   }, []);
 
-  useEffect(() => {
-    if (!stats || !dateRange.startDate || !dateRange.endDate) return;
-
-    const startTimestamp = new Date(dateRange.startDate).getTime();
-    const endTimestamp = new Date(dateRange.endDate).getTime() + (24 * 60 * 60 * 1000 - 1);
-
-    // Filter events based on search term and date range
-    const searchFilteredEvents = stats.rawEvents?.filter(event => {
-      const isInDateRange = event.timestamp >= startTimestamp && event.timestamp <= endTimestamp;
-      if (!isInDateRange) return false;
-      
-      if (!debouncedSearchTerm) return true;
-      
-      const searchLower = debouncedSearchTerm.toLowerCase();
-      return (
-        event.category.toLowerCase().includes(searchLower) ||
-        event.action.toLowerCase().includes(searchLower) ||
-        (event.metadata && JSON.stringify(event.metadata).toLowerCase().includes(searchLower))
-      );
-    }) || [];
-
-    // Create filtered stats object
-    const filtered: TelemetryStats = {
-      ...stats,
-      totalEvents: searchFilteredEvents.length,
-      eventsByCategory: {},
-      timeRange: {
-        start: startTimestamp,
-        end: endTimestamp
-      },
-      systemMetrics: {
-        byPlatform: {},
-        byVersion: {},
-        byArch: {},
-        performance: {
-          avgResponseTime: 0,
-          errorRate: 0,
-          totalCrashes: 0
-        }
-      },
-      errorPatterns: {
-        correlations: [],
-        trends: []
-      }
-    };
-
-    let errorCount = 0;
-    let totalResponseTime = 0;
-    let responseTimeCount = 0;
-    const dailyErrors: Record<string, number> = {};
-
-    // Process filtered events
-    searchFilteredEvents.forEach(event => {
-      if (categoryFilters[event.category]) {
-        filtered.eventsByCategory[event.category] = (filtered.eventsByCategory[event.category] || 0) + 1;
-        
-        filtered.systemMetrics.byPlatform[event.platform] = (filtered.systemMetrics.byPlatform[event.platform] || 0) + 1;
-        filtered.systemMetrics.byVersion[event.appVersion] = (filtered.systemMetrics.byVersion[event.appVersion] || 0) + 1;
-        filtered.systemMetrics.byArch[event.arch] = (filtered.systemMetrics.byArch[event.arch] || 0) + 1;
-
-        if (event.category === 'error' || event.action === 'error') {
-          errorCount++;
-          const date = new Date(event.timestamp).toISOString().split('T')[0];
-          dailyErrors[date] = (dailyErrors[date] || 0) + 1;
-
-          if (event.metadata?.type === 'crash') {
-            filtered.systemMetrics.performance.totalCrashes++;
-          }
-        }
-
-        if (event.metadata?.responseTime) {
-          totalResponseTime += event.metadata.responseTime;
-          responseTimeCount++;
-        }
-      }
-    });
-
-    // Calculate filtered performance metrics
-    filtered.systemMetrics.performance.avgResponseTime = responseTimeCount > 0 
-      ? totalResponseTime / responseTimeCount 
-      : 0;
-    filtered.systemMetrics.performance.errorRate = searchFilteredEvents.length > 0 
-      ? (errorCount / searchFilteredEvents.length) * 100 
-      : 0;
-
-    // Convert daily errors to trends
-    filtered.errorPatterns.trends = Object.entries(dailyErrors)
-      .map(([date, count]) => ({
-        date,
-        errors: count
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-
-    // Create time series data
-    const dailyEvents: Record<string, Record<string, number>> = {};
-    searchFilteredEvents.forEach(event => {
-      if (categoryFilters[event.category]) {
-        const date = new Date(event.timestamp).toISOString().split('T')[0];
-        if (!dailyEvents[date]) {
-          dailyEvents[date] = {};
-        }
-        if (!dailyEvents[date][event.category]) {
-          dailyEvents[date][event.category] = 0;
-        }
-        dailyEvents[date][event.category]++;
-      }
-    });
-
-    filtered.timeSeriesData = Object.entries(dailyEvents)
-      .map(([date, categories]) => ({
-        date,
-        total: Object.values(categories).reduce((sum, count) => sum + count, 0),
-        ...categories
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-
-    setFilteredStats(filtered);
-  }, [stats, dateRange, categoryFilters, debouncedSearchTerm]);
-
-  if (isLoading) {
+  if (isLoading || isProcessing) {
     return (
       <div className={`p-6 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
         Loading telemetry data...
@@ -386,15 +149,15 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
     );
   }
 
-  if (error) {
+  if (error || processingError) {
     return (
       <div className="p-6 text-red-500">
-        Error: {error}
+        Error: {error || processingError?.message}
       </div>
     );
   }
 
-  if (!filteredStats) {
+  if (!processedData) {
     return (
       <div className={`p-6 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
         No telemetry data available
@@ -426,8 +189,8 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
           dateRange={dateRange}
           onDateChange={handleDateChange}
           onPresetSelect={handlePresetRange}
-          minDate={stats ? new Date(stats.timeRange.start).toISOString().split('T')[0] : undefined}
-          maxDate={stats ? new Date(stats.timeRange.end).toISOString().split('T')[0] : undefined}
+          minDate={rawData.length ? new Date(Math.min(...rawData.map(event => event.timestamp))).toISOString().split('T')[0] : undefined}
+          maxDate={rawData.length ? new Date(Math.max(...rawData.map(event => event.timestamp))).toISOString().split('T')[0] : undefined}
           isDarkMode={isDarkMode}
         />
 
@@ -455,9 +218,9 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
         <h2 className="text-xl font-semibold mb-3">Overview</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <p className="text-lg">Total Events: {filteredStats.totalEvents}</p>
+            <p className="text-lg">Total Events: {processedData.filteredData.length}</p>
             <p className="text-lg">
-              Time Range: {new Date(filteredStats.timeRange.start).toLocaleDateString()} - {new Date(filteredStats.timeRange.end).toLocaleDateString()}
+              Time Range: {dateRange.startDate} - {dateRange.endDate}
             </p>
           </div>
         </div>
@@ -465,21 +228,22 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
 
       {/* Time Series Chart */}
       <TimeSeriesChart
-        data={filteredStats.timeSeriesData}
+        data={processedData.filteredData}
         categories={categoryFilters}
         isDarkMode={isDarkMode}
       />
 
       {/* Error Analysis */}
       <ErrorAnalysis
-        errorPatterns={filteredStats.errorPatterns}
-        updateErrors={filteredStats.updateErrors}
+        errorPatterns={processedData.errorPatterns}
+        updateErrors={processedData.updateErrors}
+        rawEvents={rawData}
         isDarkMode={isDarkMode}
       />
 
       {/* System Metrics */}
       <SystemMetrics
-        metrics={filteredStats.systemMetrics}
+        metrics={processedData.systemMetrics}
         isDarkMode={isDarkMode}
       />
     </div>

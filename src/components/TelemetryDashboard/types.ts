@@ -6,13 +6,35 @@ export interface DateRange {
 }
 
 export interface CategoryFilters {
-  [category: string]: boolean;
+  [key: string]: boolean;
+}
+
+export interface ErrorPattern {
+  pattern: string;
+  count: number;
+  impact: number;
+}
+
+export interface ErrorTrend {
+  date: string;
+  errors: number;
+}
+
+export interface ErrorPatterns {
+  correlations: ErrorPattern[];
+  trends: ErrorTrend[];
+}
+
+export interface UpdateErrors {
+  total: number;
+  byType: { [key: string]: number };
+  averageRetries: number;
 }
 
 export interface SystemMetrics {
-  byPlatform: Record<string, number>;
-  byVersion: Record<string, number>;
-  byArch: Record<string, number>;
+  byPlatform: { [key: string]: number };
+  byVersion: { [key: string]: number };
+  byArch: { [key: string]: number };
   performance: {
     avgResponseTime: number;
     errorRate: number;
@@ -20,26 +42,29 @@ export interface SystemMetrics {
   };
 }
 
-export interface ErrorPatterns {
-  correlations: Array<{
-    pattern: string;
-    count: number;
-    impact: number;
-  }>;
-  trends: Array<{
+export interface ProcessedTelemetryData {
+  filteredData: Array<{
     date: string;
-    errors: number;
+    total?: number;
+    error?: number;
+    navigation?: number;
+    [key: string]: string | number | undefined;
   }>;
+  metrics: {
+    total: number;
+    error: number;
+    navigation: number;
+    [key: string]: number;
+  };
+  errorPatterns: ErrorPatterns;
+  updateErrors: UpdateErrors;
+  systemMetrics: SystemMetrics;
 }
 
 export interface TelemetryStats {
   totalEvents: number;
-  eventsByCategory: Record<string, number>;
-  updateErrors: {
-    total: number;
-    byType: Record<string, number>;
-    averageRetries: number;
-  };
+  eventsByCategory: { [key: string]: number };
+  updateErrors: UpdateErrors;
   timeRange: {
     start: number;
     end: number;
@@ -47,61 +72,25 @@ export interface TelemetryStats {
   timeSeriesData: Array<{
     date: string;
     total: number;
-    [key: string]: number | string;
+    [key: string]: string | number;
   }>;
-  rawEvents?: TelemetryEvent[];
+  rawEvents: TelemetryEvent[];
   systemMetrics: SystemMetrics;
   errorPatterns: ErrorPatterns;
 }
 
-export interface DateRangeFiltersProps {
-  dateRange: DateRange;
-  onDateChange: (type: 'startDate' | 'endDate', value: string) => void;
-  onPresetSelect: (days: number) => void;
-  minDate?: string;
-  maxDate?: string;
-  isDarkMode: boolean;
-}
-
-export interface CategoryFiltersProps {
-  categories: CategoryFilters;
-  onToggle: (category: string) => void;
-  isDarkMode: boolean;
+export interface ChartExportOptions {
+  format: 'PNG' | 'SVG';
+  filename?: string;
+  width?: number;
+  height?: number;
+  quality?: number;
 }
 
 export interface ErrorAnalysisProps {
   errorPatterns: ErrorPatterns;
-  updateErrors: {
-    total: number;
-    byType: Record<string, number>;
-    averageRetries: number;
-  };
-  rawEvents?: TelemetryEvent[];
-  isDarkMode: boolean;
-}
-
-export interface SystemMetricsProps {
-  metrics: SystemMetrics;
-  isDarkMode: boolean;
-}
-
-export type ChartExportFormat = 'PNG' | 'SVG';
-
-export interface ChartExportOptions {
-  width?: number;
-  height?: number;
-  quality?: number;
-  format: ChartExportFormat;
-  filename?: string;
-}
-
-export interface TimeSeriesChartProps {
-  data: Array<{
-    date: string;
-    total: number;
-    [key: string]: number | string;
-  }>;
-  categories: CategoryFilters;
+  updateErrors: UpdateErrors;
+  rawEvents: TelemetryEvent[];
   isDarkMode: boolean;
 }
 
@@ -116,32 +105,22 @@ export interface ErrorInspectionModalProps {
   isDarkMode: boolean;
 }
 
-export const PRESET_RANGES = [
-  { label: 'Last 7 Days', days: 7 },
-  { label: 'Last 30 Days', days: 30 },
-  { label: 'Last 90 Days', days: 90 },
-  { label: 'All Time', days: 0 }
-] as const;
-
-export const CHART_COLORS = {
-  'auto-update': '#8884d8',
-  'system': '#82ca9d',
-  'user-interaction': '#ffc658',
-  'error': '#ff7300'
-} as const;
-
 export const PIE_CHART_COLORS = [
-  '#0088FE',
-  '#00C49F',
-  '#FFBB28',
-  '#FF8042',
-  '#8884d8'
-] as const;
+  '#FF6384',
+  '#36A2EB',
+  '#FFCE56',
+  '#4BC0C0',
+  '#9966FF',
+  '#FF9F40',
+  '#FF6384',
+  '#C9CBCF'
+];
 
-export const DEFAULT_EXPORT_OPTIONS: ChartExportOptions = {
-  width: 1200,
-  height: 600,
-  quality: 1,
-  format: 'PNG',
-  filename: 'telemetry-chart'
-} as const;
+// Helper function to convert TelemetryEvent to chart data format
+export const convertEventToChartData = (event: TelemetryEvent) => ({
+  date: new Date(event.timestamp).toISOString().split('T')[0],
+  category: event.category,
+  action: event.action,
+  value: event.value || 1,
+  metadata: event.metadata
+});

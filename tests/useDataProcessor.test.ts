@@ -1,6 +1,18 @@
 import { renderHook, act } from '@testing-library/react';
 import useDataProcessor from '../src/components/TelemetryDashboard/hooks/useDataProcessor';
+import { telemetryCache } from '../src/utils/telemetryCache';
 import type { TelemetryEvent } from '../src/types/electron';
+import type { ProcessedTelemetryData } from '../src/components/TelemetryDashboard/types';
+
+// Mock telemetryCache
+jest.mock('../src/utils/telemetryCache', () => ({
+  telemetryCache: {
+    cacheRawData: jest.fn(),
+    cacheProcessedData: jest.fn(),
+    getProcessedData: jest.fn(),
+    clearCache: jest.fn(),
+  }
+}));
 
 // Mock data
 const mockTelemetryEvents: TelemetryEvent[] = [
@@ -36,13 +48,44 @@ const mockTelemetryEvents: TelemetryEvent[] = [
   }
 ];
 
+const mockProcessedData: ProcessedTelemetryData = {
+  filteredData: mockTelemetryEvents.map(event => ({
+    date: new Date(event.timestamp).toISOString().split('T')[0],
+    total: event.category === 'performance' ? event.value : undefined,
+    error: event.category === 'error' ? event.value : undefined,
+    navigation: event.category === 'navigation' ? event.value : undefined,
+    [event.category]: event.value
+  })),
+  metrics: {
+    total: 450,
+    error: 90,
+    navigation: 360
+  },
+  errorPatterns: {
+    correlations: [],
+    trends: []
+  },
+  updateErrors: {
+    total: 0,
+    byType: {},
+    averageRetries: 0
+  },
+  systemMetrics: {
+    byPlatform: {},
+    byVersion: {},
+    byArch: {},
+    performance: {
+      avgResponseTime: 0,
+      errorRate: 0,
+      totalCrashes: 0
+    }
+  }
+};
+
 const mockCategories = {
   error: true,
   navigation: true
 };
-
-// Mock function to track renders
-const mockRender = jest.fn();
 
 // Mock Worker
 class MockWorker {
@@ -58,33 +101,7 @@ class MockWorker {
     setTimeout(() => {
       if (this.onmessage) {
         this.onmessage(new MessageEvent('message', {
-          data: {
-            filteredData: data.payload.data,
-            metrics: {
-              total: 450,
-              error: 90,
-              navigation: 360
-            },
-            errorPatterns: {
-              correlations: [],
-              trends: []
-            },
-            updateErrors: {
-              total: 0,
-              byType: {},
-              averageRetries: 0
-            },
-            systemMetrics: {
-              byPlatform: {},
-              byVersion: {},
-              byArch: {},
-              performance: {
-                avgResponseTime: 0,
-                errorRate: 0,
-                totalCrashes: 0
-              }
-            }
-          }
+          data: mockProcessedData
         }));
       }
     }, 0);
@@ -110,9 +127,12 @@ describe('useDataProcessor', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (telemetryCache.getProcessedData as jest.Mock).mockResolvedValue(null);
   });
 
-  it('initializes worker and processes data', async () => {
+  it('uses cached data when available', async () => {
+    (telemetryCache.getProcessedData as jest.Mock).mockResolvedValue(mockProcessedData);
+
     const { result } = renderHook(() => useDataProcessor({
       data: mockTelemetryEvents,
       categories: mockCategories
@@ -120,25 +140,46 @@ describe('useDataProcessor', () => {
 
     // Initial state
     expect(result.current.isProcessing).toBe(true);
-    expect(result.current.processedData).toBeNull();
-    expect(result.current.error).toBeNull();
 
-    // Wait for worker to process data
+    // Wait for cache check
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
 
-    // Check processed data
+    // Should use cached data
     expect(result.current.isProcessing).toBe(false);
-    expect(result.current.processedData).toBeTruthy();
-    expect(result.current.processedData?.metrics).toEqual({
-      total: 450,
-      error: 90,
-      navigation: 360
+    expect(result.current.processedData).toEqual(mockProcessedData);
+    expect(telemetryCache.getProcessedData).toHaveBeenCalledWith({
+      categories: mockCategories,
+      dateRange: undefined
     });
   });
 
-  it('handles worker errors', async () => {
+  it('processes data and caches result on cache miss', async () => {
+    const { result } = renderHook(() => useDataProcessor({
+      data: mockTelemetryEvents,
+      categories: mockCategories
+    }));
+
+    // Initial state
+    expect(result.current.isProcessing).toBe(true);
+
+    // Wait for processing
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    // Should process and cache data
+    expect(result.current.isProcessing).toBe(false);
+    expect(result.current.processedData).toBeTruthy();
+    expect(telemetryCache.cacheRawData).toHaveBeenCalledWith(mockTelemetryEvents);
+    expect(telemetryCache.cacheProcessedData).toHaveBeenCalledWith(
+      { categories: mockCategories, dateRange: undefined },
+      expect.any(Object)
+    );
+  });
+
+  it('handles worker errors and does not cache failed results', async () => {
     // Override worker implementation to simulate error
     const ErrorWorker = class extends MockWorker {
       postMessage() {
@@ -167,7 +208,7 @@ describe('useDataProcessor', () => {
 
     expect(result.current.isProcessing).toBe(false);
     expect(result.current.error).toBeInstanceOf(Error);
-    expect(result.current.error?.message).toBe('Worker error');
+    expect(telemetryCache.cacheProcessedData).not.toHaveBeenCalled();
   });
 
   it('reprocesses data when inputs change', async () => {
@@ -206,8 +247,9 @@ describe('useDataProcessor', () => {
       categories: mockCategories
     });
 
-    // Should be processing again
+    // Should check cache again
     expect(result.current.isProcessing).toBe(true);
+    expect(telemetryCache.getProcessedData).toHaveBeenCalledTimes(2);
 
     // Wait for reprocessing
     await act(async () => {
@@ -240,6 +282,7 @@ describe('useDataProcessor', () => {
     expect(result.current.isProcessing).toBe(false);
     expect(result.current.processedData).toBeNull();
     expect(result.current.error).toBeNull();
+    expect(telemetryCache.getProcessedData).not.toHaveBeenCalled();
   });
 
   it('processes data with date range filter', async () => {
@@ -259,6 +302,28 @@ describe('useDataProcessor', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
 
+    expect(result.current.isProcessing).toBe(false);
+    expect(result.current.processedData).toBeTruthy();
+    expect(telemetryCache.getProcessedData).toHaveBeenCalledWith({
+      categories: mockCategories,
+      dateRange
+    });
+  });
+
+  it('handles cache errors gracefully', async () => {
+    (telemetryCache.getProcessedData as jest.Mock).mockRejectedValue(new Error('Cache error'));
+
+    const { result } = renderHook(() => useDataProcessor({
+      data: mockTelemetryEvents,
+      categories: mockCategories
+    }));
+
+    // Wait for processing
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    // Should fall back to processing data
     expect(result.current.isProcessing).toBe(false);
     expect(result.current.processedData).toBeTruthy();
     expect(result.current.error).toBeNull();

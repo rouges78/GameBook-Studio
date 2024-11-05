@@ -1,50 +1,8 @@
-import { useEffect, useCallback, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { TelemetryEvent } from '../../../types/electron';
 import { convertEventToChartData } from '../types';
-
-interface TelemetryData {
-  date: string;
-  total?: number;
-  error?: number;
-  navigation?: number;
-  [key: string]: string | number | undefined;
-}
-
-interface ProcessedData {
-  filteredData: TelemetryData[];
-  metrics: {
-    total: number;
-    error: number;
-    navigation: number;
-    [key: string]: number;
-  };
-  errorPatterns: {
-    correlations: Array<{
-      pattern: string;
-      count: number;
-      impact: number;
-    }>;
-    trends: Array<{
-      date: string;
-      errors: number;
-    }>;
-  };
-  updateErrors: {
-    total: number;
-    byType: { [key: string]: number };
-    averageRetries: number;
-  };
-  systemMetrics: {
-    byPlatform: { [key: string]: number };
-    byVersion: { [key: string]: number };
-    byArch: { [key: string]: number };
-    performance: {
-      avgResponseTime: number;
-      errorRate: number;
-      totalCrashes: number;
-    };
-  };
-}
+import { telemetryCache } from '../../../utils/telemetryCache';
+import type { ProcessedTelemetryData } from '../types';
 
 interface UseDataProcessorProps {
   data: TelemetryEvent[];
@@ -56,7 +14,7 @@ interface UseDataProcessorProps {
 }
 
 interface UseDataProcessorResult {
-  processedData: ProcessedData | null;
+  processedData: ProcessedTelemetryData | null;
   isProcessing: boolean;
   error: Error | null;
 }
@@ -67,7 +25,7 @@ const useDataProcessor = ({
   dateRange
 }: UseDataProcessorProps): UseDataProcessorResult => {
   const workerRef = useRef<Worker | null>(null);
-  const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
+  const [processedData, setProcessedData] = useState<ProcessedTelemetryData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -79,9 +37,19 @@ const useDataProcessor = ({
         { type: 'module' }
       );
 
-      workerRef.current.onmessage = (event: MessageEvent<ProcessedData>) => {
+      workerRef.current.onmessage = async (event: MessageEvent<ProcessedTelemetryData>) => {
         setProcessedData(event.data);
         setIsProcessing(false);
+
+        // Cache the processed data
+        try {
+          await telemetryCache.cacheProcessedData(
+            { categories, dateRange },
+            event.data
+          );
+        } catch (err) {
+          console.error('Failed to cache processed data:', err);
+        }
       };
 
       workerRef.current.onerror = (event: ErrorEvent) => {
@@ -101,27 +69,46 @@ const useDataProcessor = ({
 
   // Process data when inputs change
   useEffect(() => {
-    if (!workerRef.current || !data.length) return;
+    const processDataWithCache = async () => {
+      if (!workerRef.current || !data.length) return;
 
-    setIsProcessing(true);
-    setError(null);
+      setIsProcessing(true);
+      setError(null);
 
-    try {
-      // Convert TelemetryEvent[] to TelemetryData[] before sending to worker
-      const formattedData = data.map(event => convertEventToChartData(event));
-
-      workerRef.current.postMessage({
-        type: 'PROCESS_DATA',
-        payload: {
-          data: formattedData,
+      try {
+        // Try to get cached data first
+        const cachedData = await telemetryCache.getProcessedData({
           categories,
           dateRange
+        });
+
+        if (cachedData) {
+          setProcessedData(cachedData);
+          setIsProcessing(false);
+          return;
         }
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to process data'));
-      setIsProcessing(false);
-    }
+
+        // Cache miss - process data with worker
+        const formattedData = data.map(event => convertEventToChartData(event));
+
+        // Cache raw data for future use
+        await telemetryCache.cacheRawData(data);
+
+        workerRef.current.postMessage({
+          type: 'PROCESS_DATA',
+          payload: {
+            data: formattedData,
+            categories,
+            dateRange
+          }
+        });
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to process data'));
+        setIsProcessing(false);
+      }
+    };
+
+    processDataWithCache();
   }, [data, categories, dateRange]);
 
   return {

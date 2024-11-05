@@ -1,108 +1,61 @@
 import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react';
-import { TimeSeriesChart } from '../src/components/TelemetryDashboard/components/TimeSeriesChart';
-import { exportChart } from '../src/components/TelemetryDashboard/utils/chartExport';
+import { render, screen } from '@testing-library/react';
+import TimeSeriesChart from '../src/components/TelemetryDashboard/components/TimeSeriesChart';
 
-// Mock the chart export utility
-jest.mock('../src/components/TelemetryDashboard/utils/chartExport', () => ({
-  exportChart: jest.fn(),
-}));
+const mockData = [
+  { date: '2024-01-01', total: 100, error: 20, navigation: 80 },
+  { date: '2024-01-02', total: 150, error: 30, navigation: 120 },
+  { date: '2024-01-03', total: 200, error: 40, navigation: 160 }
+];
+
+const mockCategories = {
+  error: true,
+  navigation: true
+};
 
 describe('TimeSeriesChart', () => {
-  const mockData = [
-    { date: '2024-01-01', total: 10, error: 2, navigation: 8 },
-    { date: '2024-01-02', total: 15, error: 3, navigation: 12 },
-  ];
-
-  const mockCategories = {
-    error: true,
-    navigation: true,
-  };
-
-  beforeEach(() => {
-    // Clear mock before each test
-    jest.clearAllMocks();
+  it('renders loading skeleton when loading prop is true', () => {
+    render(
+      <TimeSeriesChart
+        data={[]}
+        loading={true}
+        categories={mockCategories}
+      />
+    );
+    
+    expect(screen.getByRole('generic')).toHaveClass('animate-pulse');
   });
 
-  it('renders chart with export buttons', () => {
+  it('renders chart with title when provided', () => {
+    const title = 'Test Chart';
     render(
       <TimeSeriesChart
         data={mockData}
         categories={mockCategories}
-        isDarkMode={false}
+        title={title}
       />
     );
-
-    expect(screen.getByText('Export PNG')).toBeInTheDocument();
-    expect(screen.getByText('Export SVG')).toBeInTheDocument();
+    
+    expect(screen.getByText(title)).toBeInTheDocument();
   });
 
-  it('exports chart as PNG when PNG button is clicked', async () => {
+  it('renders chart with custom dimensions', () => {
+    const width = 800;
+    const height = 500;
     render(
       <TimeSeriesChart
         data={mockData}
         categories={mockCategories}
-        isDarkMode={false}
+        width={width}
+        height={height}
       />
     );
-
-    const pngButton = screen.getByText('Export PNG');
-    fireEvent.click(pngButton);
-
-    expect(exportChart).toHaveBeenCalledWith(
-      expect.any(SVGElement),
-      expect.objectContaining({
-        format: 'PNG',
-        filename: expect.stringContaining('telemetry-chart-'),
-      })
-    );
+    
+    const chartContainer = screen.getByRole('generic');
+    expect(chartContainer).toHaveStyle({ width: `${width}px`, height: `${height}px` });
   });
 
-  it('exports chart as SVG when SVG button is clicked', async () => {
-    render(
-      <TimeSeriesChart
-        data={mockData}
-        categories={mockCategories}
-        isDarkMode={false}
-      />
-    );
-
-    const svgButton = screen.getByText('Export SVG');
-    fireEvent.click(svgButton);
-
-    expect(exportChart).toHaveBeenCalledWith(
-      expect.any(SVGElement),
-      expect.objectContaining({
-        format: 'SVG',
-        filename: expect.stringContaining('telemetry-chart-'),
-      })
-    );
-  });
-
-  it('handles export error gracefully', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    (exportChart as jest.Mock).mockRejectedValueOnce(new Error('Export failed'));
-
-    render(
-      <TimeSeriesChart
-        data={mockData}
-        categories={mockCategories}
-        isDarkMode={false}
-      />
-    );
-
-    const pngButton = screen.getByText('Export PNG');
-    fireEvent.click(pngButton);
-
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Failed to export chart:',
-      expect.any(Error)
-    );
-
-    consoleSpy.mockRestore();
-  });
-
-  it('applies dark mode styles correctly', () => {
+  it('applies dark mode styles when isDarkMode is true', () => {
     render(
       <TimeSeriesChart
         data={mockData}
@@ -110,39 +63,69 @@ describe('TimeSeriesChart', () => {
         isDarkMode={true}
       />
     );
-
-    const container = screen.getByText('Events Over Time').closest('div');
-    expect(container).toHaveClass('bg-gray-700');
+    
+    const chartContainer = screen.getByRole('generic');
+    expect(chartContainer.querySelector('.stroke-gray-700')).toBeInTheDocument();
+    expect(chartContainer.querySelector('.text-gray-300')).toBeInTheDocument();
   });
 
-  it('renders chart with filtered categories', () => {
-    const filteredCategories = {
-      error: true,
-      navigation: false,
-    };
-
+  it('shows only total line when no categories are selected', () => {
     render(
       <TimeSeriesChart
         data={mockData}
-        categories={filteredCategories}
-        isDarkMode={false}
+        categories={{
+          error: false,
+          navigation: false
+        }}
       />
     );
-
-    // Only error category should be rendered
-    const chartContainer = screen.getByText('Events Over Time').closest('div');
-    expect(chartContainer).toBeInTheDocument();
+    
+    const lines = screen.getAllByRole('generic', { name: /line/i });
+    expect(lines).toHaveLength(1);
+    expect(screen.getByText('Total')).toBeInTheDocument();
   });
 
-  it('displays legend with correct formatting', () => {
+  it('shows selected category lines', () => {
+    render(
+      <TimeSeriesChart
+        data={mockData}
+        categories={{
+          error: true,
+          navigation: false
+        }}
+      />
+    );
+    
+    expect(screen.getByText('Error')).toBeInTheDocument();
+    expect(screen.queryByText('Navigation')).not.toBeInTheDocument();
+  });
+
+  it('applies custom class name', () => {
+    const customClass = 'custom-chart';
     render(
       <TimeSeriesChart
         data={mockData}
         categories={mockCategories}
-        isDarkMode={false}
+        className={customClass}
       />
     );
+    
+    expect(screen.getByRole('generic')).toHaveClass(customClass);
+  });
 
-    expect(screen.getByText('Click legend items to toggle visibility')).toBeInTheDocument();
+  it('renders tooltip with dark mode styles when isDarkMode is true', () => {
+    render(
+      <TimeSeriesChart
+        data={mockData}
+        categories={mockCategories}
+        isDarkMode={true}
+      />
+    );
+    
+    const tooltip = screen.getByRole('tooltip', { hidden: true });
+    expect(tooltip).toHaveStyle({
+      backgroundColor: 'rgba(26, 32, 44, 0.9)',
+      color: '#e2e8f0'
+    });
   });
 });

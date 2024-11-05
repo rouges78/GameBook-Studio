@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import {
   LineChart,
   Line,
@@ -9,113 +9,102 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import { TimeSeriesChartProps, CHART_COLORS, DEFAULT_EXPORT_OPTIONS } from '../types';
-import { exportChart } from '../utils/chartExport';
+import ChartSkeleton from './ChartSkeleton';
+
+interface CategoryFilters {
+  [key: string]: boolean;
+}
+
+interface TimeSeriesChartProps {
+  data: Array<{
+    [key: string]: string | number;
+  }>;
+  loading?: boolean;
+  title?: string;
+  className?: string;
+  width?: number;
+  height?: number;
+  xAxisKey?: string;
+  categories: CategoryFilters;
+  isDarkMode?: boolean;
+}
+
+const CATEGORY_COLORS = {
+  total: '#8884d8',
+  error: '#ff0000',
+  navigation: '#00ff00'
+};
 
 export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
   data,
+  loading = false,
+  title,
+  className = '',
+  width = 600,
+  height = 400,
+  xAxisKey = 'date',
   categories,
-  isDarkMode
+  isDarkMode = false
 }) => {
-  const chartRef = useRef<HTMLDivElement>(null);
+  if (loading) {
+    return <ChartSkeleton width={width} height={height} className={className} />;
+  }
 
-  const handleExport = async (format: 'PNG' | 'SVG') => {
-    if (!chartRef.current) return;
+  const activeCategories = Object.entries(categories)
+    .filter(([_, isActive]) => isActive)
+    .map(([category]) => category);
 
-    try {
-      const svgElement = chartRef.current.querySelector('svg');
-      if (!svgElement) {
-        throw new Error('SVG element not found');
-      }
-
-      await exportChart(svgElement, {
-        ...DEFAULT_EXPORT_OPTIONS,
-        format,
-        filename: `telemetry-chart-${new Date().toISOString().split('T')[0]}`,
-      });
-    } catch (error) {
-      console.error('Failed to export chart:', error);
-      // In a production app, we would show a user-friendly error notification here
-    }
-  };
+  // Always show total if no categories are selected
+  if (activeCategories.length === 0) {
+    activeCategories.push('total');
+  }
 
   return (
-    <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-      <div className="flex justify-between items-center mb-3">
-        <h2 className="text-xl font-semibold">Events Over Time</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleExport('PNG')}
-            className={`px-3 py-1 rounded ${
-              isDarkMode
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
-            }`}
-          >
-            Export PNG
-          </button>
-          <button
-            onClick={() => handleExport('SVG')}
-            className={`px-3 py-1 rounded ${
-              isDarkMode
-                ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-green-500 hover:bg-green-600 text-white'
-            }`}
-          >
-            Export SVG
-          </button>
-        </div>
-      </div>
-      <div className="h-[300px] w-full" ref={chartRef}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={data}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#4a5568' : '#e2e8f0'} />
-            <XAxis
-              dataKey="date"
-              stroke={isDarkMode ? '#e2e8f0' : '#4a5568'}
-              tick={{ fill: isDarkMode ? '#e2e8f0' : '#4a5568' }}
+    <div className={`${className}`} style={{ width, height }}>
+      {title && (
+        <h3 className="text-lg font-semibold mb-4 dark:text-gray-200">{title}</h3>
+      )}
+      <ResponsiveContainer width="100%" height={height - (title ? 40 : 0)}>
+        <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid 
+            strokeDasharray="3 3" 
+            className={isDarkMode ? 'stroke-gray-700' : 'stroke-gray-200'}
+          />
+          <XAxis
+            dataKey={xAxisKey}
+            className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}
+            tick={{ fontSize: 12 }}
+          />
+          <YAxis
+            className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}
+            tick={{ fontSize: 12 }}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: isDarkMode ? 'rgba(26, 32, 44, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+              border: isDarkMode ? '1px solid #4a5568' : '1px solid #e2e8f0',
+              borderRadius: '4px',
+              color: isDarkMode ? '#e2e8f0' : '#1a202c'
+            }}
+            labelStyle={{ color: isDarkMode ? '#e2e8f0' : '#4a5568' }}
+          />
+          <Legend />
+          {activeCategories.map((category) => (
+            <Line
+              key={category}
+              type="monotone"
+              dataKey={category}
+              name={category.charAt(0).toUpperCase() + category.slice(1)}
+              stroke={CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}
+              strokeWidth={2}
+              dot={{ r: 4 }}
+              activeDot={{ r: 6 }}
             />
-            <YAxis
-              stroke={isDarkMode ? '#e2e8f0' : '#4a5568'}
-              tick={{ fill: isDarkMode ? '#e2e8f0' : '#4a5568' }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: isDarkMode ? '#1a202c' : '#ffffff',
-                border: '1px solid #cbd5e0',
-                color: isDarkMode ? '#e2e8f0' : '#4a5568'
-              }}
-              formatter={(value: number, name: string) => [
-                value,
-                name.charAt(0).toUpperCase() + name.slice(1)
-              ]}
-            />
-            <Legend
-              formatter={(value: string) => value.charAt(0).toUpperCase() + value.slice(1)}
-            />
-            {Object.entries(categories)
-              .filter(([_, isEnabled]) => isEnabled)
-              .map(([category]) => (
-                <Line
-                  key={category}
-                  type="monotone"
-                  dataKey={category}
-                  name={category}
-                  stroke={CHART_COLORS[category as keyof typeof CHART_COLORS] || '#999999'}
-                  dot={false}
-                  strokeWidth={2}
-                  activeDot={{ r: 6 }}
-                />
-              ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-      <div className="mt-4 text-sm text-gray-500">
-        Click legend items to toggle visibility
-      </div>
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 };
+
+export default TimeSeriesChart;

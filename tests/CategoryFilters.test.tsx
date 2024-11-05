@@ -1,15 +1,17 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { CategoryFilters } from '../src/components/TelemetryDashboard/components/CategoryFilters';
+import CategoryFilters from '../src/components/TelemetryDashboard/components/CategoryFilters';
 
 describe('CategoryFilters', () => {
+  const defaultCategories = {
+    'auto-update': true,
+    'system': false,
+    'user-interaction': true,
+    'error': false
+  };
+
   const defaultProps = {
-    categories: {
-      'auto-update': true,
-      'system': false,
-      'user-interaction': true,
-      'error': false
-    },
+    categories: defaultCategories,
     onToggle: jest.fn(),
     isDarkMode: false
   };
@@ -18,83 +20,105 @@ describe('CategoryFilters', () => {
     jest.clearAllMocks();
   });
 
-  it('renders all category buttons', () => {
+  it('renders loading skeleton when loading is true', () => {
+    render(
+      <CategoryFilters
+        {...defaultProps}
+        loading={true}
+      />
+    );
+
+    const skeleton = screen.getByRole('status');
+    expect(skeleton.className).toContain('animate-pulse');
+  });
+
+  it('renders all category checkboxes', () => {
     render(<CategoryFilters {...defaultProps} />);
-    
-    Object.keys(defaultProps.categories).forEach(category => {
-      expect(screen.getByText(category)).toBeInTheDocument();
+
+    Object.entries(defaultCategories).forEach(([category, isChecked]) => {
+      const checkbox = screen.getByLabelText(category, { exact: false }) as HTMLInputElement;
+      expect(checkbox).toBeInTheDocument();
+      expect(checkbox.checked).toBe(isChecked);
     });
   });
 
-  it('calls onToggle with correct category when button is clicked', () => {
+  it('calls onToggle when checkbox is clicked', () => {
     render(<CategoryFilters {...defaultProps} />);
-    
-    const systemButton = screen.getByText('system');
-    fireEvent.click(systemButton);
-    
+
+    const checkbox = screen.getByLabelText('auto-update', { exact: false });
+    fireEvent.click(checkbox);
+
+    expect(defaultProps.onToggle).toHaveBeenCalledWith('auto-update');
+  });
+
+  it('calls both onToggle and onCategoryChange when both are provided', () => {
+    const onCategoryChange = jest.fn();
+    render(
+      <CategoryFilters
+        {...defaultProps}
+        onCategoryChange={onCategoryChange}
+      />
+    );
+
+    const checkbox = screen.getByLabelText('system', { exact: false });
+    fireEvent.click(checkbox);
+
     expect(defaultProps.onToggle).toHaveBeenCalledWith('system');
+    expect(onCategoryChange).toHaveBeenCalledWith('system');
   });
 
-  it('applies correct styles for enabled categories', () => {
-    render(<CategoryFilters {...defaultProps} />);
+  it('applies dark mode styles', () => {
+    render(
+      <CategoryFilters
+        {...defaultProps}
+        isDarkMode={true}
+      />
+    );
+
+    const title = screen.getByText('Categories');
+    expect(title.className).toContain('dark:text-gray-200');
+
+    const labels = screen.getAllByRole('checkbox').map(checkbox => 
+      checkbox.nextElementSibling
+    );
     
-    const enabledButton = screen.getByText('auto-update').closest('button');
-    const disabledButton = screen.getByText('system').closest('button');
-    
-    expect(enabledButton).toHaveClass('bg-blue-500', 'text-white');
-    expect(disabledButton).toHaveClass('bg-gray-300', 'text-gray-600');
+    labels.forEach(label => {
+      expect(label?.className).toContain('dark:text-gray-300');
+    });
   });
 
-  it('applies dark mode styles when isDarkMode is true', () => {
-    render(<CategoryFilters {...defaultProps} isDarkMode={true} />);
-    
-    const enabledButton = screen.getByText('auto-update').closest('button');
-    const disabledButton = screen.getByText('system').closest('button');
-    
-    expect(enabledButton).toHaveClass('bg-blue-600', 'text-white');
-    expect(disabledButton).toHaveClass('bg-gray-600', 'text-gray-400');
-  });
+  it('applies custom className', () => {
+    const customClass = 'custom-filters';
+    render(
+      <CategoryFilters
+        {...defaultProps}
+        className={customClass}
+      />
+    );
 
-  it('sets correct aria-pressed attribute based on category state', () => {
-    render(<CategoryFilters {...defaultProps} />);
-    
-    const enabledButton = screen.getByText('auto-update').closest('button');
-    const disabledButton = screen.getByText('system').closest('button');
-    
-    expect(enabledButton).toHaveAttribute('aria-pressed', 'true');
-    expect(disabledButton).toHaveAttribute('aria-pressed', 'false');
-  });
-
-  it('displays correct title attribute for each button', () => {
-    render(<CategoryFilters {...defaultProps} />);
-    
-    const enabledButton = screen.getByText('auto-update').closest('button');
-    const disabledButton = screen.getByText('system').closest('button');
-    
-    expect(enabledButton).toHaveAttribute('title', 'Hide auto-update events');
-    expect(disabledButton).toHaveAttribute('title', 'Show system events');
-  });
-
-  it('renders help text', () => {
-    render(<CategoryFilters {...defaultProps} />);
-    
-    expect(screen.getByText('Click a category to toggle its visibility in the charts')).toBeInTheDocument();
-  });
-
-  it('renders indicator dots with correct colors', () => {
-    render(<CategoryFilters {...defaultProps} />);
-    
-    const enabledDot = screen.getByText('auto-update').previousSibling;
-    const disabledDot = screen.getByText('system').previousSibling;
-    
-    expect(enabledDot).toHaveClass('bg-white');
-    expect(disabledDot).toHaveClass('bg-gray-400');
+    const container = screen.getByRole('region');
+    expect(container.className).toContain(customClass);
   });
 
   it('handles empty categories object', () => {
-    render(<CategoryFilters {...defaultProps} categories={{}} />);
-    
-    expect(screen.getByText('Event Categories')).toBeInTheDocument();
-    expect(screen.getByText('Click a category to toggle its visibility in the charts')).toBeInTheDocument();
+    render(
+      <CategoryFilters
+        {...defaultProps}
+        categories={{}}
+      />
+    );
+
+    const container = screen.getByRole('region');
+    expect(container).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  });
+
+  it('capitalizes category labels', () => {
+    render(<CategoryFilters {...defaultProps} />);
+
+    Object.keys(defaultCategories).forEach(category => {
+      const label = screen.getByText(category, { exact: false });
+      expect(label.className).toContain('capitalize');
+    });
   });
 });

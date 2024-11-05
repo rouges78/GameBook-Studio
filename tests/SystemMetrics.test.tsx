@@ -1,162 +1,177 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { SystemMetrics } from '../src/components/TelemetryDashboard/components/SystemMetrics';
-
-// Mock recharts components
-jest.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PieChart: ({ children }: { children: React.ReactNode }) => <div data-testid="pie-chart">{children}</div>,
-  Pie: () => <div>Pie</div>,
-  Cell: () => <div>Cell</div>,
-  Tooltip: () => <div>Tooltip</div>,
-  Legend: () => <div>Legend</div>
-}));
+import SystemMetrics from '../src/components/TelemetryDashboard/components/SystemMetrics';
 
 describe('SystemMetrics', () => {
-  const mockData = {
-    metrics: {
-      performance: {
-        avgResponseTime: 245.67,
-        errorRate: 1.23,
-        totalCrashes: 5
-      },
-      byPlatform: {
-        'windows': 75,
-        'mac': 20,
-        'linux': 5
-      },
-      byVersion: {
-        '1.0.0': 30,
-        '1.1.0': 45,
-        '1.2.0': 25
-      },
-      byArch: {
-        'x64': 80,
-        'arm64': 15,
-        'ia32': 5
-      }
+  const arrayMetrics = [
+    {
+      title: 'Response Time',
+      value: 250,
+      change: 5,
+      unit: 'ms'
     },
-    isDarkMode: false
+    {
+      title: 'Error Rate',
+      value: 1.5,
+      change: -0.5,
+      unit: '%'
+    }
+  ];
+
+  const objectMetrics = {
+    performance: {
+      avgResponseTime: 250,
+      errorRate: 1.5,
+      totalCrashes: 10
+    },
+    byPlatform: {
+      windows: 75,
+      mac: 20,
+      linux: 5
+    }
   };
 
-  it('renders all main sections', () => {
-    render(<SystemMetrics {...mockData} />);
-    
-    expect(screen.getByText('Performance Metrics')).toBeInTheDocument();
-    expect(screen.getByText('Platform Distribution')).toBeInTheDocument();
-    expect(screen.getByText('Version Distribution')).toBeInTheDocument();
-    expect(screen.getByText('Architecture Distribution')).toBeInTheDocument();
+  it('renders loading skeleton when loading is true', () => {
+    render(
+      <SystemMetrics
+        metrics={arrayMetrics}
+        loading={true}
+        isDarkMode={false}
+      />
+    );
+
+    const skeleton = screen.getByRole('status');
+    expect(skeleton.className).toContain('animate-pulse');
   });
 
-  it('displays performance metrics with correct formatting', () => {
-    render(<SystemMetrics {...mockData} />);
-    
-    expect(screen.getByText('245.67')).toBeInTheDocument();
-    expect(screen.getByText('ms')).toBeInTheDocument();
-    expect(screen.getByText('1.23')).toBeInTheDocument();
-    expect(screen.getByText('%')).toBeInTheDocument();
-    expect(screen.getByText('5')).toBeInTheDocument();
-  });
+  it('renders array-based metrics correctly', () => {
+    render(
+      <SystemMetrics
+        metrics={arrayMetrics}
+        isDarkMode={false}
+      />
+    );
 
-  it('renders distribution charts', () => {
-    render(<SystemMetrics {...mockData} />);
-    
-    const pieCharts = screen.getAllByTestId('pie-chart');
-    expect(pieCharts).toHaveLength(2); // Platform and Version charts
-  });
+    const metricCards = screen.getAllByTestId('metric-card');
+    expect(metricCards).toHaveLength(arrayMetrics.length);
 
-  it('displays architecture distribution with percentages', () => {
-    render(<SystemMetrics {...mockData} />);
-    
-    // Check architecture names
-    expect(screen.getByText('x64')).toBeInTheDocument();
-    expect(screen.getByText('arm64')).toBeInTheDocument();
-    expect(screen.getByText('ia32')).toBeInTheDocument();
-
-    // Check values
-    expect(screen.getByText('80')).toBeInTheDocument();
-    expect(screen.getByText('15')).toBeInTheDocument();
-    expect(screen.getByText('5')).toBeInTheDocument();
-
-    // Check percentages
-    expect(screen.getByText('80.0%')).toBeInTheDocument();
-    expect(screen.getByText('15.0%')).toBeInTheDocument();
-    expect(screen.getByText('5.0%')).toBeInTheDocument();
-  });
-
-  it('applies dark mode styles when isDarkMode is true', () => {
-    const darkModeData = { ...mockData, isDarkMode: true };
-    render(<SystemMetrics {...darkModeData} />);
-    
-    const sections = screen.getAllByRole('heading', { level: 2 })
-      .map(heading => heading.parentElement);
-    
-    sections.forEach(section => {
-      expect(section).toHaveClass('bg-gray-700');
-    });
-
-    // Check architecture cards
-    const archCards = screen.getAllByText(/x64|arm64|ia32/).map(text => text.parentElement);
-    archCards.forEach(card => {
-      expect(card).toHaveClass('bg-gray-600');
-    });
-  });
-
-  it('applies light mode styles when isDarkMode is false', () => {
-    render(<SystemMetrics {...mockData} />);
-    
-    const sections = screen.getAllByRole('heading', { level: 2 })
-      .map(heading => heading.parentElement);
-    
-    sections.forEach(section => {
-      expect(section).toHaveClass('bg-gray-100');
-    });
-
-    // Check architecture cards
-    const archCards = screen.getAllByText(/x64|arm64|ia32/).map(text => text.parentElement);
-    archCards.forEach(card => {
-      expect(card).toHaveClass('bg-gray-200');
-    });
-  });
-
-  it('handles empty metrics data', () => {
-    const emptyData = {
-      metrics: {
-        performance: {
-          avgResponseTime: 0,
-          errorRate: 0,
-          totalCrashes: 0
-        },
-        byPlatform: {},
-        byVersion: {},
-        byArch: {}
-      },
-      isDarkMode: false
-    };
-    
-    render(<SystemMetrics {...emptyData} />);
-    
-    expect(screen.getByText('0.00')).toBeInTheDocument(); // avgResponseTime
-    expect(screen.getByText('0.00')).toBeInTheDocument(); // errorRate
-    expect(screen.getByText('0')).toBeInTheDocument(); // totalCrashes
-  });
-
-  it('formats decimal numbers correctly', () => {
-    const dataWithLongDecimals = {
-      ...mockData,
-      metrics: {
-        ...mockData.metrics,
-        performance: {
-          avgResponseTime: 245.6789,
-          errorRate: 1.2345,
-          totalCrashes: 5
-        }
+    arrayMetrics.forEach(metric => {
+      expect(screen.getByText(metric.title)).toBeInTheDocument();
+      expect(screen.getByText(metric.value.toString())).toBeInTheDocument();
+      if (metric.unit) {
+        expect(screen.getByText(metric.unit)).toBeInTheDocument();
       }
+    });
+  });
+
+  it('renders object-based metrics correctly', () => {
+    render(
+      <SystemMetrics
+        metrics={objectMetrics}
+        isDarkMode={false}
+      />
+    );
+
+    // Check performance metrics
+    expect(screen.getByText('Average Response Time')).toBeInTheDocument();
+    expect(screen.getByText('250')).toBeInTheDocument();
+    expect(screen.getByText('Error Rate')).toBeInTheDocument();
+    expect(screen.getByText('1.5')).toBeInTheDocument();
+    expect(screen.getByText('Total Crashes')).toBeInTheDocument();
+    expect(screen.getByText('10')).toBeInTheDocument();
+
+    // Check platform metrics
+    expect(screen.getByText('Windows Usage')).toBeInTheDocument();
+    expect(screen.getByText('75')).toBeInTheDocument();
+    expect(screen.getByText('Mac Usage')).toBeInTheDocument();
+    expect(screen.getByText('20')).toBeInTheDocument();
+    expect(screen.getByText('Linux Usage')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
+  });
+
+  it('applies dark mode styles', () => {
+    render(
+      <SystemMetrics
+        metrics={arrayMetrics}
+        isDarkMode={true}
+      />
+    );
+
+    const metricCards = screen.getAllByTestId('metric-card');
+    metricCards.forEach(card => {
+      expect(card.className).toContain('dark:bg-gray-800');
+      
+      // Check title color
+      const title = card.querySelector('h3');
+      expect(title?.className).toContain('dark:text-gray-400');
+      
+      // Check value color
+      const value = card.querySelector('p');
+      expect(value?.className).toContain('dark:text-white');
+    });
+  });
+
+  it('handles empty metrics object', () => {
+    const emptyMetrics = {
+      performance: {
+        avgResponseTime: 0,
+        errorRate: 0,
+        totalCrashes: 0
+      },
+      byPlatform: {},
+      byVersion: {},
+      byArch: {}
     };
-    
-    render(<SystemMetrics {...dataWithLongDecimals} />);
-    
-    expect(screen.getByText('245.68')).toBeInTheDocument(); // avgResponseTime rounded to 2 decimals
-    expect(screen.getByText('1.23')).toBeInTheDocument(); // errorRate rounded to 2 decimals
+
+    render(
+      <SystemMetrics
+        metrics={emptyMetrics}
+        isDarkMode={false}
+      />
+    );
+
+    // Should still render performance metrics
+    expect(screen.getByText('Average Response Time')).toBeInTheDocument();
+    expect(screen.getByText('Error Rate')).toBeInTheDocument();
+    expect(screen.getByText('Total Crashes')).toBeInTheDocument();
+  });
+
+  it('applies custom className', () => {
+    const customClass = 'custom-metrics';
+    render(
+      <SystemMetrics
+        metrics={arrayMetrics}
+        isDarkMode={false}
+        className={customClass}
+      />
+    );
+
+    const container = screen.getByRole('region');
+    expect(container.className).toContain(customClass);
+  });
+
+  it('shows change indicators only when change is not zero', () => {
+    const metricsWithZeroChange = [
+      {
+        title: 'Metric 1',
+        value: 100,
+        change: 0
+      },
+      {
+        title: 'Metric 2',
+        value: 200,
+        change: 5
+      }
+    ];
+
+    render(
+      <SystemMetrics
+        metrics={metricsWithZeroChange}
+        isDarkMode={false}
+      />
+    );
+
+    const arrows = screen.queryAllByRole('img', { hidden: true });
+    expect(arrows).toHaveLength(1); // Only one metric has non-zero change
   });
 });

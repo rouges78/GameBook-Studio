@@ -1,7 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { DateRangeFilters } from '../src/components/TelemetryDashboard/components/DateRangeFilters';
-import { PRESET_RANGES } from '../src/components/TelemetryDashboard/types';
+import DateRangeFilters from '../src/components/TelemetryDashboard/components/DateRangeFilters';
 
 describe('DateRangeFilters', () => {
   const defaultProps = {
@@ -10,7 +9,6 @@ describe('DateRangeFilters', () => {
       endDate: '2024-01-31'
     },
     onDateChange: jest.fn(),
-    onPresetSelect: jest.fn(),
     isDarkMode: false
   };
 
@@ -18,78 +16,109 @@ describe('DateRangeFilters', () => {
     jest.clearAllMocks();
   });
 
-  it('renders correctly with default props', () => {
-    render(<DateRangeFilters {...defaultProps} />);
-    
-    expect(screen.getByText('Date Range')).toBeInTheDocument();
-    expect(screen.getByText('Quick Ranges')).toBeInTheDocument();
-    expect(screen.getByLabelText('Start Date')).toHaveValue('2024-01-01');
-    expect(screen.getByLabelText('End Date')).toHaveValue('2024-01-31');
+  it('renders loading skeleton when loading is true', () => {
+    render(
+      <DateRangeFilters
+        {...defaultProps}
+        loading={true}
+      />
+    );
+
+    const skeleton = screen.getByRole('status');
+    expect(skeleton.className).toContain('animate-pulse');
   });
 
-  it('renders all preset range buttons', () => {
+  it('renders date inputs with correct values', () => {
     render(<DateRangeFilters {...defaultProps} />);
-    
-    PRESET_RANGES.forEach(({ label }) => {
-      expect(screen.getByText(label)).toBeInTheDocument();
-    });
+
+    const startDateInput = screen.getByLabelText(/start date/i) as HTMLInputElement;
+    const endDateInput = screen.getByLabelText(/end date/i) as HTMLInputElement;
+
+    expect(startDateInput.value).toBe('2024-01-01');
+    expect(endDateInput.value).toBe('2024-01-31');
   });
 
-  it('calls onDateChange when date inputs change', () => {
+  it('calls onDateChange when dates are changed', () => {
     render(<DateRangeFilters {...defaultProps} />);
-    
-    const startDateInput = screen.getByLabelText('Start Date');
+
+    const startDateInput = screen.getByLabelText(/start date/i);
+    const endDateInput = screen.getByLabelText(/end date/i);
+
     fireEvent.change(startDateInput, { target: { value: '2024-02-01' } });
-    
     expect(defaultProps.onDateChange).toHaveBeenCalledWith('startDate', '2024-02-01');
-    
-    const endDateInput = screen.getByLabelText('End Date');
+
     fireEvent.change(endDateInput, { target: { value: '2024-02-28' } });
-    
     expect(defaultProps.onDateChange).toHaveBeenCalledWith('endDate', '2024-02-28');
   });
 
-  it('calls onPresetSelect when preset range is clicked', () => {
-    render(<DateRangeFilters {...defaultProps} />);
-    
-    const sevenDaysButton = screen.getByText('Last 7 Days');
+  it('renders preset buttons when onPresetSelect is provided', () => {
+    const onPresetSelect = jest.fn();
+    render(
+      <DateRangeFilters
+        {...defaultProps}
+        onPresetSelect={onPresetSelect}
+      />
+    );
+
+    const sevenDaysButton = screen.getByText(/last 7 days/i);
+    const thirtyDaysButton = screen.getByText(/last 30 days/i);
+
     fireEvent.click(sevenDaysButton);
-    
-    expect(defaultProps.onPresetSelect).toHaveBeenCalledWith(7);
+    expect(onPresetSelect).toHaveBeenCalledWith(7);
+
+    fireEvent.click(thirtyDaysButton);
+    expect(onPresetSelect).toHaveBeenCalledWith(30);
   });
 
-  it('respects min and max date constraints', () => {
-    const propsWithConstraints = {
-      ...defaultProps,
-      minDate: '2024-01-01',
-      maxDate: '2024-12-31'
-    };
-    
-    render(<DateRangeFilters {...propsWithConstraints} />);
-    
-    const startDateInput = screen.getByLabelText('Start Date');
-    const endDateInput = screen.getByLabelText('End Date');
-    
-    expect(startDateInput).toHaveAttribute('min', '2024-01-01');
-    expect(startDateInput).toHaveAttribute('max', '2024-01-31');
-    expect(endDateInput).toHaveAttribute('min', '2024-01-01');
-    expect(endDateInput).toHaveAttribute('max', '2024-12-31');
+  it('applies min and max date constraints', () => {
+    const minDate = '2024-01-01';
+    const maxDate = '2024-12-31';
+    render(
+      <DateRangeFilters
+        {...defaultProps}
+        minDate={minDate}
+        maxDate={maxDate}
+      />
+    );
+
+    const startDateInput = screen.getByLabelText(/start date/i);
+    const endDateInput = screen.getByLabelText(/end date/i);
+
+    expect(startDateInput).toHaveAttribute('min', minDate);
+    expect(startDateInput).toHaveAttribute('max', maxDate);
+    expect(endDateInput).toHaveAttribute('min', defaultProps.dateRange.startDate);
+    expect(endDateInput).toHaveAttribute('max', maxDate);
   });
 
   it('applies dark mode styles when isDarkMode is true', () => {
-    const darkModeProps = {
-      ...defaultProps,
-      isDarkMode: true
-    };
-    
-    render(<DateRangeFilters {...darkModeProps} />);
-    
-    const container = screen.getByText('Date Range').parentElement;
-    expect(container).toHaveClass('bg-gray-700');
-    
-    const dateInputs = screen.getAllByRole('textbox');
-    dateInputs.forEach(input => {
-      expect(input).toHaveClass('bg-gray-600', 'text-gray-200');
+    render(
+      <DateRangeFilters
+        {...defaultProps}
+        isDarkMode={true}
+      />
+    );
+
+    const title = screen.getByText(/date range/i);
+    expect(title.className).toContain('dark:text-gray-200');
+
+    const inputs = screen.getAllByRole('textbox');
+    inputs.forEach(input => {
+      expect(input.className).toContain('dark:bg-gray-700');
+      expect(input.className).toContain('dark:border-gray-600');
+      expect(input.className).toContain('dark:text-white');
     });
+  });
+
+  it('applies custom className', () => {
+    const customClass = 'custom-filters';
+    render(
+      <DateRangeFilters
+        {...defaultProps}
+        className={customClass}
+      />
+    );
+
+    const container = screen.getByRole('region', { name: /date range/i });
+    expect(container.className).toContain(customClass);
   });
 });

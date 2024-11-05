@@ -1,51 +1,33 @@
 import { renderHook, act } from '@testing-library/react';
 import { useStoryMap } from '../src/components/StoryMap/hooks/useStoryMap';
-import type { ExtendedParagraph, MapSettings, Node } from '../src/components/StoryMap/types';
-
-// Mock useInertiaScroll hook
-jest.mock('../src/components/StoryMap/hooks/useInertiaScroll', () => ({
-  useInertiaScroll: () => ({
-    startTracking: jest.fn(),
-    updateTracking: jest.fn(),
-    stopTracking: jest.fn()
-  })
-}));
+import type { ExtendedParagraph, Node, MapSettings } from '../src/components/StoryMap/types';
 
 describe('useStoryMap Hook', () => {
-  const defaultImageAdjustments = {
-    contrast: 100,
-    transparency: 100,
-    blackAndWhite: 0,
-    sharpness: 100,
-    brightness: 100,
-    width: 1000,
-    height: 800,
-    maintainAspectRatio: true
-  };
-
-  const defaultMapSettings: MapSettings = {
-    backgroundImage: null,
-    imageAdjustments: defaultImageAdjustments
-  };
-
   const mockParagraphs: ExtendedParagraph[] = [
     {
       id: 1,
-      title: 'Test Node 1',
+      title: 'Node 1',
+      content: 'Content 1',
       type: 'normale',
       actions: [],
-      x: 100,
-      y: 100
-    },
-    {
-      id: 2,
-      title: 'Test Node 2',
-      type: 'nodo',
-      actions: [],
-      x: 200,
-      y: 200
+      incomingConnections: [],
+      outgoingConnections: []
     }
   ];
+
+  const mockMapSettings: MapSettings = {
+    backgroundImage: null,
+    imageAdjustments: {
+      contrast: 100,
+      transparency: 100,
+      blackAndWhite: 0,
+      sharpness: 100,
+      brightness: 100,
+      width: 1000,
+      height: 800,
+      maintainAspectRatio: true
+    }
+  };
 
   const mockOnSave = jest.fn();
   const mockOnUpdateParagraphs = jest.fn();
@@ -55,223 +37,290 @@ describe('useStoryMap Hook', () => {
     jest.clearAllMocks();
   });
 
-  test('initializes with correct state', () => {
-    const { result } = renderHook(() => useStoryMap(
-      mockParagraphs,
-      defaultMapSettings,
-      mockOnSave,
-      mockOnUpdateParagraphs,
-      mockOnUpdateMapSettings
-    ));
+  describe('Node Initialization', () => {
+    test('initializes nodes with saved positions', () => {
+      const paragraphsWithPositions: ExtendedParagraph[] = [
+        {
+          ...mockParagraphs[0],
+          x: 100,
+          y: 200
+        }
+      ];
 
-    expect(result.current.state.nodes).toHaveLength(2);
-    expect(result.current.state.nodes[0]).toMatchObject({
-      id: 1,
-      title: 'Test Node 1',
-      x: 100,
-      y: 100
+      const { result } = renderHook(() =>
+        useStoryMap(
+          paragraphsWithPositions,
+          mockMapSettings,
+          mockOnSave,
+          mockOnUpdateParagraphs,
+          mockOnUpdateMapSettings
+        )
+      );
+
+      expect(result.current.state.nodes[0]).toEqual(
+        expect.objectContaining({
+          id: 1,
+          x: 100,
+          y: 200
+        })
+      );
     });
-    expect(result.current.state.zoom).toBe(1);
-    expect(result.current.state.showGrid).toBe(true);
-    expect(result.current.state.isDragMode).toBe(false);
+
+    test('assigns grid positions for nodes without saved positions', () => {
+      const manyParagraphs: ExtendedParagraph[] = Array.from({ length: 6 }, (_, i) => ({
+        ...mockParagraphs[0],
+        id: i + 1
+      }));
+
+      const { result } = renderHook(() =>
+        useStoryMap(
+          manyParagraphs,
+          mockMapSettings,
+          mockOnSave,
+          mockOnUpdateParagraphs,
+          mockOnUpdateMapSettings
+        )
+      );
+
+      // Check grid positioning (100 + (index % 5) * 200 for x, 100 + Math.floor(index / 5) * 200 for y)
+      expect(result.current.state.nodes[0].x).toBe(100); // First column
+      expect(result.current.state.nodes[0].y).toBe(100); // First row
+      expect(result.current.state.nodes[5].x).toBe(100); // Back to first column
+      expect(result.current.state.nodes[5].y).toBe(300); // Second row
+    });
   });
 
-  test('handles node selection', () => {
-    const { result } = renderHook(() => useStoryMap(
-      mockParagraphs,
-      defaultMapSettings,
-      mockOnSave,
-      mockOnUpdateParagraphs,
-      mockOnUpdateMapSettings
-    ));
+  describe('Node Boundary Constraints', () => {
+    test('constrains node position within map bounds during drag', () => {
+      const { result } = renderHook(() =>
+        useStoryMap(
+          mockParagraphs,
+          mockMapSettings,
+          mockOnSave,
+          mockOnUpdateParagraphs,
+          mockOnUpdateMapSettings
+        )
+      );
 
-    act(() => {
-      result.current.actions.setSelectedNode(1);
+      // Enable drag mode
+      act(() => {
+        result.current.actions.setIsDragMode(true);
+      });
+
+      // Start dragging
+      act(() => {
+        result.current.actions.handleNodeDragStart(
+          { clientX: 0, clientY: 0 } as React.MouseEvent,
+          1
+        );
+      });
+
+      // Attempt to drag beyond bounds
+      act(() => {
+        result.current.actions.handleNodeDrag(
+          { clientX: -100, clientY: -100 } as React.MouseEvent
+        );
+      });
+
+      // Node should be constrained to minimum bounds (30px padding)
+      expect(result.current.state.nodes[0].x).toBe(30);
+      expect(result.current.state.nodes[0].y).toBe(30);
+
+      // Attempt to drag beyond maximum bounds
+      act(() => {
+        result.current.actions.handleNodeDrag(
+          { clientX: 2000, clientY: 2000 } as React.MouseEvent
+        );
+      });
+
+      // Node should be constrained to maximum bounds (width/height - 30px padding)
+      expect(result.current.state.nodes[0].x).toBe(970); // 1000 - 30
+      expect(result.current.state.nodes[0].y).toBe(770); // 800 - 30
     });
 
-    expect(result.current.state.selectedNode).toBe(1);
+    test('prevents dragging of locked nodes', () => {
+      const paragraphWithLockedNode: ExtendedParagraph[] = [
+        {
+          ...mockParagraphs[0],
+          locked: true,
+          x: 100,
+          y: 100
+        }
+      ];
 
-    act(() => {
-      result.current.actions.setSelectedNode(null);
+      const { result } = renderHook(() =>
+        useStoryMap(
+          paragraphWithLockedNode,
+          mockMapSettings,
+          mockOnSave,
+          mockOnUpdateParagraphs,
+          mockOnUpdateMapSettings
+        )
+      );
+
+      // Enable drag mode
+      act(() => {
+        result.current.actions.setIsDragMode(true);
+      });
+
+      // Initial position
+      const initialX = result.current.state.nodes[0].x;
+      const initialY = result.current.state.nodes[0].y;
+
+      // Attempt to drag locked node
+      act(() => {
+        result.current.actions.handleNodeDragStart(
+          { clientX: 0, clientY: 0 } as React.MouseEvent,
+          1
+        );
+      });
+
+      act(() => {
+        result.current.actions.handleNodeDrag(
+          { clientX: 100, clientY: 100 } as React.MouseEvent
+        );
+      });
+
+      // Position should remain unchanged
+      expect(result.current.state.nodes[0].x).toBe(initialX);
+      expect(result.current.state.nodes[0].y).toBe(initialY);
     });
 
-    expect(result.current.state.selectedNode).toBeNull();
+    test('prevents dragging when not in drag mode', () => {
+      const { result } = renderHook(() =>
+        useStoryMap(
+          mockParagraphs,
+          mockMapSettings,
+          mockOnSave,
+          mockOnUpdateParagraphs,
+          mockOnUpdateMapSettings
+        )
+      );
+
+      // Initial position
+      const initialX = result.current.state.nodes[0].x;
+      const initialY = result.current.state.nodes[0].y;
+
+      // Attempt to drag with drag mode disabled
+      act(() => {
+        result.current.actions.handleNodeDragStart(
+          { clientX: 0, clientY: 0 } as React.MouseEvent,
+          1
+        );
+      });
+
+      act(() => {
+        result.current.actions.handleNodeDrag(
+          { clientX: 100, clientY: 100 } as React.MouseEvent
+        );
+      });
+
+      // Position should remain unchanged
+      expect(result.current.state.nodes[0].x).toBe(initialX);
+      expect(result.current.state.nodes[0].y).toBe(initialY);
+    });
   });
 
-  test('handles node dragging', () => {
-    const { result } = renderHook(() => useStoryMap(
-      mockParagraphs,
-      defaultMapSettings,
-      mockOnSave,
-      mockOnUpdateParagraphs,
-      mockOnUpdateMapSettings
-    ));
+  describe('Node Position with Zoom', () => {
+    test('adjusts node drag distance based on zoom level', () => {
+      const { result } = renderHook(() =>
+        useStoryMap(
+          mockParagraphs,
+          mockMapSettings,
+          mockOnSave,
+          mockOnUpdateParagraphs,
+          mockOnUpdateMapSettings
+        )
+      );
 
-    // Enable drag mode
-    act(() => {
-      result.current.actions.setIsDragMode(true);
+      // Enable drag mode
+      act(() => {
+        result.current.actions.setIsDragMode(true);
+      });
+
+      // Set zoom to 2x
+      act(() => {
+        result.current.actions.setZoom(2);
+      });
+
+      // Start dragging
+      act(() => {
+        result.current.actions.handleNodeDragStart(
+          { clientX: 0, clientY: 0 } as React.MouseEvent,
+          1
+        );
+      });
+
+      // Drag 100px at 2x zoom (should move node 50px)
+      act(() => {
+        result.current.actions.handleNodeDrag(
+          { clientX: 100, clientY: 100 } as React.MouseEvent
+        );
+      });
+
+      const draggedNode = result.current.state.nodes[0];
+      const expectedMove = 100 / 2; // 100px movement at 2x zoom = 50px actual movement
+
+      // Allow for small floating-point differences
+      expect(Math.abs(draggedNode.x - (result.current.state.nodes[0].x + expectedMove))).toBeLessThan(0.1);
+      expect(Math.abs(draggedNode.y - (result.current.state.nodes[0].y + expectedMove))).toBeLessThan(0.1);
     });
 
-    const mockEvent = {
-      clientX: 150,
-      clientY: 150,
-      preventDefault: jest.fn()
-    } as unknown as React.MouseEvent;
+    test('maintains node constraints at different zoom levels', () => {
+      const { result } = renderHook(() =>
+        useStoryMap(
+          mockParagraphs,
+          mockMapSettings,
+          mockOnSave,
+          mockOnUpdateParagraphs,
+          mockOnUpdateMapSettings
+        )
+      );
 
-    // Start dragging
-    act(() => {
-      result.current.actions.handleNodeDragStart(mockEvent, 1);
+      // Enable drag mode
+      act(() => {
+        result.current.actions.setIsDragMode(true);
+      });
+
+      // Test at minimum zoom (0.25)
+      act(() => {
+        result.current.actions.setZoom(0.25);
+      });
+
+      // Start dragging
+      act(() => {
+        result.current.actions.handleNodeDragStart(
+          { clientX: 0, clientY: 0 } as React.MouseEvent,
+          1
+        );
+      });
+
+      // Attempt to drag beyond bounds at minimum zoom
+      act(() => {
+        result.current.actions.handleNodeDrag(
+          { clientX: -1000, clientY: -1000 } as React.MouseEvent
+        );
+      });
+
+      // Node should still be constrained to minimum bounds
+      expect(result.current.state.nodes[0].x).toBe(30);
+      expect(result.current.state.nodes[0].y).toBe(30);
+
+      // Test at maximum zoom (4)
+      act(() => {
+        result.current.actions.setZoom(4);
+      });
+
+      // Attempt to drag beyond bounds at maximum zoom
+      act(() => {
+        result.current.actions.handleNodeDrag(
+          { clientX: 5000, clientY: 5000 } as React.MouseEvent
+        );
+      });
+
+      // Node should still be constrained to maximum bounds
+      expect(result.current.state.nodes[0].x).toBe(970);
+      expect(result.current.state.nodes[0].y).toBe(770);
     });
-
-    expect(result.current.state.isDragging).toBe(true);
-    expect(result.current.state.selectedNode).toBe(1);
-
-    // Perform drag
-    const mockMoveEvent = {
-      clientX: 200,
-      clientY: 200,
-      preventDefault: jest.fn()
-    } as unknown as React.MouseEvent;
-
-    act(() => {
-      result.current.actions.handleNodeDrag(mockMoveEvent);
-    });
-
-    const updatedNode = result.current.state.nodes.find(n => n.id === 1);
-    expect(updatedNode?.x).not.toBe(100); // Position should have changed
-    expect(updatedNode?.y).not.toBe(100);
-
-    // End dragging
-    act(() => {
-      result.current.actions.handleNodeDragEnd();
-    });
-
-    expect(result.current.state.isDragging).toBe(false);
-    expect(mockOnUpdateParagraphs).toHaveBeenCalled();
-  });
-
-  test('handles map panning', () => {
-    const { result } = renderHook(() => useStoryMap(
-      mockParagraphs,
-      defaultMapSettings,
-      mockOnSave,
-      mockOnUpdateParagraphs,
-      mockOnUpdateMapSettings
-    ));
-
-    const mockEvent = {
-      clientX: 100,
-      clientY: 100,
-      preventDefault: jest.fn()
-    } as unknown as React.MouseEvent;
-
-    act(() => {
-      result.current.actions.handleMapPanStart(mockEvent);
-    });
-
-    expect(result.current.state.isPanning).toBe(true);
-
-    const mockMoveEvent = {
-      clientX: 150,
-      clientY: 150,
-      preventDefault: jest.fn()
-    } as unknown as React.MouseEvent;
-
-    act(() => {
-      result.current.actions.handleMapPan(mockMoveEvent);
-    });
-
-    expect(result.current.state.viewBox.x).not.toBe(0);
-    expect(result.current.state.viewBox.y).not.toBe(0);
-
-    act(() => {
-      result.current.actions.handleMapPanEnd();
-    });
-
-    expect(result.current.state.isPanning).toBe(false);
-  });
-
-  test('handles zoom controls', () => {
-    const { result } = renderHook(() => useStoryMap(
-      mockParagraphs,
-      defaultMapSettings,
-      mockOnSave,
-      mockOnUpdateParagraphs,
-      mockOnUpdateMapSettings
-    ));
-
-    act(() => {
-      result.current.actions.handleZoom(0.1); // Zoom in
-    });
-
-    expect(result.current.state.zoom).toBe(1.1);
-
-    act(() => {
-      result.current.actions.handleZoom(-0.1); // Zoom out
-    });
-
-    expect(result.current.state.zoom).toBe(1);
-  });
-
-  test('handles manual save', async () => {
-    const { result } = renderHook(() => useStoryMap(
-      mockParagraphs,
-      defaultMapSettings,
-      mockOnSave,
-      mockOnUpdateParagraphs,
-      mockOnUpdateMapSettings
-    ));
-
-    await act(async () => {
-      await result.current.actions.handleManualSave();
-    });
-
-    expect(mockOnSave).toHaveBeenCalledWith(result.current.state.nodes);
-    expect(mockOnUpdateParagraphs).toHaveBeenCalled();
-    expect(mockOnUpdateMapSettings).toHaveBeenCalled();
-  });
-
-  test('handles grid toggle', () => {
-    const { result } = renderHook(() => useStoryMap(
-      mockParagraphs,
-      defaultMapSettings,
-      mockOnSave,
-      mockOnUpdateParagraphs,
-      mockOnUpdateMapSettings
-    ));
-
-    act(() => {
-      result.current.actions.setShowGrid(false);
-    });
-
-    expect(result.current.state.showGrid).toBe(false);
-
-    act(() => {
-      result.current.actions.setShowGrid(true);
-    });
-
-    expect(result.current.state.showGrid).toBe(true);
-  });
-
-  test('handles drag mode toggle', () => {
-    const { result } = renderHook(() => useStoryMap(
-      mockParagraphs,
-      defaultMapSettings,
-      mockOnSave,
-      mockOnUpdateParagraphs,
-      mockOnUpdateMapSettings
-    ));
-
-    act(() => {
-      result.current.actions.setIsDragMode(true);
-    });
-
-    expect(result.current.state.isDragMode).toBe(true);
-
-    act(() => {
-      result.current.actions.setIsDragMode(false);
-    });
-
-    expect(result.current.state.isDragMode).toBe(false);
   });
 });

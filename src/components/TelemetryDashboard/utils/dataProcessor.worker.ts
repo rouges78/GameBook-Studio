@@ -1,3 +1,5 @@
+import pako from 'pako';
+
 interface TelemetryData {
   date: string;
   category: string;
@@ -21,9 +23,10 @@ type WorkerMessage = {
       pageSize: number;
     };
   };
+  compressed?: boolean;
 };
 
-interface ProcessedData {
+interface UncompressedProcessedData {
   filteredData: TelemetryData[];
   metrics: {
     total: number;
@@ -66,6 +69,18 @@ interface ProcessedData {
   };
 }
 
+interface CompressedProcessedData {
+  compressed: true;
+  data: Uint8Array;
+}
+
+type ProcessedData = UncompressedProcessedData | CompressedProcessedData;
+
+// Type guard to check if data is compressed
+function isCompressedData(data: ProcessedData): data is CompressedProcessedData {
+  return 'compressed' in data && data.compressed === true;
+}
+
 // Helper function to check if a date is within range
 const isDateInRange = (date: string, start?: string, end?: string): boolean => {
   if (!start || !end) return true;
@@ -74,8 +89,8 @@ const isDateInRange = (date: string, start?: string, end?: string): boolean => {
 };
 
 // Helper function to calculate metrics
-const calculateMetrics = (data: TelemetryData[]): ProcessedData['metrics'] => {
-  const metrics: ProcessedData['metrics'] = {
+const calculateMetrics = (data: TelemetryData[]): UncompressedProcessedData['metrics'] => {
+  const metrics: UncompressedProcessedData['metrics'] = {
     total: 0,
     error: 0,
     navigation: 0
@@ -103,7 +118,7 @@ const calculateMetrics = (data: TelemetryData[]): ProcessedData['metrics'] => {
 };
 
 // Helper function to calculate error patterns
-const calculateErrorPatterns = (data: TelemetryData[]): ProcessedData['errorPatterns'] => {
+const calculateErrorPatterns = (data: TelemetryData[]): UncompressedProcessedData['errorPatterns'] => {
   const errorsByDate: { [key: string]: number } = {};
   const patternCounts: { [key: string]: { count: number; impact: number } } = {};
 
@@ -138,7 +153,7 @@ const calculateErrorPatterns = (data: TelemetryData[]): ProcessedData['errorPatt
 };
 
 // Helper function to calculate update errors
-const calculateUpdateErrors = (data: TelemetryData[]): ProcessedData['updateErrors'] => {
+const calculateUpdateErrors = (data: TelemetryData[]): UncompressedProcessedData['updateErrors'] => {
   const updateErrors = {
     total: 0,
     byType: {} as { [key: string]: number },
@@ -166,7 +181,7 @@ const calculateUpdateErrors = (data: TelemetryData[]): ProcessedData['updateErro
 };
 
 // Helper function to calculate system metrics
-const calculateSystemMetrics = (data: TelemetryData[]): ProcessedData['systemMetrics'] => {
+const calculateSystemMetrics = (data: TelemetryData[]): UncompressedProcessedData['systemMetrics'] => {
   const metrics = {
     byPlatform: {} as { [key: string]: number },
     byVersion: {} as { [key: string]: number },
@@ -217,8 +232,16 @@ const calculateSystemMetrics = (data: TelemetryData[]): ProcessedData['systemMet
 };
 
 // Process data based on categories, date range, and pagination
-const processData = (message: WorkerMessage['payload']): ProcessedData => {
-  const { data, categories, dateRange, pagination } = message;
+const processData = (message: WorkerMessage): ProcessedData => {
+  let payload = message.payload;
+
+  // Handle compressed data
+  if (message.compressed && typeof message.payload === 'string') {
+    const decompressed = pako.inflate(message.payload as any, { to: 'string' });
+    payload = JSON.parse(decompressed);
+  }
+
+  const { data, categories, dateRange, pagination } = payload;
 
   // Filter data by date range first
   const dateFiltered = data.filter(item => 
@@ -261,20 +284,28 @@ const processData = (message: WorkerMessage['payload']): ProcessedData => {
     };
   }
 
-  return {
+  const result: UncompressedProcessedData = {
     filteredData: paginatedData,
-    metrics: calculateMetrics(filteredData), // Calculate metrics from all data
-    errorPatterns: calculateErrorPatterns(filteredData), // Calculate patterns from all data
-    updateErrors: calculateUpdateErrors(filteredData), // Calculate errors from all data
-    systemMetrics: calculateSystemMetrics(filteredData), // Calculate metrics from all data
+    metrics: calculateMetrics(filteredData),
+    errorPatterns: calculateErrorPatterns(filteredData),
+    updateErrors: calculateUpdateErrors(filteredData),
+    systemMetrics: calculateSystemMetrics(filteredData),
     pagination: paginationMetadata
   };
+
+  // Compress large results
+  if (JSON.stringify(result).length > 50 * 1024) { // 50KB threshold
+    const compressed = pako.deflate(JSON.stringify(result));
+    return { compressed: true, data: compressed };
+  }
+
+  return result;
 };
 
 // Handle messages from the main thread
 self.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
   if (event.data.type === 'PROCESS_DATA') {
-    const result = processData(event.data.payload);
+    const result = processData(event.data);
     self.postMessage(result);
   }
 });

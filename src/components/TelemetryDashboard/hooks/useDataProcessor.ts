@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { TelemetryEvent } from '../../../types/electron';
 import { convertEventToChartData } from '../types';
 import { telemetryCache } from '../../../utils/telemetryCache';
+import { getWorkerPool } from '../utils/workerPool';
 import type { ProcessedTelemetryData, PaginationParams, PaginationMetadata } from '../types';
 
 interface UseDataProcessorProps {
@@ -21,9 +22,15 @@ interface UseDataProcessorResult {
   loadNextPage: () => void;
   loadPreviousPage: () => void;
   resetPagination: () => void;
+  poolStats: {
+    totalWorkers: number;
+    activeWorkers: number;
+    queuedTasks: number;
+  };
 }
 
 const DEFAULT_PAGE_SIZE = 50;
+const CHUNK_SIZE = 1000; // Number of items to process per worker
 
 const useDataProcessor = ({
   data,
@@ -31,70 +38,17 @@ const useDataProcessor = ({
   dateRange,
   pagination = { page: 1, pageSize: DEFAULT_PAGE_SIZE }
 }: UseDataProcessorProps): UseDataProcessorResult => {
-  const workerRef = useRef<Worker | null>(null);
   const [processedData, setProcessedData] = useState<ProcessedTelemetryData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [currentPage, setCurrentPage] = useState(pagination.page);
   const [totalItems, setTotalItems] = useState(0);
-
-  // Initialize worker
-  useEffect(() => {
-    try {
-      workerRef.current = new Worker(
-        new URL('../utils/dataProcessor.worker.ts', import.meta.url),
-        { type: 'module' }
-      );
-
-      workerRef.current.onmessage = async (event: MessageEvent<ProcessedTelemetryData>) => {
-        const paginatedData = event.data;
-        
-        // Calculate pagination metadata
-        const totalPages = Math.ceil(totalItems / pagination.pageSize);
-        const paginationMetadata: PaginationMetadata = {
-          currentPage,
-          totalPages,
-          totalItems,
-          hasNextPage: currentPage < totalPages,
-          hasPreviousPage: currentPage > 1
-        };
-
-        setProcessedData({
-          ...paginatedData,
-          pagination: paginationMetadata
-        });
-        setIsProcessing(false);
-
-        // Cache the processed data with pagination info
-        try {
-          await telemetryCache.cacheProcessedData(
-            { categories, dateRange, pagination: { page: currentPage, pageSize: pagination.pageSize } },
-            paginatedData
-          );
-        } catch (err) {
-          console.error('Failed to cache processed data:', err);
-        }
-      };
-
-      workerRef.current.onerror = (event: ErrorEvent) => {
-        setError(new Error(event.message));
-        setIsProcessing(false);
-      };
-
-      return () => {
-        workerRef.current?.terminate();
-        workerRef.current = null;
-      };
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to initialize worker'));
-      return undefined;
-    }
-  }, []);
+  const [poolStats, setPoolStats] = useState({ totalWorkers: 0, activeWorkers: 0, queuedTasks: 0 });
 
   // Process data when inputs change
   useEffect(() => {
     const processDataWithCache = async () => {
-      if (!workerRef.current || !data.length) return;
+      if (!data.length) return;
 
       setIsProcessing(true);
       setError(null);
@@ -133,26 +87,101 @@ const useDataProcessor = ({
           return;
         }
 
-        // Cache miss - process data with worker
+        // Cache miss - process data with worker pool
         const startIndex = (currentPage - 1) * pagination.pageSize;
         const endIndex = startIndex + pagination.pageSize;
         const paginatedData = filteredData.slice(startIndex, endIndex);
         const formattedData = paginatedData.map(event => convertEventToChartData(event));
 
+        // Split data into chunks for parallel processing
+        const chunks: typeof formattedData[] = [];
+        for (let i = 0; i < formattedData.length; i += CHUNK_SIZE) {
+          chunks.push(formattedData.slice(i, i + CHUNK_SIZE));
+        }
+
+        const workerPool = getWorkerPool();
+        setPoolStats(workerPool.getStats());
+
+        // Process chunks in parallel
+        const chunkPromises = chunks.map(chunk => 
+          workerPool.executeTask<ProcessedTelemetryData>({
+            type: 'PROCESS_DATA',
+            payload: {
+              data: chunk,
+              categories,
+              dateRange,
+              pagination: { page: currentPage, pageSize: pagination.pageSize }
+            }
+          })
+        );
+
+        // Wait for all chunks to be processed
+        const results = await Promise.all(chunkPromises);
+
+        // Merge results from all workers
+        const mergedResult = results.reduce<ProcessedTelemetryData>((acc, curr) => ({
+          filteredData: [...acc.filteredData, ...curr.filteredData],
+          metrics: {
+            total: acc.metrics.total + curr.metrics.total,
+            error: acc.metrics.error + curr.metrics.error,
+            navigation: acc.metrics.navigation + curr.metrics.navigation,
+            ...Object.keys(curr.metrics)
+              .filter(key => !['total', 'error', 'navigation'].includes(key))
+              .reduce<Record<string, number>>((metricAcc, key) => ({
+                ...metricAcc,
+                [key]: (acc.metrics[key] || 0) + curr.metrics[key]
+              }), {})
+          },
+          errorPatterns: {
+            correlations: [...acc.errorPatterns.correlations, ...curr.errorPatterns.correlations]
+              .sort((a, b) => b.impact - a.impact)
+              .slice(0, 5),
+            trends: mergeErrorTrends(acc.errorPatterns.trends, curr.errorPatterns.trends)
+          },
+          updateErrors: {
+            total: acc.updateErrors.total + curr.updateErrors.total,
+            byType: Object.entries(curr.updateErrors.byType).reduce<Record<string, number>>(
+              (typeAcc, [type, count]) => ({
+                ...typeAcc,
+                [type]: (acc.updateErrors.byType[type] || 0) + count
+              }),
+              acc.updateErrors.byType
+            ),
+            averageRetries: (acc.updateErrors.averageRetries + curr.updateErrors.averageRetries) / 2
+          },
+          systemMetrics: mergeSystemMetrics(acc.systemMetrics, curr.systemMetrics)
+        }), results[0]);
+
+        // Calculate pagination metadata
+        const totalPages = Math.ceil(totalItems / pagination.pageSize);
+        const paginationMetadata: PaginationMetadata = {
+          currentPage,
+          totalPages,
+          totalItems,
+          hasNextPage: currentPage < totalPages,
+          hasPreviousPage: currentPage > 1
+        };
+
+        const finalResult = {
+          ...mergedResult,
+          pagination: paginationMetadata
+        };
+
+        setProcessedData(finalResult);
+        setPoolStats(workerPool.getStats());
+
+        // Cache the processed data
+        await telemetryCache.cacheProcessedData(
+          { categories, dateRange, pagination: { page: currentPage, pageSize: pagination.pageSize } },
+          finalResult
+        );
+
         // Cache raw data for future use
         await telemetryCache.cacheRawData(paginatedData);
 
-        workerRef.current.postMessage({
-          type: 'PROCESS_DATA',
-          payload: {
-            data: formattedData,
-            categories,
-            dateRange,
-            pagination: { page: currentPage, pageSize: pagination.pageSize }
-          }
-        });
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to process data'));
+      } finally {
         setIsProcessing(false);
       }
     };
@@ -182,8 +211,48 @@ const useDataProcessor = ({
     error,
     loadNextPage,
     loadPreviousPage,
-    resetPagination
+    resetPagination,
+    poolStats
   };
+};
+
+// Helper function to merge error trends
+const mergeErrorTrends = (
+  trends1: Array<{ date: string; errors: number }>,
+  trends2: Array<{ date: string; errors: number }>
+): Array<{ date: string; errors: number }> => {
+  const trendMap = new Map<string, number>();
+  
+  [...trends1, ...trends2].forEach(trend => {
+    trendMap.set(trend.date, (trendMap.get(trend.date) || 0) + trend.errors);
+  });
+
+  return Array.from(trendMap.entries())
+    .map(([date, errors]) => ({ date, errors }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+};
+
+// Helper function to merge system metrics
+const mergeSystemMetrics = (metrics1: ProcessedTelemetryData['systemMetrics'], metrics2: ProcessedTelemetryData['systemMetrics']): ProcessedTelemetryData['systemMetrics'] => {
+  return {
+    byPlatform: mergeCounts(metrics1.byPlatform, metrics2.byPlatform),
+    byVersion: mergeCounts(metrics1.byVersion, metrics2.byVersion),
+    byArch: mergeCounts(metrics1.byArch, metrics2.byArch),
+    performance: {
+      avgResponseTime: (metrics1.performance.avgResponseTime + metrics2.performance.avgResponseTime) / 2,
+      errorRate: (metrics1.performance.errorRate + metrics2.performance.errorRate) / 2,
+      totalCrashes: metrics1.performance.totalCrashes + metrics2.performance.totalCrashes
+    }
+  };
+};
+
+// Helper function to merge count objects
+const mergeCounts = (obj1: { [key: string]: number }, obj2: { [key: string]: number }): { [key: string]: number } => {
+  const result = { ...obj1 };
+  Object.entries(obj2).forEach(([key, value]) => {
+    result[key] = (result[key] || 0) + value;
+  });
+  return result;
 };
 
 export default useDataProcessor;

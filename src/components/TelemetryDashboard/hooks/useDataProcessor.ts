@@ -15,6 +15,13 @@ interface UseDataProcessorProps {
   pagination?: PaginationParams;
 }
 
+interface PoolPerformanceStats {
+  currentMemoryUsage?: number;
+  currentCpuUsage?: number;
+  averageExecutionTime: number;
+  successRate: number;
+}
+
 interface UseDataProcessorResult {
   processedData: ProcessedTelemetryData | null;
   isProcessing: boolean;
@@ -26,6 +33,7 @@ interface UseDataProcessorResult {
     totalWorkers: number;
     activeWorkers: number;
     queuedTasks: number;
+    performance: PoolPerformanceStats;
   };
 }
 
@@ -43,7 +51,15 @@ const useDataProcessor = ({
   const [error, setError] = useState<Error | null>(null);
   const [currentPage, setCurrentPage] = useState(pagination.page);
   const [totalItems, setTotalItems] = useState(0);
-  const [poolStats, setPoolStats] = useState({ totalWorkers: 0, activeWorkers: 0, queuedTasks: 0 });
+  const [poolStats, setPoolStats] = useState({
+    totalWorkers: 0,
+    activeWorkers: 0,
+    queuedTasks: 0,
+    performance: {
+      averageExecutionTime: 0,
+      successRate: 100
+    } as PoolPerformanceStats
+  });
 
   // Process data when inputs change
   useEffect(() => {
@@ -100,7 +116,18 @@ const useDataProcessor = ({
         }
 
         const workerPool = getWorkerPool();
-        setPoolStats(workerPool.getStats());
+        const poolStatsData = workerPool.getStats();
+        setPoolStats({
+          totalWorkers: poolStatsData.totalWorkers,
+          activeWorkers: poolStatsData.activeWorkers,
+          queuedTasks: poolStatsData.queuedTasks,
+          performance: {
+            currentMemoryUsage: poolStatsData.performance.currentMemoryUsage,
+            currentCpuUsage: poolStatsData.performance.currentCpuUsage,
+            averageExecutionTime: poolStatsData.performance.averageExecutionTime,
+            successRate: poolStatsData.performance.successRate
+          }
+        });
 
         // Process chunks in parallel
         const chunkPromises = chunks.map(chunk => 
@@ -119,7 +146,7 @@ const useDataProcessor = ({
         const results = await Promise.all(chunkPromises);
 
         // Merge results from all workers
-        const mergedResult = results.reduce<ProcessedTelemetryData>((acc, curr) => ({
+        const mergedResult = results.reduce<ProcessedTelemetryData>((acc: ProcessedTelemetryData, curr: ProcessedTelemetryData) => ({
           filteredData: [...acc.filteredData, ...curr.filteredData],
           metrics: {
             total: acc.metrics.total + curr.metrics.total,
@@ -168,7 +195,20 @@ const useDataProcessor = ({
         };
 
         setProcessedData(finalResult);
-        setPoolStats(workerPool.getStats());
+
+        // Update pool stats after processing
+        const updatedStats = workerPool.getStats();
+        setPoolStats({
+          totalWorkers: updatedStats.totalWorkers,
+          activeWorkers: updatedStats.activeWorkers,
+          queuedTasks: updatedStats.queuedTasks,
+          performance: {
+            currentMemoryUsage: updatedStats.performance.currentMemoryUsage,
+            currentCpuUsage: updatedStats.performance.currentCpuUsage,
+            averageExecutionTime: updatedStats.performance.averageExecutionTime,
+            successRate: updatedStats.performance.successRate
+          }
+        });
 
         // Cache the processed data
         await telemetryCache.cacheProcessedData(

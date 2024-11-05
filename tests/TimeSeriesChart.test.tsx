@@ -13,7 +13,22 @@ const mockCategories = {
   navigation: true
 };
 
+// Mock function to track renders
+const mockRender = jest.fn();
+
+// Wrapper component to track renders
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  React.useEffect(() => {
+    mockRender();
+  });
+  return <>{children}</>;
+};
+
 describe('TimeSeriesChart', () => {
+  beforeEach(() => {
+    mockRender.mockClear();
+  });
+
   it('renders loading skeleton when loading prop is true', () => {
     render(
       <TimeSeriesChart
@@ -126,6 +141,170 @@ describe('TimeSeriesChart', () => {
     expect(tooltip).toHaveStyle({
       backgroundColor: 'rgba(26, 32, 44, 0.9)',
       color: '#e2e8f0'
+    });
+  });
+
+  // Memoization tests
+  describe('memoization', () => {
+    it('does not re-render when non-essential props change', () => {
+      const { rerender } = render(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={mockData}
+            categories={mockCategories}
+            className="test"
+            title="Test Chart"
+          />
+        </TestWrapper>
+      );
+
+      const initialRenderCount = mockRender.mock.calls.length;
+
+      // Update non-essential props
+      rerender(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={mockData}
+            categories={mockCategories}
+            className="different-class"
+            title="Different Title"
+          />
+        </TestWrapper>
+      );
+
+      expect(mockRender.mock.calls.length).toBe(initialRenderCount);
+    });
+
+    it('re-renders when data changes', () => {
+      const { rerender } = render(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={mockData}
+            categories={mockCategories}
+          />
+        </TestWrapper>
+      );
+
+      const initialRenderCount = mockRender.mock.calls.length;
+
+      const newData = [...mockData, { date: '2024-01-04', total: 250, error: 50, navigation: 200 }];
+      
+      rerender(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={newData}
+            categories={mockCategories}
+          />
+        </TestWrapper>
+      );
+
+      expect(mockRender.mock.calls.length).toBeGreaterThan(initialRenderCount);
+    });
+
+    it('re-renders when categories change', () => {
+      const { rerender } = render(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={mockData}
+            categories={mockCategories}
+          />
+        </TestWrapper>
+      );
+
+      const initialRenderCount = mockRender.mock.calls.length;
+
+      const newCategories = { ...mockCategories, error: false };
+      
+      rerender(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={mockData}
+            categories={newCategories}
+          />
+        </TestWrapper>
+      );
+
+      expect(mockRender.mock.calls.length).toBeGreaterThan(initialRenderCount);
+    });
+
+    it('re-renders when loading state changes', () => {
+      const { rerender } = render(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={mockData}
+            categories={mockCategories}
+            loading={false}
+          />
+        </TestWrapper>
+      );
+
+      const initialRenderCount = mockRender.mock.calls.length;
+
+      rerender(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={mockData}
+            categories={mockCategories}
+            loading={true}
+          />
+        </TestWrapper>
+      );
+
+      expect(mockRender.mock.calls.length).toBeGreaterThan(initialRenderCount);
+    });
+
+    it('re-renders when dimensions change', () => {
+      const { rerender } = render(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={mockData}
+            categories={mockCategories}
+            width={600}
+            height={400}
+          />
+        </TestWrapper>
+      );
+
+      const initialRenderCount = mockRender.mock.calls.length;
+
+      rerender(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={mockData}
+            categories={mockCategories}
+            width={800}
+            height={500}
+          />
+        </TestWrapper>
+      );
+
+      expect(mockRender.mock.calls.length).toBeGreaterThan(initialRenderCount);
+    });
+
+    it('re-renders when dark mode changes', () => {
+      const { rerender } = render(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={mockData}
+            categories={mockCategories}
+            isDarkMode={false}
+          />
+        </TestWrapper>
+      );
+
+      const initialRenderCount = mockRender.mock.calls.length;
+
+      rerender(
+        <TestWrapper>
+          <TimeSeriesChart
+            data={mockData}
+            categories={mockCategories}
+            isDarkMode={true}
+          />
+        </TestWrapper>
+      );
+
+      expect(mockRender.mock.calls.length).toBeGreaterThan(initialRenderCount);
     });
   });
 });

@@ -35,7 +35,28 @@ const CATEGORY_COLORS = {
   navigation: '#00ff00'
 };
 
-export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
+const arePropsEqual = (prevProps: TimeSeriesChartProps, nextProps: TimeSeriesChartProps): boolean => {
+  // Check data array length and content
+  if (prevProps.data.length !== nextProps.data.length) return false;
+  if (JSON.stringify(prevProps.data) !== JSON.stringify(nextProps.data)) return false;
+
+  // Check loading state
+  if (prevProps.loading !== nextProps.loading) return false;
+
+  // Check categories object
+  if (JSON.stringify(prevProps.categories) !== JSON.stringify(nextProps.categories)) return false;
+
+  // Check dimensions
+  if (prevProps.width !== nextProps.width || prevProps.height !== nextProps.height) return false;
+
+  // Check dark mode
+  if (prevProps.isDarkMode !== nextProps.isDarkMode) return false;
+
+  // If all checks pass, props are considered equal
+  return true;
+};
+
+export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = React.memo(({
   data,
   loading = false,
   title,
@@ -105,6 +126,6 @@ export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
       </ResponsiveContainer>
     </div>
   );
-};
+}, arePropsEqual);
 
 export default TimeSeriesChart;

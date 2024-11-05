@@ -210,7 +210,29 @@ ipcMain.handle('db:getProjects', async () => {
   }
 });
 
-// ... (rest of the database handlers with similar telemetry additions)
+// Add the debug database handler
+ipcMain.handle('db:debugDatabase', async () => {
+  try {
+    log.info('Debugging database...');
+    const projects = await databaseManager.debugDatabase();
+    log.info('Database debug completed:', projects.length);
+    return projects;
+  } catch (error) {
+    log.error('Error debugging database:', error);
+    telemetryService.logEvents([{
+      category: 'database',
+      action: 'error',
+      label: 'debug-database',
+      metadata: { 
+        errorType: error.name,
+        errorMessage: error.message,
+        stack: error.stack
+      },
+      timestamp: Date.now()
+    }]);
+    throw error;
+  }
+});
 
 // IPC handlers for updates
 ipcMain.handle('update:check', async () => {
@@ -235,8 +257,6 @@ ipcMain.handle('update:check', async () => {
     throw error;
   }
 });
-
-// ... (rest of the update handlers with similar telemetry additions)
 
 // App event handlers
 app.whenReady().then(async () => {

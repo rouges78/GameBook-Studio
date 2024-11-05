@@ -1,13 +1,4 @@
-import { ipcRenderer } from 'electron';
-
-interface TelemetryEvent {
-  category: string;
-  action: string;
-  label?: string;
-  value?: number;
-  metadata?: Record<string, any>;
-  timestamp?: number;
-}
+import type { TelemetryEvent } from '../types/electron';
 
 interface UpdateErrorEvent extends TelemetryEvent {
   category: 'auto-update';
@@ -23,14 +14,12 @@ interface UpdateErrorEvent extends TelemetryEvent {
 
 class TelemetryManager {
   private static instance: TelemetryManager;
-  private isEnabled: boolean = true;
-  private queue: TelemetryEvent[] = [];
+  private queue: Omit<TelemetryEvent, 'appVersion' | 'platform' | 'arch'>[] = [];
   private readonly MAX_QUEUE_SIZE = 100;
   private readonly FLUSH_INTERVAL = 60000; // 1 minute
 
   private constructor() {
     this.setupFlushInterval();
-    this.setupIpcHandlers();
   }
 
   public static getInstance(): TelemetryManager {
@@ -46,21 +35,10 @@ class TelemetryManager {
     }, this.FLUSH_INTERVAL);
   }
 
-  private setupIpcHandlers(): void {
-    ipcRenderer.on('telemetry-status-changed', (_, enabled: boolean) => {
-      this.isEnabled = enabled;
-      if (enabled) {
-        this.flush();
-      }
-    });
-  }
-
-  public trackEvent(event: TelemetryEvent): void {
-    if (!this.isEnabled) return;
-
+  public trackEvent(event: Omit<TelemetryEvent, 'appVersion' | 'platform' | 'arch'>): void {
     const enrichedEvent = {
       ...event,
-      timestamp: Date.now(),
+      timestamp: event.timestamp || Date.now(),
     };
 
     this.queue.push(enrichedEvent);
@@ -71,7 +49,7 @@ class TelemetryManager {
   }
 
   public trackUpdateError(error: Error, attemptNumber: number, totalAttempts: number, lastDelay: number): void {
-    const errorEvent: UpdateErrorEvent = {
+    const errorEvent: Omit<UpdateErrorEvent, 'appVersion' | 'platform' | 'arch'> = {
       category: 'auto-update',
       action: 'error',
       label: error.name,
@@ -89,13 +67,14 @@ class TelemetryManager {
   }
 
   private async flush(): Promise<void> {
-    if (!this.isEnabled || this.queue.length === 0) return;
+    if (this.queue.length === 0) return;
 
     try {
       const events = [...this.queue];
       this.queue = [];
 
-      await ipcRenderer.invoke('telemetry-events', events);
+      // The main process will add appVersion, platform, and arch
+      await window.electron['telemetry-events'](events as TelemetryEvent[]);
     } catch (error) {
       console.error('Failed to flush telemetry events:', error);
       // Re-add events to queue if flush fails
@@ -104,17 +83,6 @@ class TelemetryManager {
         this.queue = this.queue.slice(-this.MAX_QUEUE_SIZE);
       }
     }
-  }
-
-  public setEnabled(enabled: boolean): void {
-    this.isEnabled = enabled;
-    if (enabled) {
-      this.flush();
-    }
-  }
-
-  public istelemetryEnabled(): boolean {
-    return this.isEnabled;
   }
 }
 

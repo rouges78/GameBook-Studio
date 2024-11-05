@@ -2,6 +2,10 @@
 Write-Host "Cleaning dist directory..."
 rimraf dist
 
+# Compile preload script
+Write-Host "Compiling preload script..."
+npm run dev:preload
+
 # Start Vite dev server
 Write-Host "Starting Vite dev server..."
 $viteProcess = Start-Process -FilePath "npm" -ArgumentList "run dev:vite" -PassThru -NoNewWindow

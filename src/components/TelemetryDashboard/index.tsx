@@ -5,12 +5,30 @@ import {
   CategoryFilters,
   ErrorAnalysis,
   SystemMetrics,
-  TimeSeriesChart
+  TimeSeriesChart,
+  MemoryAlertsPanel,
+  VirtualizedErrorTable
 } from './components';
 import type { TelemetryStats, DateRange, CategoryFilters as CategoryFiltersType, PaginationParams } from './types';
 import useDataProcessor from './hooks/useDataProcessor';
 
 const DEFAULT_PAGE_SIZE = 50;
+
+const isValidTelemetryEvent = (event: any): event is TelemetryEvent => {
+  return (
+    event !== null &&
+    typeof event === 'object' &&
+    typeof event.category === 'string' &&
+    typeof event.action === 'string' &&
+    typeof event.timestamp === 'number' &&
+    typeof event.appVersion === 'string' &&
+    typeof event.platform === 'string' &&
+    typeof event.arch === 'string' &&
+    (!event.metadata || typeof event.metadata === 'object') &&
+    (!event.label || typeof event.label === 'string') &&
+    (!event.value || typeof event.value === 'number')
+  );
+};
 
 export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
   const [rawData, setRawData] = useState<TelemetryEvent[]>([]);
@@ -128,15 +146,18 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
           throw new Error('Invalid telemetry data format');
         }
 
+        // Filter and validate events
+        const validEvents = events.filter(isValidTelemetryEvent);
+
         // Initialize category filters
         const initialFilters: CategoryFiltersType = {};
-        const categories = new Set(events.map(event => event.category));
+        const categories = new Set(validEvents.map(event => event.category));
         categories.forEach(category => {
           initialFilters[category] = true;
         });
         setCategoryFilters(initialFilters);
 
-        setRawData(events);
+        setRawData(validEvents);
         
         // Set initial date range if not set
         if (!dateRange.startDate || !dateRange.endDate) {
@@ -197,6 +218,11 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
         </button>
       </div>
 
+      {/* Memory Alerts Panel */}
+      <div className="mb-6">
+        <MemoryAlertsPanel />
+      </div>
+
       {/* Filters Section */}
       <div className={`mb-6 p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
         <h2 className="text-xl font-semibold mb-3">Filters</h2>
@@ -229,19 +255,6 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
         </div>
       </div>
 
-      {/* Overview Section */}
-      <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} mb-6`}>
-        <h2 className="text-xl font-semibold mb-3">Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-lg">Total Events: {processedData.filteredData.length}</p>
-            <p className="text-lg">
-              Time Range: {dateRange.startDate} - {dateRange.endDate}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Time Series Chart */}
       <TimeSeriesChart
         data={processedData.filteredData}
@@ -260,6 +273,12 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
       {/* System Metrics */}
       <SystemMetrics
         metrics={processedData.systemMetrics}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* Virtualized Error Table */}
+      <VirtualizedErrorTable
+        events={rawData}
         isDarkMode={isDarkMode}
       />
 

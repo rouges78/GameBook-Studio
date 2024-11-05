@@ -84,6 +84,16 @@ export interface SystemMetricsProps {
   isDarkMode: boolean;
 }
 
+export type ChartExportFormat = 'PNG' | 'SVG';
+
+export interface ChartExportOptions {
+  width?: number;
+  height?: number;
+  quality?: number;
+  format: ChartExportFormat;
+  filename?: string;
+}
+
 export interface TimeSeriesChartProps {
   data: Array<{
     date: string;
@@ -115,3 +125,11 @@ export const PIE_CHART_COLORS = [
   '#FF8042',
   '#8884d8'
 ] as const;
+
+export const DEFAULT_EXPORT_OPTIONS: ChartExportOptions = {
+  width: 1200,
+  height: 600,
+  quality: 1,
+  format: 'PNG',
+  filename: 'telemetry-chart'
+} as const;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   LineChart,
   Line,
@@ -9,17 +9,64 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import { TimeSeriesChartProps, CHART_COLORS } from '../types';
+import { TimeSeriesChartProps, CHART_COLORS, DEFAULT_EXPORT_OPTIONS } from '../types';
+import { exportChart } from '../utils/chartExport';
 
 export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
   data,
   categories,
   isDarkMode
 }) => {
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  const handleExport = async (format: 'PNG' | 'SVG') => {
+    if (!chartRef.current) return;
+
+    try {
+      const svgElement = chartRef.current.querySelector('svg');
+      if (!svgElement) {
+        throw new Error('SVG element not found');
+      }
+
+      await exportChart(svgElement, {
+        ...DEFAULT_EXPORT_OPTIONS,
+        format,
+        filename: `telemetry-chart-${new Date().toISOString().split('T')[0]}`,
+      });
+    } catch (error) {
+      console.error('Failed to export chart:', error);
+      // In a production app, we would show a user-friendly error notification here
+    }
+  };
+
   return (
     <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-      <h2 className="text-xl font-semibold mb-3">Events Over Time</h2>
-      <div className="h-[300px] w-full">
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-xl font-semibold">Events Over Time</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleExport('PNG')}
+            className={`px-3 py-1 rounded ${
+              isDarkMode
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+          >
+            Export PNG
+          </button>
+          <button
+            onClick={() => handleExport('SVG')}
+            className={`px-3 py-1 rounded ${
+              isDarkMode
+                ? 'bg-green-600 hover:bg-green-700 text-white'
+                : 'bg-green-500 hover:bg-green-600 text-white'
+            }`}
+          >
+            Export SVG
+          </button>
+        </div>
+      </div>
+      <div className="h-[300px] w-full" ref={chartRef}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={data}

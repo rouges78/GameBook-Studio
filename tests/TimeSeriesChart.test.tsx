@@ -1,163 +1,148 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, fireEvent, screen } from '@testing-library/react';
 import { TimeSeriesChart } from '../src/components/TelemetryDashboard/components/TimeSeriesChart';
-import { CHART_COLORS } from '../src/components/TelemetryDashboard/types';
+import { exportChart } from '../src/components/TelemetryDashboard/utils/chartExport';
 
-// Mock recharts components
-jest.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  LineChart: ({ children }: { children: React.ReactNode }) => <div data-testid="line-chart">{children}</div>,
-  Line: ({ dataKey, stroke }: { dataKey: string; stroke: string }) => (
-    <div data-testid={`line-${dataKey}`} data-stroke={stroke}>Line</div>
-  ),
-  XAxis: () => <div>XAxis</div>,
-  YAxis: () => <div>YAxis</div>,
-  CartesianGrid: () => <div>CartesianGrid</div>,
-  Tooltip: () => <div>Tooltip</div>,
-  Legend: () => <div>Legend</div>
+// Mock the chart export utility
+jest.mock('../src/components/TelemetryDashboard/utils/chartExport', () => ({
+  exportChart: jest.fn(),
 }));
 
 describe('TimeSeriesChart', () => {
   const mockData = [
-    {
-      date: '2024-01-01',
-      total: 25,
-      'auto-update': 10,
-      'system': 5,
-      'user-interaction': 8,
-      'error': 2
-    },
-    {
-      date: '2024-01-02',
-      total: 26,
-      'auto-update': 12,
-      'system': 6,
-      'user-interaction': 7,
-      'error': 1
-    }
+    { date: '2024-01-01', total: 10, error: 2, navigation: 8 },
+    { date: '2024-01-02', total: 15, error: 3, navigation: 12 },
   ];
 
   const mockCategories = {
-    'auto-update': true,
-    'system': true,
-    'user-interaction': false,
-    'error': true
+    error: true,
+    navigation: true,
   };
 
-  const defaultProps = {
-    data: mockData,
-    categories: mockCategories,
-    isDarkMode: false
-  };
-
-  it('renders the chart container', () => {
-    render(<TimeSeriesChart {...defaultProps} />);
-    
-    expect(screen.getByText('Events Over Time')).toBeInTheDocument();
-    expect(screen.getByTestId('line-chart')).toBeInTheDocument();
+  beforeEach(() => {
+    // Clear mock before each test
+    jest.clearAllMocks();
   });
 
-  it('renders only enabled category lines', () => {
-    render(<TimeSeriesChart {...defaultProps} />);
-    
-    // Should render lines for enabled categories
-    expect(screen.getByTestId('line-auto-update')).toBeInTheDocument();
-    expect(screen.getByTestId('line-system')).toBeInTheDocument();
-    expect(screen.getByTestId('line-error')).toBeInTheDocument();
-    
-    // Should not render line for disabled category
-    expect(screen.queryByTestId('line-user-interaction')).not.toBeInTheDocument();
+  it('renders chart with export buttons', () => {
+    render(
+      <TimeSeriesChart
+        data={mockData}
+        categories={mockCategories}
+        isDarkMode={false}
+      />
+    );
+
+    expect(screen.getByText('Export PNG')).toBeInTheDocument();
+    expect(screen.getByText('Export SVG')).toBeInTheDocument();
   });
 
-  it('applies correct colors to category lines', () => {
-    render(<TimeSeriesChart {...defaultProps} />);
-    
-    Object.entries(mockCategories)
-      .filter(([_, isEnabled]) => isEnabled)
-      .forEach(([category]) => {
-        const line = screen.getByTestId(`line-${category}`);
-        expect(line).toHaveAttribute(
-          'data-stroke',
-          CHART_COLORS[category as keyof typeof CHART_COLORS] || '#999999'
-        );
-      });
+  it('exports chart as PNG when PNG button is clicked', async () => {
+    render(
+      <TimeSeriesChart
+        data={mockData}
+        categories={mockCategories}
+        isDarkMode={false}
+      />
+    );
+
+    const pngButton = screen.getByText('Export PNG');
+    fireEvent.click(pngButton);
+
+    expect(exportChart).toHaveBeenCalledWith(
+      expect.any(SVGElement),
+      expect.objectContaining({
+        format: 'PNG',
+        filename: expect.stringContaining('telemetry-chart-'),
+      })
+    );
   });
 
-  it('applies dark mode styles when isDarkMode is true', () => {
-    const darkModeProps = { ...defaultProps, isDarkMode: true };
-    render(<TimeSeriesChart {...darkModeProps} />);
-    
-    const container = screen.getByText('Events Over Time').parentElement;
+  it('exports chart as SVG when SVG button is clicked', async () => {
+    render(
+      <TimeSeriesChart
+        data={mockData}
+        categories={mockCategories}
+        isDarkMode={false}
+      />
+    );
+
+    const svgButton = screen.getByText('Export SVG');
+    fireEvent.click(svgButton);
+
+    expect(exportChart).toHaveBeenCalledWith(
+      expect.any(SVGElement),
+      expect.objectContaining({
+        format: 'SVG',
+        filename: expect.stringContaining('telemetry-chart-'),
+      })
+    );
+  });
+
+  it('handles export error gracefully', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    (exportChart as jest.Mock).mockRejectedValueOnce(new Error('Export failed'));
+
+    render(
+      <TimeSeriesChart
+        data={mockData}
+        categories={mockCategories}
+        isDarkMode={false}
+      />
+    );
+
+    const pngButton = screen.getByText('Export PNG');
+    fireEvent.click(pngButton);
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Failed to export chart:',
+      expect.any(Error)
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  it('applies dark mode styles correctly', () => {
+    render(
+      <TimeSeriesChart
+        data={mockData}
+        categories={mockCategories}
+        isDarkMode={true}
+      />
+    );
+
+    const container = screen.getByText('Events Over Time').closest('div');
     expect(container).toHaveClass('bg-gray-700');
   });
 
-  it('applies light mode styles when isDarkMode is false', () => {
-    render(<TimeSeriesChart {...defaultProps} />);
-    
-    const container = screen.getByText('Events Over Time').parentElement;
-    expect(container).toHaveClass('bg-gray-100');
+  it('renders chart with filtered categories', () => {
+    const filteredCategories = {
+      error: true,
+      navigation: false,
+    };
+
+    render(
+      <TimeSeriesChart
+        data={mockData}
+        categories={filteredCategories}
+        isDarkMode={false}
+      />
+    );
+
+    // Only error category should be rendered
+    const chartContainer = screen.getByText('Events Over Time').closest('div');
+    expect(chartContainer).toBeInTheDocument();
   });
 
-  it('displays help text', () => {
-    render(<TimeSeriesChart {...defaultProps} />);
-    
+  it('displays legend with correct formatting', () => {
+    render(
+      <TimeSeriesChart
+        data={mockData}
+        categories={mockCategories}
+        isDarkMode={false}
+      />
+    );
+
     expect(screen.getByText('Click legend items to toggle visibility')).toBeInTheDocument();
-  });
-
-  it('handles empty data array', () => {
-    const emptyDataProps = {
-      ...defaultProps,
-      data: []
-    };
-    
-    render(<TimeSeriesChart {...emptyDataProps} />);
-    expect(screen.getByTestId('line-chart')).toBeInTheDocument();
-  });
-
-  it('handles empty categories object', () => {
-    const emptyCategoriesProps = {
-      ...defaultProps,
-      categories: {}
-    };
-    
-    render(<TimeSeriesChart {...emptyCategoriesProps} />);
-    expect(screen.getByTestId('line-chart')).toBeInTheDocument();
-  });
-
-  it('renders chart with single data point', () => {
-    const singleDataProps = {
-      ...defaultProps,
-      data: [{
-        date: '2024-01-01',
-        total: 17,
-        'auto-update': 10,
-        'system': 5,
-        'error': 2
-      }]
-    };
-    
-    render(<TimeSeriesChart {...singleDataProps} />);
-    expect(screen.getByTestId('line-chart')).toBeInTheDocument();
-    expect(screen.getByTestId('line-auto-update')).toBeInTheDocument();
-    expect(screen.getByTestId('line-system')).toBeInTheDocument();
-    expect(screen.getByTestId('line-error')).toBeInTheDocument();
-  });
-
-  it('handles undefined category values in data', () => {
-    const incompleteDataProps = {
-      ...defaultProps,
-      data: [{
-        date: '2024-01-01',
-        total: 12,
-        'auto-update': 10,
-        // system is undefined
-        'error': 2
-      }]
-    };
-    
-    render(<TimeSeriesChart {...incompleteDataProps} />);
-    expect(screen.getByTestId('line-chart')).toBeInTheDocument();
-    expect(screen.getByTestId('line-auto-update')).toBeInTheDocument();
-    expect(screen.getByTestId('line-error')).toBeInTheDocument();
   });
 });

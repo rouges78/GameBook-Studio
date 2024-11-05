@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, Bell, Database, Clock, ToggleLeft, ToggleRight, Brain } from 'lucide-react';
+import { ArrowLeft, Save, Bell, Database, Clock, ToggleLeft, ToggleRight, Brain, BarChart2 } from 'lucide-react';
 import { saveProject, getProjects } from '../utils/storage';
 import { 
   requestNotificationPermission, 
@@ -11,7 +11,7 @@ import {
 import Notification from './Notification';
 
 interface SettingsProps {
-  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 'settings' | 'help') => void;
+  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 'settings' | 'help' | 'export' | 'backupManager' | 'telemetryDashboard') => void;
   isDarkMode: boolean;
   language: 'it' | 'en';
 }
@@ -104,7 +104,9 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       apiKey: "Chiave API",
       anthropic: "Anthropic",
       openai: "OpenAI",
-      openrouter: "OpenRouter"
+      openrouter: "OpenRouter",
+      telemetryDashboard: "Dashboard Telemetria",
+      openTelemetryDashboard: "Apri Dashboard Telemetria"
     },
     en: {
       backToDashboard: "Back to Dashboard",
@@ -139,7 +141,9 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       apiKey: "API Key",
       anthropic: "Anthropic",
       openai: "OpenAI",
-      openrouter: "OpenRouter"
+      openrouter: "OpenRouter",
+      telemetryDashboard: "Telemetry Dashboard",
+      openTelemetryDashboard: "Open Telemetry Dashboard"
     }
   };
 
@@ -284,6 +288,20 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       <div className="flex-1 overflow-y-auto px-6">
         <div className="max-w-3xl mx-auto">
           <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 space-y-6 mb-20`}>
+            {/* Telemetry Dashboard */}
+            <section>
+              <h2 className="text-lg font-semibold mb-3 flex items-center">
+                <BarChart2 size={20} className="mr-2" />
+                {t.telemetryDashboard}
+              </h2>
+              <button
+                onClick={() => setCurrentPage('telemetryDashboard')}
+                className={`${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white font-medium py-1.5 px-3 rounded text-sm`}
+              >
+                {t.openTelemetryDashboard}
+              </button>
+            </section>
+
             {/* Notification Settings */}
             <section>
               <h2 className="text-lg font-semibold mb-3 flex items-center">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun, BookOpen, Palette, Settings, HelpCircle, LogOut, Database, BarChart } from 'lucide-react';
+import { Moon, Sun, BookOpen, Palette, Settings, HelpCircle, LogOut, Database } from 'lucide-react';
 
 interface SidebarProps {
   isDarkMode: boolean;
@@ -30,8 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       settings: "Impostazioni",
       help: "Aiuto",
       logout: "Esci",
-      backupManager: "Gestione Backup",
-      telemetryDashboard: "Dashboard Telemetria"
+      backupManager: "Gestione Backup"
     },
     en: {
       preferences: "Preferences",
@@ -44,8 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       settings: "Settings",
       help: "Help",
       logout: "Logout",
-      backupManager: "Backup Manager",
-      telemetryDashboard: "Telemetry Dashboard"
+      backupManager: "Backup Manager"
     }
   };
 
@@ -123,17 +121,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         >
           <Database size={18} className="mr-2" />
           {t.backupManager}
-        </button>
-        <button
-          onClick={() => setCurrentPage('telemetryDashboard')}
-          className={`w-full mb-4 ${
-            isDarkMode 
-              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-              : 'bg-gray-500 hover:bg-gray-600 text-gray-50'
-          } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
-        >
-          <BarChart size={18} className="mr-2" />
-          {t.telemetryDashboard}
         </button>
         <button
           onClick={() => setCurrentPage('themeEditor')}

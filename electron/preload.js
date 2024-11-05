@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 // Expose IPC handlers to the renderer process
 electron_1.contextBridge.exposeInMainWorld('electron', {
+    // Window operations
+    'window:close': () => electron_1.ipcRenderer.invoke('window:close'),
     // Update handlers
     'update:check': () => electron_1.ipcRenderer.invoke('update:check'),
     'update:start-download': () => electron_1.ipcRenderer.invoke('update:start-download'),

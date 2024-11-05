@@ -72,6 +72,9 @@ interface ElectronAPI {
 
   // Telemetry operations
   'telemetry:getData': () => Promise<TelemetryEvent[]>;
+  'telemetry-events': (events: TelemetryEvent[]) => Promise<void>;
+  'telemetry-status': () => Promise<boolean>;
+  'telemetry-toggle': (enabled: boolean) => Promise<boolean>;
 
   // Dialog operations
   dialog: {

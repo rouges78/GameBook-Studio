@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import { TelemetryEvent } from '../../types/electron';
+import type { TelemetryEvent } from '../../types/electron';
 
 interface TelemetryStats {
   totalEvents: number;
@@ -30,10 +30,20 @@ interface TelemetryStats {
   }>;
 }
 
+interface DateRange {
+  startDate: string;
+  endDate: string;
+}
+
 export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
   const [stats, setStats] = useState<TelemetryStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: '',
+    endDate: ''
+  });
+  const [filteredStats, setFilteredStats] = useState<TelemetryStats | null>(null);
 
   useEffect(() => {
     const loadTelemetryData = async () => {
@@ -110,6 +120,15 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
         stats.updateErrors.averageRetries = errorCount > 0 ? totalRetries / errorCount : 0;
 
         setStats(stats);
+        setFilteredStats(stats);
+        
+        // Set initial date range if not set
+        if (!dateRange.startDate || !dateRange.endDate) {
+          const startDate = new Date(stats.timeRange.start).toISOString().split('T')[0];
+          const endDate = new Date(stats.timeRange.end).toISOString().split('T')[0];
+          setDateRange({ startDate, endDate });
+        }
+        
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load telemetry data');
@@ -120,6 +139,49 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
 
     loadTelemetryData();
   }, []);
+
+  useEffect(() => {
+    if (!stats || !dateRange.startDate || !dateRange.endDate) return;
+
+    const startTimestamp = new Date(dateRange.startDate).getTime();
+    const endTimestamp = new Date(dateRange.endDate).getTime() + (24 * 60 * 60 * 1000 - 1); // End of the selected day
+
+    // Filter time series data
+    const filteredTimeSeriesData = stats.timeSeriesData.filter(entry => {
+      const entryTimestamp = new Date(entry.date).getTime();
+      return entryTimestamp >= startTimestamp && entryTimestamp <= endTimestamp;
+    });
+
+    // Calculate filtered stats
+    const filtered: TelemetryStats = {
+      ...stats,
+      timeSeriesData: filteredTimeSeriesData,
+      totalEvents: filteredTimeSeriesData.reduce((sum, entry) => sum + entry.total, 0),
+      eventsByCategory: {},
+      timeRange: {
+        start: startTimestamp,
+        end: endTimestamp
+      }
+    };
+
+    // Recalculate events by category
+    filteredTimeSeriesData.forEach(entry => {
+      Object.entries(entry).forEach(([key, value]) => {
+        if (key !== 'date' && key !== 'total') {
+          filtered.eventsByCategory[key] = (filtered.eventsByCategory[key] || 0) + (value as number);
+        }
+      });
+    });
+
+    setFilteredStats(filtered);
+  }, [stats, dateRange]);
+
+  const handleDateChange = (type: 'startDate' | 'endDate', value: string) => {
+    setDateRange(prev => ({
+      ...prev,
+      [type]: value
+    }));
+  };
 
   if (isLoading) {
     return (
@@ -137,7 +199,7 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
     );
   }
 
-  if (!stats) {
+  if (!filteredStats) {
     return (
       <div className={`p-6 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
         No telemetry data available
@@ -156,6 +218,35 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
     <div className={`p-6 ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'}`}>
       <h1 className="text-2xl font-bold mb-6">Telemetry Dashboard</h1>
       
+      {/* Date Range Filter */}
+      <div className={`mb-6 p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+        <h2 className="text-xl font-semibold mb-3">Date Range Filter</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-2">Start Date</label>
+            <input
+              type="date"
+              value={dateRange.startDate}
+              onChange={(e) => handleDateChange('startDate', e.target.value)}
+              min={stats ? new Date(stats.timeRange.start).toISOString().split('T')[0] : undefined}
+              max={dateRange.endDate || (stats ? new Date(stats.timeRange.end).toISOString().split('T')[0] : undefined)}
+              className={`w-full p-2 rounded ${isDarkMode ? 'bg-gray-600 text-gray-200' : 'bg-white text-gray-800'}`}
+            />
+          </div>
+          <div>
+            <label className="block mb-2">End Date</label>
+            <input
+              type="date"
+              value={dateRange.endDate}
+              onChange={(e) => handleDateChange('endDate', e.target.value)}
+              min={dateRange.startDate || (stats ? new Date(stats.timeRange.start).toISOString().split('T')[0] : undefined)}
+              max={stats ? new Date(stats.timeRange.end).toISOString().split('T')[0] : undefined}
+              className={`w-full p-2 rounded ${isDarkMode ? 'bg-gray-600 text-gray-200' : 'bg-white text-gray-800'}`}
+            />
+          </div>
+        </div>
+      </div>
+      
       <div className="grid grid-cols-1 gap-6">
         {/* Time-based Events Graph */}
         <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
@@ -163,7 +254,7 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={stats.timeSeriesData}
+                data={filteredStats.timeSeriesData}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#4a5568' : '#e2e8f0'} />
@@ -184,7 +275,7 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
                   }}
                 />
                 <Legend />
-                {Object.keys(stats.eventsByCategory).map((category) => (
+                {Object.keys(filteredStats.eventsByCategory).map((category) => (
                   <Line
                     key={category}
                     type="monotone"
@@ -203,18 +294,18 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
           {/* Overview Card */}
           <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
             <h2 className="text-xl font-semibold mb-3">Overview</h2>
-            <p>Total Events: {stats.totalEvents}</p>
-            <p>Time Range: {new Date(stats.timeRange.start).toLocaleDateString()} - {new Date(stats.timeRange.end).toLocaleDateString()}</p>
+            <p>Total Events: {filteredStats.totalEvents}</p>
+            <p>Time Range: {new Date(filteredStats.timeRange.start).toLocaleDateString()} - {new Date(filteredStats.timeRange.end).toLocaleDateString()}</p>
           </div>
 
           {/* Update Errors Card */}
           <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
             <h2 className="text-xl font-semibold mb-3">Update Errors</h2>
-            <p>Total Errors: {stats.updateErrors.total}</p>
-            <p>Average Retries: {stats.updateErrors.averageRetries.toFixed(2)}</p>
+            <p>Total Errors: {filteredStats.updateErrors.total}</p>
+            <p>Average Retries: {filteredStats.updateErrors.averageRetries.toFixed(2)}</p>
             <div className="mt-2">
               <h3 className="font-semibold mb-2">Error Types:</h3>
-              {Object.entries(stats.updateErrors.byType).map(([type, count]) => (
+              {Object.entries(filteredStats.updateErrors.byType).map(([type, count]) => (
                 <p key={type}>{type}: {count}</p>
               ))}
             </div>
@@ -223,7 +314,7 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
           {/* Events by Category Card */}
           <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
             <h2 className="text-xl font-semibold mb-3">Events by Category</h2>
-            {Object.entries(stats.eventsByCategory).map(([category, count]) => (
+            {Object.entries(filteredStats.eventsByCategory).map(([category, count]) => (
               <p key={category}>{category}: {count}</p>
             ))}
           </div>

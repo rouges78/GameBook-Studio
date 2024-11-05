@@ -1,6 +1,6 @@
 import { app } from 'electron';
-import path from 'path';
-import fs from 'fs/promises';
+import * as path from 'path';
+import * as fs from 'fs/promises';
 
 interface TelemetryEvent {
   category: string;
@@ -64,7 +64,7 @@ class TelemetryService {
     try {
       await this.ensureLogDirectory();
       const files = await fs.readdir(this.logPath);
-      const logFiles = files.filter(file => file.startsWith('telemetry-') && file.endsWith('.log'));
+      const logFiles = files.filter((file: string) => file.startsWith('telemetry-') && file.endsWith('.log'));
       
       const allEvents: TelemetryEvent[] = [];
       

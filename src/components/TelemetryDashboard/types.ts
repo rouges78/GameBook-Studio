@@ -76,6 +76,7 @@ export interface ErrorAnalysisProps {
     byType: Record<string, number>;
     averageRetries: number;
   };
+  rawEvents?: TelemetryEvent[];
   isDarkMode: boolean;
 }
 
@@ -101,6 +102,17 @@ export interface TimeSeriesChartProps {
     [key: string]: number | string;
   }>;
   categories: CategoryFilters;
+  isDarkMode: boolean;
+}
+
+export interface ErrorInspectionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  errorPatterns: ErrorPatterns;
+  selectedError?: {
+    pattern: string;
+    events: TelemetryEvent[];
+  };
   isDarkMode: boolean;
 }
 

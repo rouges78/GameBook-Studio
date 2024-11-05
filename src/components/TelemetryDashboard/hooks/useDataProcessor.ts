@@ -3,7 +3,7 @@ import type { TelemetryEvent } from '../../../types/electron';
 import { convertEventToChartData } from '../types';
 import { telemetryCache } from '../../../utils/telemetryCache';
 import { getWorkerPool } from '../utils/workerPool';
-import type { ProcessedTelemetryData, PaginationParams, PaginationMetadata } from '../types';
+import type { ProcessedTelemetryData, PaginationParams, PaginationMetadata, PerformanceData } from '../types';
 
 interface UseDataProcessorProps {
   data: TelemetryEvent[];
@@ -241,7 +241,11 @@ const mergeSystemMetrics = (metrics1: ProcessedTelemetryData['systemMetrics'], m
     performance: {
       avgResponseTime: (metrics1.performance.avgResponseTime + metrics2.performance.avgResponseTime) / 2,
       errorRate: (metrics1.performance.errorRate + metrics2.performance.errorRate) / 2,
-      totalCrashes: metrics1.performance.totalCrashes + metrics2.performance.totalCrashes
+      totalCrashes: metrics1.performance.totalCrashes + metrics2.performance.totalCrashes,
+      detailedMetrics: [
+        ...(metrics1.performance.detailedMetrics || []),
+        ...(metrics2.performance.detailedMetrics || [])
+      ].sort((a, b) => a.timestamp - b.timestamp)
     }
   };
 };

@@ -7,7 +7,8 @@ import {
   SystemMetrics,
   TimeSeriesChart,
   MemoryAlertsPanel,
-  VirtualizedErrorTable
+  VirtualizedErrorTable,
+  DetailedPerformanceMetrics
 } from './components';
 import type { TelemetryStats, DateRange, CategoryFilters as CategoryFiltersType, PaginationParams } from './types';
 import useDataProcessor from './hooks/useDataProcessor';
@@ -261,6 +262,16 @@ export const TelemetryDashboard: React.FC<{ isDarkMode: boolean }> = ({ isDarkMo
         categories={categoryFilters}
         isDarkMode={isDarkMode}
       />
+
+      {/* Detailed Performance Metrics */}
+      {processedData.systemMetrics.performance.detailedMetrics && (
+        <div className="mb-6">
+          <DetailedPerformanceMetrics
+            data={processedData.systemMetrics.performance.detailedMetrics}
+            isDarkMode={isDarkMode}
+          />
+        </div>
+      )}
 
       {/* Error Analysis */}
       <ErrorAnalysis

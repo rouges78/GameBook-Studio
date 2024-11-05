@@ -6,3 +6,4 @@ export { TimeSeriesChart } from './TimeSeriesChart';
 export { ErrorInspectionModal } from './ErrorInspectionModal';
 export { MemoryAlertsPanel } from './MemoryAlertsPanel';
 export { VirtualizedErrorTable } from './VirtualizedErrorTable';
+export { DetailedPerformanceMetrics } from './DetailedPerformanceMetrics';

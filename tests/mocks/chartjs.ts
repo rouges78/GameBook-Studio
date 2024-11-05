@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+import React from 'react';
 
 // Mock Chart.js
 jest.mock('chart.js', () => ({
@@ -19,10 +19,15 @@ jest.mock('chart.js', () => ({
 
 // Mock react-chartjs-2 Line component
 jest.mock('react-chartjs-2', () => ({
-  Line: function MockChart() {
-    return '<div data-testid="mock-chart"></div>';
+  Line: function MockChart(props: { data: { datasets: Array<{ data: number[] }> } }) {
+    return React.createElement('div', {
+      'data-testid': 'mock-chart',
+      children: props.data.datasets[0].data.map((point, index) =>
+        React.createElement('div', {
+          key: index,
+          'data-point': point
+        })
+      )
+    });
   }
 }));
-
-// Set test environment
-process.env.NODE_ENV = 'test';

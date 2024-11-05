@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+import React from 'react';
 
 // Mock Chart.js
 jest.mock('chart.js', () => ({
@@ -17,12 +17,12 @@ jest.mock('chart.js', () => ({
   Filler: jest.fn()
 }));
 
-// Mock react-chartjs-2 Line component
-jest.mock('react-chartjs-2', () => ({
-  Line: function MockChart() {
-    return '<div data-testid="mock-chart"></div>';
-  }
-}));
+// Create a mock Line component
+const MockLine = () => {
+  return React.createElement('div', { 'data-testid': 'mock-chart' });
+};
 
-// Set test environment
-process.env.NODE_ENV = 'test';
+// Mock react-chartjs-2
+jest.mock('react-chartjs-2', () => ({
+  Line: MockLine
+}));

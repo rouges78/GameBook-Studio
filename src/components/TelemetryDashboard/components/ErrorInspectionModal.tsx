@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { TelemetryEvent } from '../../../types/electron';
 import { ErrorPatterns } from '../types';
+import { VirtualizedErrorTable } from './VirtualizedErrorTable';
 
 interface ErrorInspectionModalProps {
   isOpen: boolean;
@@ -156,39 +157,11 @@ export const ErrorInspectionModal: React.FC<ErrorInspectionModalProps> = ({
               </div>
 
               <div>
-                <h3 className={`text-lg font-semibold mb-2 ${textColor}`}>Recent Occurrences</h3>
-                <div className={`border border-${isDarkMode ? 'gray-700' : 'gray-200'} rounded-lg overflow-hidden`}>
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className={`bg-${isDarkMode ? 'gray-700' : 'gray-50'}`}>
-                      <tr>
-                        <th className={`px-6 py-3 text-left text-xs font-medium ${subTextColor} uppercase tracking-wider`}>
-                          Timestamp
-                        </th>
-                        <th className={`px-6 py-3 text-left text-xs font-medium ${subTextColor} uppercase tracking-wider`}>
-                          Version
-                        </th>
-                        <th className={`px-6 py-3 text-left text-xs font-medium ${subTextColor} uppercase tracking-wider`}>
-                          Platform
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className={`bg-${isDarkMode ? 'gray-800' : 'white'} divide-y divide-${isDarkMode ? 'gray-700' : 'gray-200'}`}>
-                      {selectedError.events.slice(0, 5).map((event, index) => (
-                        <tr key={index}>
-                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${textColor}`}>
-                            {new Date(event.timestamp).toLocaleString()}
-                          </td>
-                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${textColor}`}>
-                            {event.appVersion}
-                          </td>
-                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${textColor}`}>
-                            {event.platform}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <h3 className={`text-lg font-semibold mb-2 ${textColor}`}>All Occurrences</h3>
+                <VirtualizedErrorTable
+                  events={selectedError.events}
+                  isDarkMode={isDarkMode}
+                />
               </div>
             </div>
           ) : (

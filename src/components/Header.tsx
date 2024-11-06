@@ -24,8 +24,14 @@ const Header: React.FC<HeaderProps> = ({
     animate: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } }
   };
 
-  const iconVariants = {
-    hover: { rotate: 360, transition: { duration: 0.5 } }
+  const logoVariants = {
+    initial: { scale: 0.8, rotate: -10 },
+    animate: { scale: 1, rotate: 0, transition: { duration: 0.5 } },
+    hover: { 
+      scale: 1.1,
+      rotate: [0, -10, 10, -5, 5, 0],
+      transition: { duration: 0.5 }
+    }
   };
 
   const versionVariants = {
@@ -50,31 +56,37 @@ const Header: React.FC<HeaderProps> = ({
       variants={headerVariants}
       initial="initial"
       animate="animate"
-      className={`flex flex-col ${
-        isDarkMode 
-          ? 'bg-gray-800 text-white border-gray-700' 
-          : 'bg-gray-800 text-white border-gray-700'
-      }`}
+      className={`${isDarkMode ? 'glass-dark' : 'glass'} z-50 sticky top-0`}
     >
-      <div className="w-full text-left py-2 border-b border-gray-700 px-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
+      <div className="w-full py-3 px-4">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center space-x-3">
             <motion.div
+              variants={logoVariants}
+              initial="initial"
+              animate="animate"
               whileHover="hover"
-              variants={iconVariants}
-              className="text-blue-500 mr-3"
+              className="text-primary"
             >
-              <Book size={28} />
+              <Book size={28} strokeWidth={2.5} />
             </motion.div>
-            <span className="text-xl font-semibold">GameBook Studio</span>
+            <motion.span 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-xl font-bold tracking-tight"
+            >
+              GameBook Studio
+            </motion.span>
           </div>
-          <div className="flex items-center space-x-4">
+          
+          <div className="flex items-center space-x-6">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               transition={springTransition}
               onClick={onThemeToggle}
-              className="relative w-8 h-8 flex items-center justify-center text-blue-500"
+              className="relative w-8 h-8 flex items-center justify-center text-primary hover:text-primary/80 transition-colors"
+              aria-label="Toggle theme"
             >
               <AnimatePresence mode="wait">
                 {isDarkMode ? (
@@ -86,7 +98,7 @@ const Header: React.FC<HeaderProps> = ({
                     exit="exit"
                     className="absolute"
                   >
-                    <Moon size={20} />
+                    <Moon size={20} strokeWidth={2} />
                   </motion.div>
                 ) : (
                   <motion.div
@@ -97,65 +109,53 @@ const Header: React.FC<HeaderProps> = ({
                     exit="exit"
                     className="absolute"
                   >
-                    <Sun size={20} />
+                    <Sun size={20} strokeWidth={2} />
                   </motion.div>
                 )}
               </AnimatePresence>
             </motion.button>
-            <motion.div
-              variants={versionVariants}
-              initial="initial"
-              animate="animate"
-              className="text-sm text-gray-400"
-            >
-              v{version}
-            </motion.div>
+
+            <div className="flex items-center space-x-3">
+              <motion.div
+                variants={versionVariants}
+                initial="initial"
+                animate="animate"
+                className="flex items-center space-x-2"
+              >
+                {edition && (
+                  <motion.span
+                    whileHover={{ scale: 1.05 }}
+                    className="badge badge-secondary"
+                  >
+                    {edition}
+                  </motion.span>
+                )}
+                <motion.span
+                  whileHover={{ scale: 1.05 }}
+                  className="badge badge-primary"
+                >
+                  v{version}
+                </motion.span>
+                {update && (
+                  <motion.span
+                    whileHover={{ scale: 1.05 }}
+                    className="badge bg-blue-500 text-white border-transparent hover:bg-blue-600"
+                  >
+                    Update {update}
+                  </motion.span>
+                )}
+                {revision && (
+                  <motion.span
+                    whileHover={{ scale: 1.05 }}
+                    className="badge badge-secondary"
+                  >
+                    Rev {revision}
+                  </motion.span>
+                )}
+              </motion.div>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="h-12 flex items-center justify-end px-4">
-        <motion.div
-          variants={versionVariants}
-          initial="initial"
-          animate="animate"
-          className="flex items-center space-x-4 text-sm"
-        >
-          {edition && (
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={springTransition}
-              className="px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 transition-colors cursor-pointer"
-            >
-              {edition}
-            </motion.div>
-          )}
-          {update && (
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={springTransition}
-              className="px-2 py-1 rounded bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer group"
-            >
-              <motion.span
-                initial={{ opacity: 0.8 }}
-                whileHover={{ opacity: 1 }}
-              >
-                Update {update}
-              </motion.span>
-            </motion.div>
-          )}
-          {revision && (
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={springTransition}
-              className="px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 transition-colors cursor-pointer"
-            >
-              Rev {revision}
-            </motion.div>
-          )}
-        </motion.div>
       </div>
     </motion.header>
   );

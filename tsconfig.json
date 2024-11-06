@@ -24,7 +24,7 @@
     /* Paths */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
+      "*": ["./src/*"],
       "@components/*": ["./src/components/*"],
       "@contexts/*": ["./src/contexts/*"],
       "@hooks/*": ["./src/hooks/*"],
@@ -42,8 +42,6 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.d.ts",
-    "electron/**/*.ts",
-    "electron/**/*.js",
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "tests/**/*.d.ts"

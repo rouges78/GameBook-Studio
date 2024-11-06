@@ -1,34 +1,6 @@
-export interface Action {
-  'N.Par.'?: string;
-  text?: string;
-  [key: string]: any;
-}
+import { Action, Paragraph, MapSettings, ExtendedParagraph } from '../../types/storymap';
 
-export interface Paragraph {
-  id: number;
-  title: string;
-  type: 'normale' | 'nodo' | 'finale';
-  actions: Action[];
-  x?: number;
-  y?: number;
-  locked?: boolean;
-}
-
-export interface MapSettings {
-  backgroundImage: string | null;
-  imageAdjustments: ImageAdjustments;
-}
-
-// Extended version that includes ParagraphEditor fields
-export interface ExtendedParagraph extends Paragraph {
-  content?: string;
-  incomingConnections?: number[];
-  outgoingConnections?: string[];
-  image?: {
-    data: string;
-    position: 'before' | 'after';
-  };
-}
+export type { Action, Paragraph, MapSettings, ExtendedParagraph };
 
 export interface StoryMapProps {
   paragraphs: ExtendedParagraph[];

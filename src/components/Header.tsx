@@ -20,23 +20,23 @@ const Header: React.FC<HeaderProps> = ({
   onThemeToggle 
 }) => {
   const headerVariants = {
-    initial: { y: -50, opacity: 0 },
-    animate: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } }
+    initial: { y: -20, opacity: 0 },
+    animate: { y: 0, opacity: 1, transition: { duration: 0.4, ease: "easeOut" } }
   };
 
   const logoVariants = {
     initial: { scale: 0.8, rotate: -10 },
-    animate: { scale: 1, rotate: 0, transition: { duration: 0.5 } },
+    animate: { scale: 1, rotate: 0, transition: { duration: 0.4 } },
     hover: { 
       scale: 1.1,
       rotate: [0, -10, 10, -5, 5, 0],
-      transition: { duration: 0.5 }
+      transition: { duration: 0.4 }
     }
   };
 
   const versionVariants = {
-    initial: { opacity: 0, x: 20 },
-    animate: { opacity: 1, x: 0, transition: { delay: 0.3, duration: 0.3 } }
+    initial: { opacity: 0, x: 10 },
+    animate: { opacity: 1, x: 0, transition: { delay: 0.2, duration: 0.3 } }
   };
 
   const themeIconVariants = {
@@ -56,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({
       variants={headerVariants}
       initial="initial"
       animate="animate"
-      className={`${isDarkMode ? 'glass-dark' : 'glass'} z-50 sticky top-0`}
+      className={`${isDarkMode ? 'glass-dark' : 'glass'} z-50 sticky top-0 border-b border-border/40`}
     >
       <div className="w-full py-3 px-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
@@ -68,10 +68,10 @@ const Header: React.FC<HeaderProps> = ({
               whileHover="hover"
               className="text-primary"
             >
-              <Book size={28} strokeWidth={2.5} />
+              <Book size={28} strokeWidth={1.5} />
             </motion.div>
             <motion.span 
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               className="text-xl font-bold tracking-tight"
             >
@@ -81,8 +81,8 @@ const Header: React.FC<HeaderProps> = ({
           
           <div className="flex items-center space-x-6">
             <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               transition={springTransition}
               onClick={onThemeToggle}
               className="relative w-8 h-8 flex items-center justify-center text-primary hover:text-primary/80 transition-colors"
@@ -98,7 +98,7 @@ const Header: React.FC<HeaderProps> = ({
                     exit="exit"
                     className="absolute"
                   >
-                    <Moon size={20} strokeWidth={2} />
+                    <Moon size={20} strokeWidth={1.5} />
                   </motion.div>
                 ) : (
                   <motion.div
@@ -109,7 +109,7 @@ const Header: React.FC<HeaderProps> = ({
                     exit="exit"
                     className="absolute"
                   >
-                    <Sun size={20} strokeWidth={2} />
+                    <Sun size={20} strokeWidth={1.5} />
                   </motion.div>
                 )}
               </AnimatePresence>

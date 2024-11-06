@@ -2,6 +2,7 @@ import React from 'react';
 import { Bold, Italic, Underline, Link, Code, Quote, AlignLeft, AlignCenter, AlignRight, ChevronDown, Type } from 'lucide-react';
 import { ParagraphEditorControlsProps } from './types';
 import { translations } from './translations';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
   selectedParagraph,
@@ -10,8 +11,18 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
   onSelectParagraph,
   isDarkMode,
   language,
+  onSave,
+  onShowStoryMap,
 }) => {
   const t = translations[language];
+
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts({
+    selectedParagraph,
+    onUpdate,
+    onSave,
+    onShowStoryMap,
+  });
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate({
@@ -51,15 +62,15 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
   ];
 
   const formatButtons = [
-    { icon: <Bold size={18} />, format: 'bold', title: t.formatButtons.bold },
-    { icon: <Italic size={18} />, format: 'italic', title: t.formatButtons.italic },
-    { icon: <Underline size={18} />, format: 'underline', title: t.formatButtons.underline },
-    { text: 'H1', format: 'heading1', title: t.formatButtons.heading1 },
-    { text: 'H2', format: 'heading2', title: t.formatButtons.heading2 },
-    { text: 'H3', format: 'heading3', title: t.formatButtons.heading3 },
+    { icon: <Bold size={18} />, format: 'bold', title: t.formatButtons.bold, shortcut: 'Ctrl+B' },
+    { icon: <Italic size={18} />, format: 'italic', title: t.formatButtons.italic, shortcut: 'Ctrl+I' },
+    { icon: <Underline size={18} />, format: 'underline', title: t.formatButtons.underline, shortcut: 'Ctrl+U' },
+    { text: 'H1', format: 'heading1', title: t.formatButtons.heading1, shortcut: 'Alt+1' },
+    { text: 'H2', format: 'heading2', title: t.formatButtons.heading2, shortcut: 'Alt+2' },
+    { text: 'H3', format: 'heading3', title: t.formatButtons.heading3, shortcut: 'Alt+3' },
     { icon: <Quote size={18} />, format: 'quote', title: t.formatButtons.quote },
-    { icon: <Code size={18} />, format: 'code', title: t.formatButtons.code },
-    { icon: <Link size={18} />, format: 'link', title: t.formatButtons.link },
+    { icon: <Code size={18} />, format: 'code', title: t.formatButtons.code, shortcut: 'Ctrl+`' },
+    { icon: <Link size={18} />, format: 'link', title: t.formatButtons.link, shortcut: 'Ctrl+K' },
   ];
 
   const handleFormat = (format: string) => {
@@ -241,10 +252,15 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
           <button
             key={button.format}
             onClick={() => handleFormat(button.format)}
-            title={button.title}
-            className="w-10 h-8 flex items-center justify-center rounded text-gray-300 hover:bg-gray-700 hover:text-white"
+            title={`${button.title}${button.shortcut ? ` (${button.shortcut})` : ''}`}
+            className="w-10 h-8 flex items-center justify-center rounded text-gray-300 hover:bg-gray-700 hover:text-white group relative"
           >
             {button.icon || <span className="text-sm font-medium">{button.text}</span>}
+            {button.shortcut && (
+              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-900 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                {button.shortcut}
+              </span>
+            )}
           </button>
         ))}
       </div>

@@ -55,16 +55,19 @@ const EditorMain: React.FC<EditorMainProps> = ({
     <main className="flex-1 flex flex-col min-h-0">
       <ParagraphEditorControls
         selectedParagraph={selectedParagraph}
+        paragraphs={paragraphs}
         onUpdate={onUpdate}
+        onSelectParagraph={(id) => onUpdate({ ...selectedParagraph, id })}
         isDarkMode={isDarkMode}
         language={language}
+        onSave={onSave}
+        onShowStoryMap={onShowStoryMap}
       />
 
       <div className="flex-1 flex flex-col min-h-0">
         <ParagraphContent
           selectedParagraph={selectedParagraph}
           onUpdate={onUpdate}
-          paragraphs={paragraphs}
           isDarkMode={isDarkMode}
           language={language}
         />
@@ -81,7 +84,7 @@ const EditorMain: React.FC<EditorMainProps> = ({
         />
 
         <TagInput
-          tags={selectedParagraph.tags}
+          tags={selectedParagraph.tags || []}
           onTagsChange={(newTags: string[]) => onUpdate({
             ...selectedParagraph,
             tags: newTags
@@ -102,6 +105,7 @@ const EditorMain: React.FC<EditorMainProps> = ({
           <button
             onClick={onShowStoryMap}
             className="px-3 py-1 bg-amber-900 hover:bg-amber-800 text-white text-sm rounded-md flex items-center"
+            title={t.shortcuts.map}
           >
             {t.showMap}
           </button>
@@ -123,6 +127,7 @@ const EditorMain: React.FC<EditorMainProps> = ({
             <button
               onClick={onSave}
               className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md flex items-center"
+              title={t.shortcuts.save}
             >
               {t.save}
             </button>

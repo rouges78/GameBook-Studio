@@ -41,11 +41,6 @@ export interface ParagraphContentProps {
   onUpdate: (updatedParagraph: Paragraph) => void;
   isDarkMode: boolean;
   language: 'it' | 'en';
-  onShowImageEditor: () => void;
-  onShowStoryMap: () => void;
-  onDelete: () => void;
-  onExport: () => void;
-  onSave: () => void;
 }
 
 export interface ParagraphEditorControlsProps {
@@ -55,6 +50,8 @@ export interface ParagraphEditorControlsProps {
   onSelectParagraph: (id: number) => void;
   isDarkMode: boolean;
   language: 'it' | 'en';
+  onSave: () => void;
+  onShowStoryMap: () => void;
 }
 
 export interface ParagraphSidebarProps {

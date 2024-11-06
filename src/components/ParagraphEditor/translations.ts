@@ -27,15 +27,15 @@ export const translations = {
       final: "Finale"
     },
     formatButtons: {
-      bold: "Grassetto",
-      italic: "Corsivo",
-      underline: "Sottolineato",
-      heading1: "Titolo 1",
-      heading2: "Titolo 2",
-      heading3: "Titolo 3",
+      bold: "Grassetto (Ctrl+B)",
+      italic: "Corsivo (Ctrl+I)",
+      underline: "Sottolineato (Ctrl+U)",
+      heading1: "Titolo 1 (Alt+1)",
+      heading2: "Titolo 2 (Alt+2)",
+      heading3: "Titolo 3 (Alt+3)",
       quote: "Citazione",
-      code: "Codice",
-      link: "Link"
+      code: "Codice (Ctrl+`)",
+      link: "Link (Ctrl+K)"
     },
     alignment: {
       left: "Allinea a sinistra",
@@ -51,6 +51,10 @@ export const translations = {
       autosaving: "Salvataggio automatico",
       words: "Parole",
       characters: "Caratteri"
+    },
+    shortcuts: {
+      save: "Ctrl+S per salvare",
+      map: "Ctrl+M per mostrare la mappa"
     }
   },
   en: {
@@ -81,15 +85,15 @@ export const translations = {
       final: "Final"
     },
     formatButtons: {
-      bold: "Bold",
-      italic: "Italic",
-      underline: "Underline",
-      heading1: "Heading 1",
-      heading2: "Heading 2",
-      heading3: "Heading 3",
+      bold: "Bold (Ctrl+B)",
+      italic: "Italic (Ctrl+I)",
+      underline: "Underline (Ctrl+U)",
+      heading1: "Heading 1 (Alt+1)",
+      heading2: "Heading 2 (Alt+2)",
+      heading3: "Heading 3 (Alt+3)",
       quote: "Quote",
-      code: "Code",
-      link: "Link"
+      code: "Code (Ctrl+`)",
+      link: "Link (Ctrl+K)"
     },
     alignment: {
       left: "Align left",
@@ -105,6 +109,10 @@ export const translations = {
       autosaving: "Auto-saving",
       words: "Words",
       characters: "Characters"
+    },
+    shortcuts: {
+      save: "Ctrl+S to save",
+      map: "Ctrl+M to show map"
     }
   }
 };

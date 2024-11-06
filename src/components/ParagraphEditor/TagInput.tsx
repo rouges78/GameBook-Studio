@@ -2,7 +2,7 @@ import React, { useState, KeyboardEvent } from 'react';
 import { X } from 'lucide-react';
 import { TagInputProps } from './types';
 
-const TagInput: React.FC<TagInputProps> = ({ tags, onTagsChange, isDarkMode }) => {
+const TagInput: React.FC<TagInputProps> = ({ tags = [], onTagsChange, isDarkMode }) => {
   const [inputValue, setInputValue] = useState('');
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {

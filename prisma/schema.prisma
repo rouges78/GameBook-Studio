@@ -25,30 +25,21 @@ model Project {
 }
 
 model Paragraph {
-  id          String       @id @default(uuid())
-  number      Int
-  title       String
-  content     String
-  tags        String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  projectId   String
-  project     Project      @relation(fields: [projectId], references: [id])
-  fromLinks   Connection[] @relation("FromParagraph")
-  toLinks     Connection[] @relation("ToParagraph")
-  x           Float?       // Position in story map
-  y           Float?       // Position in story map
-}
-
-model Connection {
-  id            String    @id @default(uuid())
-  fromId        String
-  toId          String
-  condition     String?   // Condition for this connection
-  fromParagraph Paragraph @relation("FromParagraph", fields: [fromId], references: [id])
-  toParagraph   Paragraph @relation("ToParagraph", fields: [toId], references: [id])
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                  String    @id @default(uuid())
+  number              Int
+  title               String
+  content             String
+  tags                String?
+  type                String    @default("normale")
+  actions             String    @default("[]") // JSON string of actions
+  incomingConnections String    @default("[]") // JSON string of incoming connections
+  outgoingConnections String    @default("[]") // JSON string of outgoing connections
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  projectId           String
+  project             Project   @relation(fields: [projectId], references: [id])
+  x                   Float?    // Position in story map
+  y                   Float?    // Position in story map
 }
 
 model Asset {

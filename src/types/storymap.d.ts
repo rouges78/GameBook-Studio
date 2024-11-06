@@ -1,6 +1,6 @@
 export interface Action {
-  'N.Par.'?: string;
-  text?: string;
+  'N.Par.': string;
+  text: string;
   [key: string]: any;
 }
 
@@ -29,11 +29,14 @@ export interface MapSettings {
 }
 
 export interface ExtendedParagraph extends Paragraph {
-  content?: string;
-  incomingConnections?: number[];
-  outgoingConnections?: string[];
+  content: string;
+  incomingConnections: number[];
+  outgoingConnections: string[];
   image?: {
     data: string;
     position: 'before' | 'after';
   };
+  tags?: string[];
+  font?: string;
+  alignment?: 'left' | 'center' | 'right';
 }

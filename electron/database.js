@@ -24,10 +24,14 @@ class DatabaseManager {
                         create: paragraphs.map(p => ({
                             id: p.id.toString(), // Convert id to string
                             number: parseInt(p.id),
-                            title: '', // Required by schema but not in our type
-                            content: p.text || '', // Default empty string if text is undefined
+                            title: p.title || '', // Use paragraph title if available
+                            content: p.content || '',
                             x: p.x,
-                            y: p.y
+                            y: p.y,
+                            actions: JSON.stringify(p.actions || []),
+                            incomingConnections: JSON.stringify(p.incomingConnections || []),
+                            outgoingConnections: JSON.stringify(p.outgoingConnections || []),
+                            type: p.type || 'normale'
                         }))
                     }
                 },
@@ -41,10 +45,14 @@ class DatabaseManager {
                         create: paragraphs.map(p => ({
                             id: p.id.toString(), // Convert id to string
                             number: parseInt(p.id),
-                            title: '', // Required by schema but not in our type
-                            content: p.text || '', // Default empty string if text is undefined
+                            title: p.title || '', // Use paragraph title if available
+                            content: p.content || '',
                             x: p.x,
-                            y: p.y
+                            y: p.y,
+                            actions: JSON.stringify(p.actions || []),
+                            incomingConnections: JSON.stringify(p.incomingConnections || []),
+                            outgoingConnections: JSON.stringify(p.outgoingConnections || []),
+                            type: p.type || 'normale'
                         }))
                     }
                 }
@@ -69,16 +77,20 @@ class DatabaseManager {
                 author: dbProject.description || '',
                 lastEdited: dbProject.updatedAt.toISOString(),
                 paragraphs: dbProject.paragraphs.map(p => ({
-                    id: parseInt(p.id), // Convert id back to number
-                    text: p.content,
-                    choices: [], // We'll need to implement choice handling
+                    id: parseInt(p.id),
+                    title: p.title || '',
+                    content: p.content || '',
+                    actions: JSON.parse(p.actions || '[]'),
+                    incomingConnections: JSON.parse(p.incomingConnections || '[]'),
+                    outgoingConnections: JSON.parse(p.outgoingConnections || '[]'),
+                    type: p.type || 'normale',
                     x: p.x || undefined,
                     y: p.y || undefined
                 })),
                 mapSettings: {
                     positions: dbProject.paragraphs.reduce((acc, p) => {
                         if (p.x !== null && p.y !== null) {
-                            acc[parseInt(p.id)] = { x: p.x, y: p.y }; // Convert id back to number
+                            acc[parseInt(p.id)] = { x: p.x, y: p.y };
                         }
                         return acc;
                     }, {}),
@@ -125,16 +137,20 @@ class DatabaseManager {
                 author: dbProject.description || '',
                 lastEdited: dbProject.updatedAt.toISOString(),
                 paragraphs: dbProject.paragraphs.map(p => ({
-                    id: parseInt(p.id), // Convert id back to number
-                    text: p.content,
-                    choices: [], // We'll need to implement choice handling
+                    id: parseInt(p.id),
+                    title: p.title || '',
+                    content: p.content || '',
+                    actions: JSON.parse(p.actions || '[]'),
+                    incomingConnections: JSON.parse(p.incomingConnections || '[]'),
+                    outgoingConnections: JSON.parse(p.outgoingConnections || '[]'),
+                    type: p.type || 'normale',
                     x: p.x || undefined,
                     y: p.y || undefined
                 })),
                 mapSettings: {
                     positions: dbProject.paragraphs.reduce((acc, p) => {
                         if (p.x !== null && p.y !== null) {
-                            acc[parseInt(p.id)] = { x: p.x, y: p.y }; // Convert id back to number
+                            acc[parseInt(p.id)] = { x: p.x, y: p.y };
                         }
                         return acc;
                     }, {}),

@@ -1,7 +1,5 @@
-import { MapSettings as StoryMapSettings, ExtendedParagraph as StoryMapParagraph } from '../StoryMap/types';
+import { MapSettings, ExtendedParagraph } from '../../types/storymap';
 
-export type MapSettings = StoryMapSettings;
-export type ExtendedParagraph = StoryMapParagraph;
 export type Paragraph = ExtendedParagraph;
 
 export interface Project {

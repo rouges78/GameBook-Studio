@@ -3,7 +3,7 @@
     "composite": true,
     "skipLibCheck": true,
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "target": "ES2020",
@@ -11,7 +11,7 @@
     "types": ["node", "electron"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
+      "*": ["./src/*"],
       "@components/*": ["./src/components/*"],
       "@contexts/*": ["./src/contexts/*"],
       "@hooks/*": ["./src/hooks/*"],
@@ -20,7 +20,6 @@
   },
   "include": [
     "vite.config.ts",
-    "electron/**/*.ts",
     "src/types.ts"
-, "electron/main.js"  ]
+  ]
 }

@@ -8,7 +8,9 @@
   "license": "MIT",
   "main": "electron/main.js",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && vite build",
+    "build:electron": "tsc -p tsconfig.build.json",
+    "build:frontend": "vite build",
+    "build": "npm run build:electron && npm run build:frontend",
     "start": "vite",
     "dev:vite": "vite",
     "dev:electron": "cross-env NODE_ENV=development electron .",

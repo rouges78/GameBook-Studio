@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Moon, Sun, BookOpen, Palette, Settings, HelpCircle, LogOut, Database } from 'lucide-react';
 
 interface SidebarProps {
@@ -53,121 +54,138 @@ const Sidebar: React.FC<SidebarProps> = ({
     window.electron?.closeWindow();
   };
 
+  const buttonVariants = {
+    hover: { scale: 1.02 },
+    tap: { scale: 0.98 }
+  };
+
   return (
-    <aside className={`w-64 p-6 flex flex-col ${isDarkMode ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>
-      <h2 className="text-xl font-bold mb-6">{t.preferences}</h2>
-      <div className="mb-6">
-        <label className="flex items-center justify-between cursor-pointer">
-          <span className="flex items-center">
-            {isDarkMode ? <Moon size={18} className="mr-2 text-blue-400" /> : <Sun size={18} className="mr-2 text-blue-500" />}
+    <motion.aside
+      initial={{ x: -20, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      className={`w-64 p-6 flex flex-col ${isDarkMode ? 'glass-dark' : 'glass'}`}
+    >
+      <motion.h2
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="text-lg font-semibold mb-6"
+      >
+        {t.preferences}
+      </motion.h2>
+
+      <motion.div className="mb-6">
+        <label className="flex items-center justify-between cursor-pointer group">
+          <span className="flex items-center text-sm">
+            <motion.div
+              whileHover={{ rotate: 15 }}
+              transition={{ duration: 0.2 }}
+            >
+              {isDarkMode ? (
+                <Moon size={16} className="mr-2 text-primary" strokeWidth={2} />
+              ) : (
+                <Sun size={16} className="mr-2 text-primary" strokeWidth={2} />
+              )}
+            </motion.div>
             {t.darkMode}
           </span>
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
-              isDarkMode ? 'bg-blue-600' : 'bg-gray-400'
+            className={`relative inline-flex items-center h-5 rounded-full w-9 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+              isDarkMode ? 'bg-primary' : 'bg-muted'
             }`}
           >
-            <span
-              className={`inline-block w-4 h-4 transform transition-transform bg-white rounded-full ${
-                isDarkMode ? 'translate-x-6' : 'translate-x-1'
-              }`}
+            <motion.span
+              initial={false}
+              animate={{
+                x: isDarkMode ? '16px' : '2px',
+                scale: isDarkMode ? 1 : 0.9
+              }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              className="inline-block w-4 h-4 transform bg-background rounded-full shadow-sm"
             />
           </button>
         </label>
-      </div>
-      <h2 className="text-xl font-bold mb-6">{t.language}</h2>
-      <div className="mb-6">
-        <label className="flex items-center cursor-pointer">
-          <input
-            type="radio"
-            checked={language === 'it'}
-            onChange={() => setLanguage('it')}
-            className={`form-radio h-5 w-5 ${isDarkMode ? 'text-blue-600' : 'text-gray-600'}`}
-          />
-          <span className="ml-2">{t.italian}</span>
-        </label>
-      </div>
-      <div className="mb-6">
-        <label className="flex items-center cursor-pointer">
-          <input
-            type="radio"
-            checked={language === 'en'}
-            onChange={() => setLanguage('en')}
-            className={`form-radio h-5 w-5 ${isDarkMode ? 'text-blue-600' : 'text-gray-600'}`}
-          />
-          <span className="ml-2">{t.english}</span>
-        </label>
-      </div>
-      <div className="flex-grow">
-        <button
-          onClick={() => setCurrentPage('library')}
-          className={`w-full mb-4 ${
-            isDarkMode 
-              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-              : 'bg-gray-600 hover:bg-gray-700 text-gray-50'
-          } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
-        >
-          <BookOpen size={18} className="mr-2" />
-          {t.library}
-        </button>
-        <button
-          onClick={() => setCurrentPage('backupManager')}
-          className={`w-full mb-4 ${
-            isDarkMode 
-              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-              : 'bg-gray-500 hover:bg-gray-600 text-gray-50'
-          } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
-        >
-          <Database size={18} className="mr-2" />
-          {t.backupManager}
-        </button>
-        <button
-          onClick={() => setCurrentPage('themeEditor')}
-          className={`w-full mb-4 ${
-            isDarkMode 
-              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-              : 'bg-gray-500 hover:bg-gray-600 text-gray-50'
-          } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
-        >
-          <Palette size={18} className="mr-2" />
-          {t.themeEditor}
-        </button>
-        <button
-          onClick={() => setCurrentPage('settings')}
-          className={`w-full mb-4 ${
-            isDarkMode 
-              ? 'bg-gray-700 hover:bg-gray-600 text-white' 
-              : 'bg-gray-400 hover:bg-gray-500 text-gray-50'
-          } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
-        >
-          <Settings size={18} className="mr-2" />
-          {t.settings}
-        </button>
-        <button
-          onClick={() => setCurrentPage('help')}
-          className={`w-full mb-4 ${
-            isDarkMode 
-              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-              : 'bg-gray-500 hover:bg-gray-600 text-gray-50'
-          } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
-        >
-          <HelpCircle size={18} className="mr-2" />
-          {t.help}
-        </button>
-      </div>
-      <button
-        onClick={handleLogout}
-        className={`w-full ${
-          isDarkMode 
-            ? 'bg-red-600 hover:bg-red-700 text-white' 
-            : 'bg-red-500 hover:bg-red-600 text-white'
-        } font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-colors`}
+      </motion.div>
+
+      <motion.h2
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="text-lg font-semibold mb-4"
       >
-        <LogOut size={18} className="mr-2" />
+        {t.language}
+      </motion.h2>
+
+      <div className="space-y-3 mb-8">
+        {[
+          { value: 'it', label: t.italian },
+          { value: 'en', label: t.english }
+        ].map((option) => (
+          <motion.label
+            key={option.value}
+            className="flex items-center cursor-pointer group"
+            whileHover={{ x: 2 }}
+          >
+            <div className="relative">
+              <input
+                type="radio"
+                checked={language === option.value}
+                onChange={() => setLanguage(option.value as 'it' | 'en')}
+                className="sr-only"
+              />
+              <div className={`w-4 h-4 rounded-full border-2 transition-colors ${
+                language === option.value 
+                  ? 'border-primary bg-primary/10' 
+                  : 'border-muted-foreground'
+              }`}>
+                {language === option.value && (
+                  <motion.div
+                    layoutId="radio-dot"
+                    className="absolute inset-1 rounded-full bg-primary"
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  />
+                )}
+              </div>
+            </div>
+            <span className="ml-2 text-sm group-hover:text-primary transition-colors">
+              {option.label}
+            </span>
+          </motion.label>
+        ))}
+      </div>
+
+      <div className="flex-grow space-y-3">
+        {[
+          { icon: BookOpen, label: t.library, page: 'library' },
+          { icon: Database, label: t.backupManager, page: 'backupManager' },
+          { icon: Palette, label: t.themeEditor, page: 'themeEditor' },
+          { icon: Settings, label: t.settings, page: 'settings' },
+          { icon: HelpCircle, label: t.help, page: 'help' }
+        ].map((item) => (
+          <motion.button
+            key={item.page}
+            variants={buttonVariants}
+            whileHover="hover"
+            whileTap="tap"
+            onClick={() => setCurrentPage(item.page as any)}
+            className="btn btn-secondary w-full justify-start text-sm"
+          >
+            <item.icon size={16} className="mr-2" strokeWidth={2} />
+            {item.label}
+          </motion.button>
+        ))}
+      </div>
+
+      <motion.button
+        variants={buttonVariants}
+        whileHover="hover"
+        whileTap="tap"
+        onClick={handleLogout}
+        className="btn w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 text-sm mt-6"
+      >
+        <LogOut size={16} className="mr-2" strokeWidth={2} />
         {t.logout}
-      </button>
-    </aside>
+      </motion.button>
+    </motion.aside>
   );
 };
 

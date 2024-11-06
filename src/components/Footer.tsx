@@ -25,14 +25,12 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
       setCurrentTime(new Date());
     }, 1000);
 
-    // Load auto-save settings
     const savedSettings = localStorage.getItem('gamebookSettings');
     if (savedSettings) {
       const settings = JSON.parse(savedSettings);
       setIsAutoSaveEnabled(settings.autoSaveEnabled);
     }
 
-    // Listen for auto-save settings changes
     const handleAutoSaveSettingsChanged = (event: CustomEvent) => {
       setIsAutoSaveEnabled(event.detail.enabled);
     };
@@ -62,8 +60,7 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
     initial: { scale: 0 },
     animate: { scale: 1, transition: springTransition },
     hover: { 
-      scale: 1.2, 
-      rotate: 10, 
+      scale: 1.2,
       transition: { duration: 0.2 } 
     }
   };
@@ -87,7 +84,7 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
   };
 
   const tooltipVariants = {
-    hidden: { opacity: 0, y: 10, scale: 0.8 },
+    hidden: { opacity: 0, y: 10, scale: 0.95 },
     visible: { 
       opacity: 1, 
       y: 0, 
@@ -101,9 +98,9 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
       variants={footerVariants}
       initial="initial"
       animate="animate"
-      className={`bg-gray-800 text-gray-100 h-8 flex items-center px-4 border-t border-gray-700 relative`}
+      className={`${isDarkMode ? 'glass-dark' : 'glass'} h-10 flex items-center px-4 sticky bottom-0 z-50`}
     >
-      <div className="w-64 flex items-center justify-center">
+      <div className="w-64 flex items-center justify-start">
         <AnimatePresence mode="wait">
           <motion.div
             key={isOnline ? 'online' : 'offline'}
@@ -121,9 +118,9 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
               className="relative"
             >
               {isOnline ? (
-                <Wifi size={18} className="text-green-400" />
+                <Wifi size={16} className="text-primary" strokeWidth={2} />
               ) : (
-                <WifiOff size={18} className="text-red-400" />
+                <WifiOff size={16} className="text-destructive" strokeWidth={2} />
               )}
               <AnimatePresence>
                 {showTooltip === 'connection' && (
@@ -132,7 +129,7 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
                     initial="hidden"
                     animate="visible"
                     exit="hidden"
-                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap"
+                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-popover text-popover-foreground rounded-md shadow-lg whitespace-nowrap border border-border"
                   >
                     {isOnline ? 'Connected to network' : 'No network connection'}
                   </motion.div>
@@ -140,22 +137,22 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
               </AnimatePresence>
             </motion.div>
             <motion.span 
-              className="text-sm font-medium"
+              className="text-xs font-medium"
               animate={{ 
-                color: isOnline ? '#34D399' : '#F87171'
+                color: isOnline ? 'var(--primary)' : 'var(--destructive)'
               }}
               transition={{ duration: 0.3 }}
             >
-              {isOnline ? 'ONLINE' : 'OFFLINE'}
+              {isOnline ? 'Connected' : 'Offline'}
             </motion.span>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      <div className="flex-1 flex items-center justify-center space-x-6">
+      <div className="flex-1 flex items-center justify-center space-x-8">
         <motion.div
           className="flex items-center space-x-2"
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.02 }}
           transition={springTransition}
         >
           <motion.div 
@@ -165,7 +162,7 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
             onMouseLeave={() => setShowTooltip('')}
             className="relative"
           >
-            <Library size={18} className="text-orange-500" />
+            <Library size={16} className="text-primary" strokeWidth={2} />
             <AnimatePresence>
               {showTooltip === 'projects' && (
                 <motion.div
@@ -173,25 +170,21 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
                   initial="hidden"
                   animate="visible"
                   exit="hidden"
-                  className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap"
+                  className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-popover text-popover-foreground rounded-md shadow-lg whitespace-nowrap border border-border"
                 >
                   Total projects in library
                 </motion.div>
               )}
             </AnimatePresence>
           </motion.div>
-          <motion.span 
-            className="text-sm"
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 0.3 }}
-          >
-            PROGETTI: {projectCount}
+          <motion.span className="text-xs font-medium">
+            Projects: {projectCount}
           </motion.span>
         </motion.div>
 
         <motion.div
           className="flex items-center space-x-2"
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.02 }}
           transition={springTransition}
         >
           <motion.div 
@@ -202,8 +195,9 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
             className="relative"
           >
             <Save 
-              size={18} 
-              className={isAutoSaveEnabled ? 'text-green-500' : 'text-orange-500'} 
+              size={16} 
+              className={isAutoSaveEnabled ? 'text-primary' : 'text-primary/70'} 
+              strokeWidth={2}
             />
             <AnimatePresence>
               {showTooltip === 'backup' && (
@@ -212,64 +206,66 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
                   initial="hidden"
                   animate="visible"
                   exit="hidden"
-                  className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap"
+                  className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-popover text-popover-foreground rounded-md shadow-lg whitespace-nowrap border border-border"
                 >
                   {isAutoSaveEnabled ? 'Auto-save enabled' : 'Last manual save'}
                 </motion.div>
               )}
             </AnimatePresence>
           </motion.div>
-          <span className="text-sm">
-            BACKUP: {lastBackup}
+          <span className="text-xs font-medium">
+            Last backup: {lastBackup}
             {isAutoSaveEnabled && (
               <motion.span
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={springTransition}
-                className="ml-1 text-green-500"
+                className="ml-1 text-primary"
               >
-                (AUTO)
+                (Auto)
               </motion.span>
             )}
           </span>
         </motion.div>
       </div>
 
-      <motion.div
-        className="flex items-center space-x-2"
-        whileHover={{ scale: 1.05 }}
-        transition={springTransition}
-      >
-        <motion.div 
-          variants={iconVariants} 
-          whileHover="hover"
-          onMouseEnter={() => setShowTooltip('time')}
-          onMouseLeave={() => setShowTooltip('')}
-          className="relative"
+      <div className="w-64 flex items-center justify-end">
+        <motion.div
+          className="flex items-center space-x-2"
+          whileHover={{ scale: 1.02 }}
+          transition={springTransition}
         >
-          <Clock size={18} className="text-orange-500" />
-          <AnimatePresence>
-            {showTooltip === 'time' && (
-              <motion.div
-                variants={tooltipVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-900 text-white rounded shadow-lg whitespace-nowrap"
-              >
-                Current local time
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <motion.div 
+            variants={iconVariants} 
+            whileHover="hover"
+            onMouseEnter={() => setShowTooltip('time')}
+            onMouseLeave={() => setShowTooltip('')}
+            className="relative"
+          >
+            <Clock size={16} className="text-primary" strokeWidth={2} />
+            <AnimatePresence>
+              {showTooltip === 'time' && (
+                <motion.div
+                  variants={tooltipVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="hidden"
+                  className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-popover text-popover-foreground rounded-md shadow-lg whitespace-nowrap border border-border"
+                >
+                  Current local time
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+          <motion.span 
+            className="text-xs font-medium"
+            animate={{ opacity: [0.8, 1] }}
+            transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+          >
+            {currentTime.toLocaleTimeString()}
+          </motion.span>
         </motion.div>
-        <motion.span 
-          className="text-sm"
-          animate={{ opacity: [0.8, 1] }}
-          transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
-        >
-          {currentTime.toLocaleString()}
-        </motion.span>
-      </motion.div>
+      </div>
     </motion.footer>
   );
 };

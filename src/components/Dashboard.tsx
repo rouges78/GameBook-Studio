@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, Suspense, lazy, useRef, useEffect } from 'react';
 import { Plus, FolderOpen, FileText } from 'lucide-react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getProjects, saveProject } from '../utils/storage';
 
 const Sidebar = lazy(() => import('./Sidebar'));
@@ -33,7 +33,7 @@ interface ProjectBoxProps {
 }
 
 const ProjectBox: React.FC<ProjectBoxProps> = React.memo(({ project, isDarkMode, translations: t, onProjectSelect, index }) => {
-  const boxVariants: Variants = {
+  const boxVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
@@ -54,7 +54,7 @@ const ProjectBox: React.FC<ProjectBoxProps> = React.memo(({ project, isDarkMode,
         animate="visible"
         className="flex flex-col"
       >
-        <div className={`${isDarkMode ? 'glass-dark' : 'glass'} rounded-lg overflow-hidden aspect-[3/4]`}>
+        <div className={`${isDarkMode ? 'glass-card-dark' : 'glass-card'} rounded-lg overflow-hidden aspect-[3/4]`}>
           <div className="flex items-center justify-center h-full">
             <p className="text-sm text-muted-foreground">
               {t.noProject}
@@ -73,7 +73,7 @@ const ProjectBox: React.FC<ProjectBoxProps> = React.memo(({ project, isDarkMode,
       className="flex flex-col cursor-pointer h-full group"
       onClick={() => onProjectSelect(project)}
     >
-      <div className={`${isDarkMode ? 'glass-dark' : 'glass'} rounded-lg overflow-hidden aspect-[3/4] relative transition-all duration-300 hover:ring-2 hover:ring-primary/50 hover:shadow-[0_0_15px_rgba(var(--primary),0.2)]`}>
+      <div className={`${isDarkMode ? 'glass-card-dark' : 'glass-card'} rounded-lg overflow-hidden aspect-[3/4] relative transition-all duration-300 hover:ring-2 hover:ring-primary/50`}>
         {project.coverImage ? (
           <div className="w-full h-full">
             <img 
@@ -100,10 +100,10 @@ const ProjectBox: React.FC<ProjectBoxProps> = React.memo(({ project, isDarkMode,
         transition={{ delay: 0.2 }}
         className="text-center mt-3 space-y-1"
       >
-        <h3 className="text-sm font-semibold truncate">
+        <h3 className="text-sm font-semibold">
           {project.bookTitle}
         </h3>
-        <p className="text-xs text-muted-foreground truncate">
+        <p className="text-xs text-muted-foreground">
           {t.by} {project.author}
         </p>
         <p className="text-xs text-muted-foreground">
@@ -223,7 +223,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [setCurrentProject, setCurrentPage, t]);
 
-  const logoVariants: Variants = {
+  const logoVariants = {
     initial: { 
       scale: 0.8,
       opacity: 0,
@@ -243,7 +243,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  const glowVariants: Variants = {
+  const glowVariants = {
     initial: { 
       opacity: 0,
       scale: 0.8
@@ -308,7 +308,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
                 whileHover={{ scale: 1.02 }}
-                className={`${isDarkMode ? 'glass-dark' : 'glass'} p-6 rounded-lg flex flex-col justify-center`}
+                className={`${isDarkMode ? 'glass-card-dark' : 'glass-card'} p-6 rounded-lg flex flex-col justify-center`}
               >
                 <motion.div
                   whileHover={{ rotate: 180 }}
@@ -331,7 +331,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
                 whileHover={{ scale: 1.02 }}
-                className={`${isDarkMode ? 'glass-dark' : 'glass'} p-6 rounded-lg flex flex-col justify-center`}
+                className={`${isDarkMode ? 'glass-card-dark' : 'glass-card'} p-6 rounded-lg flex flex-col justify-center`}
               >
                 <motion.div
                   whileHover={{ rotate: -30 }}
@@ -361,7 +361,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className={`${isDarkMode ? 'glass-dark' : 'glass'} h-[60%] p-6 rounded-lg overflow-hidden`}
+              className={`${isDarkMode ? 'glass-card-dark' : 'glass-card'} h-[60%] p-6 rounded-lg overflow-hidden`}
             >
               <motion.h2
                 initial={{ opacity: 0 }}

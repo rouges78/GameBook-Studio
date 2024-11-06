@@ -98,7 +98,7 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
       variants={footerVariants}
       initial="initial"
       animate="animate"
-      className={`${isDarkMode ? 'glass-dark' : 'glass'} h-10 flex items-center px-4 sticky bottom-0 z-50`}
+      className={`${isDarkMode ? 'glass-dark' : 'glass'} h-10 flex items-center px-4 sticky bottom-0 z-50 border-t border-border/40`}
     >
       <div className="w-64 flex items-center justify-start">
         <AnimatePresence mode="wait">
@@ -118,9 +118,9 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
               className="relative"
             >
               {isOnline ? (
-                <Wifi size={16} className="text-primary" strokeWidth={2} />
+                <Wifi size={16} className="text-primary" strokeWidth={1.5} />
               ) : (
-                <WifiOff size={16} className="text-destructive" strokeWidth={2} />
+                <WifiOff size={16} className="text-destructive" strokeWidth={1.5} />
               )}
               <AnimatePresence>
                 {showTooltip === 'connection' && (
@@ -162,7 +162,7 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
             onMouseLeave={() => setShowTooltip('')}
             className="relative"
           >
-            <Library size={16} className="text-primary" strokeWidth={2} />
+            <Library size={16} className="text-primary" strokeWidth={1.5} />
             <AnimatePresence>
               {showTooltip === 'projects' && (
                 <motion.div
@@ -197,7 +197,7 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
             <Save 
               size={16} 
               className={isAutoSaveEnabled ? 'text-primary' : 'text-primary/70'} 
-              strokeWidth={2}
+              strokeWidth={1.5}
             />
             <AnimatePresence>
               {showTooltip === 'backup' && (
@@ -242,7 +242,7 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
             onMouseLeave={() => setShowTooltip('')}
             className="relative"
           >
-            <Clock size={16} className="text-primary" strokeWidth={2} />
+            <Clock size={16} className="text-primary" strokeWidth={1.5} />
             <AnimatePresence>
               {showTooltip === 'time' && (
                 <motion.div

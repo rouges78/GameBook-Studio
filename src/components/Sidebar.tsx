@@ -55,6 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const buttonVariants = {
+    initial: { scale: 1 },
     hover: { scale: 1.02 },
     tap: { scale: 0.98 }
   };
@@ -63,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     <motion.aside
       initial={{ x: -20, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      className={`w-64 p-6 flex flex-col ${isDarkMode ? 'glass-dark' : 'glass'}`}
+      className={`w-64 p-6 flex flex-col ${isDarkMode ? 'bg-gray-800/90 backdrop-blur-md border-r border-white/20' : 'glass'}`}
     >
       <motion.h2
         initial={{ opacity: 0 }}
@@ -77,7 +78,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         <label className="flex items-center justify-between cursor-pointer group">
           <span className="flex items-center text-sm">
             <motion.div
-              whileHover={{ rotate: 15 }}
               transition={{ duration: 0.2 }}
             >
               {isDarkMode ? (
@@ -122,8 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         ].map((option) => (
           <motion.label
             key={option.value}
-            className="flex items-center cursor-pointer group"
-            whileHover={{ x: 2 }}
+            className="flex items-center cursor-pointer"
           >
             <div className="relative">
               <input
@@ -146,7 +145,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 )}
               </div>
             </div>
-            <span className="ml-2 text-sm group-hover:text-primary transition-colors">
+            <span className="ml-2 text-sm">
               {option.label}
             </span>
           </motion.label>
@@ -164,26 +163,28 @@ const Sidebar: React.FC<SidebarProps> = ({
           <motion.button
             key={item.page}
             variants={buttonVariants}
+            initial="initial"
             whileHover="hover"
             whileTap="tap"
             onClick={() => setCurrentPage(item.page as any)}
-            className="btn btn-secondary w-full justify-start text-sm"
+            className="w-full flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-md bg-blue-500 hover:bg-blue-600 text-white transition-colors"
           >
-            <item.icon size={16} className="mr-2" strokeWidth={2} />
-            {item.label}
+            <item.icon size={16} strokeWidth={2} />
+            <span>{item.label}</span>
           </motion.button>
         ))}
       </div>
 
       <motion.button
         variants={buttonVariants}
+        initial="initial"
         whileHover="hover"
         whileTap="tap"
         onClick={handleLogout}
-        className="btn w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 text-sm mt-6"
+        className="w-full flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-md bg-red-500 hover:bg-red-600 text-white mt-6"
       >
-        <LogOut size={16} className="mr-2" strokeWidth={2} />
-        {t.logout}
+        <LogOut size={16} strokeWidth={2} />
+        <span>{t.logout}</span>
       </motion.button>
     </motion.aside>
   );

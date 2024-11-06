@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, Bell, Database, Clock, ToggleLeft, ToggleRight, Brain, BarChart2 } from 'lucide-react';
+import { ArrowLeft, Save, Bell, Database, Clock, ToggleLeft, ToggleRight, Brain, BarChart2, Archive } from 'lucide-react';
 import { saveProject, getProjects } from '../utils/storage';
 import { 
   requestNotificationPermission, 
@@ -64,7 +64,6 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
   const [notification, setNotification] = useState<NotificationMessage | null>(null);
   const [notificationStyle, setNotificationStyle] = useState<NotificationStyle>('modern');
   const [notificationPosition, setNotificationPosition] = useState<NotificationPosition>('top-right');
-
   const [aiEnabled, setAiEnabled] = useState(false);
   const [aiProvider, setAiProvider] = useState<AIProvider>('anthropic');
   const [aiModel, setAiModel] = useState<ProviderModels[AIProvider]>(PROVIDER_MODELS.anthropic[0]);
@@ -90,6 +89,8 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       dataManagement: "Gestione Database",
       exportDatabase: "Esporta database",
       importDatabase: "Importa database",
+      backupManager: "Gestione Backup",
+      openBackupManager: "Apri Gestione Backup",
       autoSave: "Salvataggio automatico",
       autoSaveInterval: "Intervallo di salvataggio automatico (minuti)",
       saveChanges: "Salva modifiche",
@@ -127,6 +128,8 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       dataManagement: "Database Management",
       exportDatabase: "Export database",
       importDatabase: "Import database",
+      backupManager: "Backup Manager",
+      openBackupManager: "Open Backup Manager",
       autoSave: "Auto-save",
       autoSaveInterval: "Auto-save interval (minutes)",
       saveChanges: "Save changes",
@@ -346,22 +349,33 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
                 <Database size={20} className="mr-2" />
                 {t.dataManagement}
               </h2>
-              <div className="flex gap-3">
-                <button 
-                  onClick={handleExportDatabase}
-                  className={`${isDarkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'} text-white font-medium py-1.5 px-3 rounded text-sm`}
-                >
-                  {t.exportDatabase}
-                </button>
-                <label className={`${isDarkMode ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-yellow-500 hover:bg-yellow-600'} text-white font-medium py-1.5 px-3 rounded cursor-pointer text-sm`}>
-                  {t.importDatabase}
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleImportDatabase}
-                    className="hidden"
-                  />
-                </label>
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <button 
+                    onClick={handleExportDatabase}
+                    className={`${isDarkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'} text-white font-medium py-1.5 px-3 rounded text-sm`}
+                  >
+                    {t.exportDatabase}
+                  </button>
+                  <label className={`${isDarkMode ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-yellow-500 hover:bg-yellow-600'} text-white font-medium py-1.5 px-3 rounded cursor-pointer text-sm`}>
+                    {t.importDatabase}
+                    <input
+                      type="file"
+                      accept=".json"
+                      onChange={handleImportDatabase}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                <div>
+                  <button
+                    onClick={() => setCurrentPage('backupManager')}
+                    className={`${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white font-medium py-1.5 px-3 rounded text-sm flex items-center`}
+                  >
+                    <Archive size={16} className="mr-2" />
+                    {t.openBackupManager}
+                  </button>
+                </div>
               </div>
             </section>
 
@@ -442,7 +456,7 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
                       onChange={(e) => setAiModel(e.target.value as ProviderModels[AIProvider])}
                       className={`w-full p-1.5 rounded text-sm ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}
                     >
-                      {PROVIDER_MODELS[aiProvider].map(model => (
+                      {PROVIDER_MODELS[aiProvider].map((model) => (
                         <option key={model} value={model}>{model}</option>
                       ))}
                     </select>

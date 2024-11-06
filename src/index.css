@@ -33,19 +33,19 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 47.4% 11.2%;
     --popover-foreground: 210 40% 98%;
-    --primary: 24 96% 53%;
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 24 96% 53%;
+    --accent: 221 83% 53%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 24 96% 53%;
+    --ring: 221 83% 53%;
   }
 }
 
@@ -84,11 +84,11 @@
 
 /* Glass effect utilities */
 .glass {
-  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-lg;
+  @apply bg-white/95 backdrop-blur-md border border-white/40 shadow-lg;
 }
 
 .glass-dark {
-  @apply bg-gray-900/70 backdrop-blur-md border border-white/10 shadow-lg;
+  @apply bg-gray-800/95 backdrop-blur-md border border-white/20 shadow-lg;
 }
 
 .glass-card {

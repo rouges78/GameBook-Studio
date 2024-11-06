@@ -37,6 +37,11 @@ interface Theme {
   layout: 'grid' | 'list';
 }
 
+interface NotificationType {
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
 export const ThemeContext = createContext<{
   theme: Theme;
   setTheme: React.Dispatch<React.SetStateAction<Theme>>;
@@ -69,7 +74,7 @@ const App: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [lastBackup, setLastBackup] = useState<string>('');
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [notification, setNotification] = useState<NotificationType | null>(null);
   const [theme, setTheme] = useState<Theme>({
     primaryColor: '#3B82F6',
     secondaryColor: '#10B981',
@@ -104,11 +109,8 @@ const App: React.FC = () => {
     return paragraphs.map((p, index) => ({
       id: Number(p.id),
       title: `Paragraph ${index + 1}`,
-      content: p.text,
-      actions: p.choices.map(choice => ({
-        text: choice.text,
-        'N.Par.': choice.destination
-      })),
+      content: p.content,
+      actions: p.actions,
       type: 'normale'
     }));
   };
@@ -195,10 +197,11 @@ const App: React.FC = () => {
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
-      <div className={`h-screen flex flex-col ${isDarkMode ? 'dark' : 'light'}`} style={{ backgroundColor: theme.backgroundColor, color: theme.textColor }}>
+      <div className={`h-screen flex flex-col overflow-hidden ${isDarkMode ? 'dark' : 'light'}`} style={{ backgroundColor: theme.backgroundColor, color: theme.textColor }}>
         <Header 
           isDarkMode={isDarkMode} 
           version={packageJson.version}
+          onThemeToggle={() => setIsDarkMode(!isDarkMode)}
         />
         {currentPage === 'dashboard' && (
           <Dashboard
@@ -284,7 +287,10 @@ const App: React.FC = () => {
           />
         )}
         {currentPage === 'backupManager' && (
-          <BackupManager />
+          <BackupManager
+            setCurrentPage={setCurrentPage}
+            isDarkMode={isDarkMode}
+          />
         )}
         {currentPage === 'telemetryDashboard' && (
           <TelemetryDashboard isDarkMode={isDarkMode} />
@@ -293,6 +299,7 @@ const App: React.FC = () => {
           projectCount={projects.length}
           lastBackup={lastBackup}
           isDarkMode={isDarkMode}
+          language={language}
         />
         {notification && (
           <Notification

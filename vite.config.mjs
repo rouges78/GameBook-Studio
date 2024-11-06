@@ -79,5 +79,15 @@ export default defineConfig({
     '__dirname': 'undefined',
     '__filename': 'undefined',
     'process.env': '{}'
+  },
+  worker: {
+    format: 'es',
+    plugins: () => [], // Convert plugins to a function that returns an array
+    rollupOptions: {
+      output: {
+        format: 'es',
+        sourcemap: true
+      }
+    }
   }
-})
+});

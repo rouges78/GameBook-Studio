@@ -11,52 +11,65 @@ class DatabaseManager {
         try {
             const { bookTitle, author, paragraphs, lastEdited } = project;
             
-            await this.prisma.project.upsert({
+            // Find existing project by title
+            const existingProject = await this.prisma.project.findFirst({
                 where: {
-                    id: bookTitle // Using bookTitle as the ID since it's unique
-                },
-                update: {
-                    title: bookTitle,
-                    description: author,
-                    updatedAt: new Date(lastEdited),
-                    paragraphs: {
-                        deleteMany: {},
-                        create: paragraphs.map(p => ({
-                            id: p.id.toString(), // Convert id to string
-                            number: parseInt(p.id),
-                            title: p.title || '', // Use paragraph title if available
-                            content: p.content || '',
-                            x: p.x,
-                            y: p.y,
-                            actions: JSON.stringify(p.actions || []),
-                            incomingConnections: JSON.stringify(p.incomingConnections || []),
-                            outgoingConnections: JSON.stringify(p.outgoingConnections || []),
-                            type: p.type || 'normale'
-                        }))
-                    }
-                },
-                create: {
-                    id: bookTitle,
-                    title: bookTitle,
-                    description: author,
-                    createdAt: new Date(),
-                    updatedAt: new Date(lastEdited),
-                    paragraphs: {
-                        create: paragraphs.map(p => ({
-                            id: p.id.toString(), // Convert id to string
-                            number: parseInt(p.id),
-                            title: p.title || '', // Use paragraph title if available
-                            content: p.content || '',
-                            x: p.x,
-                            y: p.y,
-                            actions: JSON.stringify(p.actions || []),
-                            incomingConnections: JSON.stringify(p.incomingConnections || []),
-                            outgoingConnections: JSON.stringify(p.outgoingConnections || []),
-                            type: p.type || 'normale'
-                        }))
-                    }
+                    title: bookTitle
                 }
             });
+
+            if (existingProject) {
+                // Update existing project
+                await this.prisma.project.update({
+                    where: {
+                        id: existingProject.id
+                    },
+                    data: {
+                        title: bookTitle,
+                        description: author,
+                        updatedAt: new Date(lastEdited),
+                        paragraphs: {
+                            deleteMany: {},
+                            create: paragraphs.map(p => ({
+                                id: p.id.toString(), // Convert id to string
+                                number: parseInt(p.id),
+                                title: p.title || '', // Use paragraph title if available
+                                content: p.content || '',
+                                x: p.x,
+                                y: p.y,
+                                actions: JSON.stringify(p.actions || []),
+                                incomingConnections: JSON.stringify(p.incomingConnections || []),
+                                outgoingConnections: JSON.stringify(p.outgoingConnections || []),
+                                type: p.type || 'normale'
+                            }))
+                        }
+                    }
+                });
+            } else {
+                // Create new project
+                await this.prisma.project.create({
+                    data: {
+                        title: bookTitle,
+                        description: author,
+                        createdAt: new Date(),
+                        updatedAt: new Date(lastEdited),
+                        paragraphs: {
+                            create: paragraphs.map(p => ({
+                                id: p.id.toString(), // Convert id to string
+                                number: parseInt(p.id),
+                                title: p.title || '', // Use paragraph title if available
+                                content: p.content || '',
+                                x: p.x,
+                                y: p.y,
+                                actions: JSON.stringify(p.actions || []),
+                                incomingConnections: JSON.stringify(p.incomingConnections || []),
+                                outgoingConnections: JSON.stringify(p.outgoingConnections || []),
+                                type: p.type || 'normale'
+                            }))
+                        }
+                    }
+                });
+            }
             log.info('Project saved successfully:', bookTitle);
         } catch (error) {
             log.error('Error saving project:', error);
@@ -118,9 +131,9 @@ class DatabaseManager {
 
     async getProject(bookTitle) {
         try {
-            const dbProject = await this.prisma.project.findUnique({
+            const dbProject = await this.prisma.project.findFirst({
                 where: {
-                    id: bookTitle
+                    title: bookTitle
                 },
                 include: {
                     paragraphs: true
@@ -178,12 +191,22 @@ class DatabaseManager {
 
     async deleteProject(bookTitle) {
         try {
-            await this.prisma.project.delete({
+            const project = await this.prisma.project.findFirst({
                 where: {
-                    id: bookTitle
+                    title: bookTitle
                 }
             });
-            log.info('Project deleted successfully:', bookTitle);
+
+            if (project) {
+                await this.prisma.project.delete({
+                    where: {
+                        id: project.id
+                    }
+                });
+                log.info('Project deleted successfully:', bookTitle);
+            } else {
+                log.warn('Project not found for deletion:', bookTitle);
+            }
         } catch (error) {
             log.error('Error deleting project:', error);
             throw error;

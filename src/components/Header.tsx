@@ -26,12 +26,7 @@ const Header: React.FC<HeaderProps> = ({
 
   const logoVariants = {
     initial: { scale: 0.8, rotate: -10 },
-    animate: { scale: 1, rotate: 0, transition: { duration: 0.4 } },
-    hover: { 
-      scale: 1.1,
-      rotate: [0, -10, 10, -5, 5, 0],
-      transition: { duration: 0.4 }
-    }
+    animate: { scale: 1, rotate: 0, transition: { duration: 0.4 } }
   };
 
   const versionVariants = {
@@ -45,27 +40,21 @@ const Header: React.FC<HeaderProps> = ({
     exit: { scale: 0, rotate: 180, transition: { duration: 0.3 } }
   };
 
-  const springTransition = {
-    type: "spring",
-    stiffness: 500,
-    damping: 30
-  };
-
   return (
     <motion.header
       variants={headerVariants}
       initial="initial"
       animate="animate"
-      className={`${isDarkMode ? 'glass-dark' : 'glass'} z-50 sticky top-0 border-b border-border/40`}
+      className={`${isDarkMode ? 'bg-gray-800/90 backdrop-blur-md border-b border-white/20' : 'glass'} z-50 sticky top-0`}
     >
       <div className="w-full py-3 px-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center space-x-3">
+        <div className="flex items-center">
+          {/* Left side - Logo and Title */}
+          <div className="flex items-center space-x-3 pl-4">
             <motion.div
               variants={logoVariants}
               initial="initial"
               animate="animate"
-              whileHover="hover"
               className="text-primary"
             >
               <Book size={28} strokeWidth={1.5} />
@@ -79,11 +68,35 @@ const Header: React.FC<HeaderProps> = ({
             </motion.span>
           </div>
           
-          <div className="flex items-center space-x-6">
+          {/* Right side - Version and Theme Toggle */}
+          <div className="flex items-center space-x-6 ml-auto">
+            <motion.div
+              variants={versionVariants}
+              initial="initial"
+              animate="animate"
+              className="flex items-center space-x-2"
+            >
+              {edition && (
+                <span className="badge badge-secondary">
+                  {edition}
+                </span>
+              )}
+              <span className="badge badge-primary">
+                v{version}
+              </span>
+              {update && (
+                <span className="badge bg-blue-500 text-white border-transparent">
+                  Update {update}
+                </span>
+              )}
+              {revision && (
+                <span className="badge badge-secondary">
+                  Rev {revision}
+                </span>
+              )}
+            </motion.div>
+
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={springTransition}
               onClick={onThemeToggle}
               className="relative w-8 h-8 flex items-center justify-center text-primary hover:text-primary/80 transition-colors"
               aria-label="Toggle theme"
@@ -114,46 +127,6 @@ const Header: React.FC<HeaderProps> = ({
                 )}
               </AnimatePresence>
             </motion.button>
-
-            <div className="flex items-center space-x-3">
-              <motion.div
-                variants={versionVariants}
-                initial="initial"
-                animate="animate"
-                className="flex items-center space-x-2"
-              >
-                {edition && (
-                  <motion.span
-                    whileHover={{ scale: 1.05 }}
-                    className="badge badge-secondary"
-                  >
-                    {edition}
-                  </motion.span>
-                )}
-                <motion.span
-                  whileHover={{ scale: 1.05 }}
-                  className="badge badge-primary"
-                >
-                  v{version}
-                </motion.span>
-                {update && (
-                  <motion.span
-                    whileHover={{ scale: 1.05 }}
-                    className="badge bg-blue-500 text-white border-transparent hover:bg-blue-600"
-                  >
-                    Update {update}
-                  </motion.span>
-                )}
-                {revision && (
-                  <motion.span
-                    whileHover={{ scale: 1.05 }}
-                    className="badge badge-secondary"
-                  >
-                    Rev {revision}
-                  </motion.span>
-                )}
-              </motion.div>
-            </div>
           </div>
         </div>
       </div>

@@ -6,13 +6,45 @@ interface FooterProps {
   projectCount: number;
   lastBackup: string;
   isDarkMode: boolean;
+  language?: 'it' | 'en';
 }
 
-const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode }) => {
+const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode, language = 'it' }) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState(false);
   const [showTooltip, setShowTooltip] = useState('');
+
+  const translations = {
+    it: {
+      connected: "Connesso",
+      offline: "Non in linea",
+      connectedToNetwork: "Connesso alla rete",
+      noConnection: "Nessuna connessione di rete",
+      projects: "Progetti",
+      totalProjects: "Progetti totali in libreria",
+      lastBackup: "Ultimo backup",
+      autoSaveEnabled: "Salvataggio automatico attivato",
+      lastManualSave: "Ultimo salvataggio manuale",
+      auto: "Auto",
+      currentTime: "Ora locale"
+    },
+    en: {
+      connected: "Connected",
+      offline: "Offline",
+      connectedToNetwork: "Connected to network",
+      noConnection: "No network connection",
+      projects: "Projects",
+      totalProjects: "Total projects in library",
+      lastBackup: "Last backup",
+      autoSaveEnabled: "Auto-save enabled",
+      lastManualSave: "Last manual save",
+      auto: "Auto",
+      currentTime: "Current local time"
+    }
+  };
+
+  const t = translations[language];
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -98,7 +130,7 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
       variants={footerVariants}
       initial="initial"
       animate="animate"
-      className={`${isDarkMode ? 'glass-dark' : 'glass'} h-10 flex items-center px-4 sticky bottom-0 z-50 border-t border-border/40`}
+      className={`${isDarkMode ? 'bg-gray-800/90 backdrop-blur-md border-t border-white/20' : 'glass'} h-10 flex items-center px-4 sticky bottom-0 z-50`}
     >
       <div className="w-64 flex items-center justify-start">
         <AnimatePresence mode="wait">
@@ -118,9 +150,9 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
               className="relative"
             >
               {isOnline ? (
-                <Wifi size={16} className="text-primary" strokeWidth={1.5} />
+                <Wifi size={16} className="text-green-500" strokeWidth={1.5} />
               ) : (
-                <WifiOff size={16} className="text-destructive" strokeWidth={1.5} />
+                <WifiOff size={16} className="text-red-500" strokeWidth={1.5} />
               )}
               <AnimatePresence>
                 {showTooltip === 'connection' && (
@@ -131,7 +163,7 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
                     exit="hidden"
                     className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-popover text-popover-foreground rounded-md shadow-lg whitespace-nowrap border border-border"
                   >
-                    {isOnline ? 'Connected to network' : 'No network connection'}
+                    {isOnline ? t.connectedToNetwork : t.noConnection}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -139,11 +171,11 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
             <motion.span 
               className="text-xs font-medium"
               animate={{ 
-                color: isOnline ? 'var(--primary)' : 'var(--destructive)'
+                color: isOnline ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'
               }}
               transition={{ duration: 0.3 }}
             >
-              {isOnline ? 'Connected' : 'Offline'}
+              {isOnline ? t.connected : t.offline}
             </motion.span>
           </motion.div>
         </AnimatePresence>
@@ -172,13 +204,13 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
                   exit="hidden"
                   className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-popover text-popover-foreground rounded-md shadow-lg whitespace-nowrap border border-border"
                 >
-                  Total projects in library
+                  {t.totalProjects}
                 </motion.div>
               )}
             </AnimatePresence>
           </motion.div>
           <motion.span className="text-xs font-medium">
-            Projects: {projectCount}
+            {t.projects}: {projectCount}
           </motion.span>
         </motion.div>
 
@@ -208,13 +240,13 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
                   exit="hidden"
                   className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-popover text-popover-foreground rounded-md shadow-lg whitespace-nowrap border border-border"
                 >
-                  {isAutoSaveEnabled ? 'Auto-save enabled' : 'Last manual save'}
+                  {isAutoSaveEnabled ? t.autoSaveEnabled : t.lastManualSave}
                 </motion.div>
               )}
             </AnimatePresence>
           </motion.div>
           <span className="text-xs font-medium">
-            Last backup: {lastBackup}
+            {t.lastBackup}: {lastBackup}
             {isAutoSaveEnabled && (
               <motion.span
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -222,7 +254,7 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
                 transition={springTransition}
                 className="ml-1 text-primary"
               >
-                (Auto)
+                ({t.auto})
               </motion.span>
             )}
           </span>
@@ -252,7 +284,7 @@ const Footer: React.FC<FooterProps> = ({ projectCount, lastBackup, isDarkMode })
                   exit="hidden"
                   className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-popover text-popover-foreground rounded-md shadow-lg whitespace-nowrap border border-border"
                 >
-                  Current local time
+                  {t.currentTime}
                 </motion.div>
               )}
             </AnimatePresence>

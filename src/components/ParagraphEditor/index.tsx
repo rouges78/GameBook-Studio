@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ParagraphEditorProps, Paragraph, Project } from './types';
 import { translations } from './translations';
 import { useParagraphEditor } from './hooks/useParagraphEditor';
@@ -10,27 +10,26 @@ import StoryMap from '../StoryMap';
 import Notification from '../Notification';
 import CustomPopup from '../CustomPopup';
 import ImageEditor from '../ImageEditor';
-import { MapSettings } from '../StoryMap/types';
 
 const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
-  setCurrentPage,
-  bookTitle,
-  author,
-  onSaveProject,
-  isDarkMode,
-  language,
-  initialParagraphs = [],
+  setCurrentPage, 
+  bookTitle, 
+  author, 
+  onSaveProject, 
+  isDarkMode, 
+  language, 
+  initialParagraphs = [], 
   initialMapSettings,
-  updateLastBackup,
+  updateLastBackup
 }) => {
-  const [mapSettings, setMapSettings] = useState<MapSettings | undefined>(initialMapSettings);
+  const [mapSettings, setMapSettings] = useState(initialMapSettings);
 
   const { state, actions } = useParagraphEditor({
     initialParagraphs,
     onSaveProject,
     bookTitle,
     author,
-    updateLastBackup,
+    updateLastBackup: updateLastBackup || (() => {}),
     initialMapSettings,
   });
 
@@ -54,8 +53,7 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
       actions: [],
       incomingConnections: [],
       outgoingConnections: [],
-      type: 'normale',
-      tags: [],
+      type: 'normale'
     };
     actions.setParagraphs((prev) => [...prev, newParagraph]);
     actions.setSelectedParagraph(newId);
@@ -68,8 +66,8 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
         return updatedParagraphs.map((p) => ({
           ...p,
           actions: p.actions.filter((a) => a['N.Par.'] !== selectedParagraph.id.toString()),
-          incomingConnections: p.incomingConnections.filter((incomingId) => incomingId !== selectedParagraph.id),
-          outgoingConnections: p.outgoingConnections.filter((outgoingId) => outgoingId !== selectedParagraph.id.toString()),
+          incomingConnections: (p.incomingConnections || []).filter((incomingId) => incomingId !== selectedParagraph.id),
+          outgoingConnections: (p.outgoingConnections || []).filter((outgoingId) => outgoingId !== selectedParagraph.id.toString()),
         }));
       });
       actions.setSelectedParagraph(state.paragraphs[0].id);
@@ -118,168 +116,306 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
     });
   }, [actions]);
 
+  const containerVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.3 } },
+    exit: { opacity: 0, transition: { duration: 0.2 } }
+  };
+
+  const headerVariants = {
+    initial: { y: -20, opacity: 0 },
+    animate: { y: 0, opacity: 1, transition: { duration: 0.3 } }
+  };
+
+  const sidebarVariants = {
+    initial: { x: -300, opacity: 0 },
+    animate: { x: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 30 } }
+  };
+
+  const mainContentVariants = {
+    initial: { opacity: 0, scale: 0.98 },
+    animate: { opacity: 1, scale: 1, transition: { duration: 0.4 } },
+    exit: { opacity: 0, scale: 0.98, transition: { duration: 0.2 } }
+  };
+
+  const buttonVariants = {
+    hover: { scale: 1.05, transition: { duration: 0.2 } },
+    tap: { scale: 0.95 }
+  };
+
+  const overlayVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.3 } },
+    exit: { opacity: 0, transition: { duration: 0.2 } }
+  };
+
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-900 text-white">
-      <div className="flex-none h-10 border-b border-gray-700 flex items-center justify-between px-6">
-        <button
+    <motion.div
+      variants={containerVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="h-screen flex flex-col overflow-hidden bg-gray-900 text-white"
+    >
+      <motion.div
+        variants={headerVariants}
+        className="flex-none h-10 border-b border-gray-700 flex items-center justify-between px-6"
+      >
+        <motion.button
+          variants={buttonVariants}
+          whileHover="hover"
+          whileTap="tap"
           onClick={() => setCurrentPage('dashboard')}
           className="flex items-center text-blue-400 hover:text-blue-300"
         >
           <ArrowLeft size={18} className="mr-2" />
           {t.backToHome}
-        </button>
-        <h1 className="text-lg font-bold">{t.editorTitle}</h1>
-        <div className="text-base font-medium">{bookTitle}</div>
-      </div>
+        </motion.button>
+        <motion.h1
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-lg font-bold"
+        >
+          {t.editorTitle}
+        </motion.h1>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-base font-medium"
+        >
+          {bookTitle}
+        </motion.div>
+      </motion.div>
 
       <div className="flex-1 flex min-h-0 overflow-hidden">
-        <ParagraphSidebar
-          paragraphs={state.paragraphs}
-          selectedParagraph={state.selectedParagraph}
-          isDarkMode={isDarkMode}
-          showSearch={state.showSearch}
-          searchTerm={state.searchTerm}
-          showConnections={state.showConnections}
-          language={language}
-          onAddParagraph={handleAddParagraph}
-          onSelectParagraph={actions.setSelectedParagraph}
-          onToggleSearch={() => actions.setShowSearch(!state.showSearch)}
-          onSearchChange={actions.setSearchTerm}
-          onToggleConnections={(id: number | null) => actions.setShowConnections(id)}
-          onImageEdit={(id: number) => {
-            actions.setSelectedParagraph(id);
-            actions.setShowImageEditor(true);
-          }}
-        />
-
-        {selectedParagraph ? (
-          <EditorMain
-            selectedParagraph={selectedParagraph}
+        <motion.div
+          variants={sidebarVariants}
+          initial="initial"
+          animate="animate"
+        >
+          <ParagraphSidebar
             paragraphs={state.paragraphs}
+            selectedParagraph={state.selectedParagraph}
             isDarkMode={isDarkMode}
+            showSearch={state.showSearch}
+            searchTerm={state.searchTerm}
+            showConnections={state.showConnections}
             language={language}
-            onUpdate={handleParagraphUpdate}
-            onShowImageEditor={() => actions.setShowImageEditor(true)}
-            onShowStoryMap={() => actions.setShowStoryMap(true)}
-            onDelete={handleDelete}
-            onExport={handleExport}
-            onSave={handleSave}
-            onNotification={actions.setNotification}
-            translations={t}
+            onAddParagraph={handleAddParagraph}
+            onSelectParagraph={actions.setSelectedParagraph}
+            onToggleSearch={() => actions.setShowSearch(!state.showSearch)}
+            onSearchChange={actions.setSearchTerm}
+            onToggleConnections={(id: number | null) => actions.setShowConnections(id)}
+            onImageEdit={(id: number) => {
+              actions.setSelectedParagraph(id);
+              actions.setShowImageEditor(true);
+            }}
           />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
-            {t.selectParagraph}
-          </div>
-        )}
+        </motion.div>
+
+        <AnimatePresence mode="wait">
+          {selectedParagraph ? (
+            <motion.div
+              key="editor"
+              variants={mainContentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="flex-1"
+            >
+              <EditorMain
+                selectedParagraph={selectedParagraph}
+                paragraphs={state.paragraphs}
+                isDarkMode={isDarkMode}
+                language={language}
+                onUpdate={handleParagraphUpdate}
+                onShowImageEditor={() => actions.setShowImageEditor(true)}
+                onShowStoryMap={() => actions.setShowStoryMap(true)}
+                onDelete={handleDelete}
+                onExport={handleExport}
+                onSave={handleSave}
+                onNotification={actions.setNotification}
+                translations={t}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="placeholder"
+              variants={mainContentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="flex-1 flex items-center justify-center text-gray-500"
+            >
+              {t.selectParagraph}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <AnimatePresence>
         {state.showPopup.visible && (
-          <CustomPopup
-            message={
-              state.showPopup.isExisting
-                ? `${t.confirmConnection} ${state.showPopup.paragraphId}?`
-                : t.createNewParagraph
-            }
-            onConfirm={() => {/* Handle confirm */}}
-            onCancel={() => actions.setShowPopup({ visible: false, actionIndex: null })}
-            isDarkMode={isDarkMode}
-          />
+          <motion.div
+            variants={overlayVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <CustomPopup
+                message={
+                  state.showPopup.isExisting
+                    ? `${t.confirmConnection} ${state.showPopup.paragraphId}?`
+                    : t.createNewParagraph
+                }
+                onConfirm={() => {/* Handle confirm */}}
+                onCancel={() => actions.setShowPopup({ visible: false, actionIndex: null })}
+                isDarkMode={isDarkMode}
+              />
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {state.notification && (
-          <Notification
-            message={state.notification.message}
-            type={state.notification.type}
-            onClose={() => actions.setNotification(null)}
-            isDarkMode={isDarkMode}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed bottom-4 right-4"
+          >
+            <Notification
+              message={state.notification.message}
+              type={state.notification.type}
+              onClose={() => actions.setNotification(null)}
+              isDarkMode={isDarkMode}
+            />
+          </motion.div>
         )}
       </AnimatePresence>
 
-      {state.showStoryMap && (
-        <StoryMap
-          paragraphs={state.paragraphs}
-          mapSettings={mapSettings}
-          onClose={() => actions.setShowStoryMap(false)}
-          isDarkMode={isDarkMode}
-          language={language}
-          onEditParagraph={actions.setSelectedParagraph}
-          onDeleteParagraph={(id: number) => {
-            if (state.paragraphs.length > 1) {
-              actions.setParagraphs((prevParagraphs) => {
-                const updatedParagraphs = prevParagraphs.filter((p) => p.id !== id);
-                return updatedParagraphs.map((p) => ({
-                  ...p,
-                  actions: p.actions.filter((a) => a['N.Par.'] !== id.toString()),
-                  incomingConnections: p.incomingConnections.filter((incomingId) => incomingId !== id),
-                  outgoingConnections: p.outgoingConnections.filter((outgoingId) => outgoingId !== id.toString()),
-                }));
-              });
-              actions.setSelectedParagraph(state.paragraphs[0].id);
-            } else {
-              actions.setNotification({
-                message: t.cannotDeleteLast,
-                type: 'error'
-              });
-            }
-          }}
-          onAddNote={(id: number, note: string) => {
-            actions.setParagraphs(prevParagraphs =>
-              prevParagraphs.map(p =>
-                p.id === id ? { ...p, note } : p
-              )
-            );
-          }}
-          onAddParagraph={handleAddParagraph}
-          onLinkParagraphs={(sourceId: number, targetId: number) => {
-            actions.setParagraphs((prevParagraphs) =>
-              prevParagraphs.map((p) => {
-                if (p.id === sourceId) {
-                  return {
-                    ...p,
-                    actions: [...p.actions, { text: '', 'N.Par.': targetId.toString() }],
-                    outgoingConnections: [...p.outgoingConnections, targetId.toString()],
-                  };
-                }
-                if (p.id === targetId) {
-                  return {
-                    ...p,
-                    incomingConnections: [...p.incomingConnections, sourceId],
-                  };
-                }
-                return p;
-              })
-            );
-          }}
-          onSave={handleStoryMapSave}
-          onUpdateParagraphs={(paragraphs) => {
-            paragraphs.forEach(p => handleParagraphUpdate(p as Paragraph));
-          }}
-          onUpdateMapSettings={setMapSettings}
-        />
-      )}
+      <AnimatePresence>
+        {state.showStoryMap && (
+          <motion.div
+            variants={overlayVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-0 bg-black bg-opacity-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <StoryMap
+                paragraphs={state.paragraphs}
+                mapSettings={mapSettings}
+                onClose={() => actions.setShowStoryMap(false)}
+                isDarkMode={isDarkMode}
+                language={language}
+                onEditParagraph={actions.setSelectedParagraph}
+                onDeleteParagraph={(id: number) => {
+                  if (state.paragraphs.length > 1) {
+                    actions.setParagraphs((prevParagraphs) => {
+                      const updatedParagraphs = prevParagraphs.filter((p) => p.id !== id);
+                      return updatedParagraphs.map((p) => ({
+                        ...p,
+                        actions: p.actions.filter((a) => a['N.Par.'] !== id.toString()),
+                        incomingConnections: (p.incomingConnections || []).filter((incomingId) => incomingId !== id),
+                        outgoingConnections: (p.outgoingConnections || []).filter((outgoingId) => outgoingId !== id.toString()),
+                      }));
+                    });
+                    actions.setSelectedParagraph(state.paragraphs[0].id);
+                  } else {
+                    actions.setNotification({
+                      message: t.cannotDeleteLast,
+                      type: 'error'
+                    });
+                  }
+                }}
+                onAddNote={(id: number, note: string) => {
+                  actions.setParagraphs(prevParagraphs =>
+                    prevParagraphs.map(p =>
+                      p.id === id ? { ...p, note } : p
+                    )
+                  );
+                }}
+                onAddParagraph={handleAddParagraph}
+                onLinkParagraphs={(sourceId: number, targetId: number) => {
+                  actions.setParagraphs((prevParagraphs) =>
+                    prevParagraphs.map((p) => {
+                      if (p.id === sourceId) {
+                        return {
+                          ...p,
+                          actions: [...p.actions, { text: '', 'N.Par.': targetId.toString() }],
+                          outgoingConnections: [...(p.outgoingConnections || []), targetId.toString()],
+                        };
+                      }
+                      if (p.id === targetId) {
+                        return {
+                          ...p,
+                          incomingConnections: [...(p.incomingConnections || []), sourceId],
+                        };
+                      }
+                      return p;
+                    })
+                  );
+                }}
+                onSave={handleStoryMapSave}
+                onUpdateParagraphs={(paragraphs) => {
+                  paragraphs.forEach(p => handleParagraphUpdate(p as Paragraph));
+                }}
+                onUpdateMapSettings={setMapSettings}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {state.showImageEditor && selectedParagraph && (
-        <ImageEditor
-          onSave={(imageData: string | null, position: 'before' | 'after') => {
-            handleParagraphUpdate({
-              ...selectedParagraph,
-              image: imageData ? { data: imageData, position } : undefined
-            });
-            actions.setShowImageEditor(false);
-          }}
-          onClose={() => actions.setShowImageEditor(false)}
-          isDarkMode={isDarkMode}
-          language={language}
-          initialImage={selectedParagraph.image?.data}
-          initialPosition={selectedParagraph.image?.position}
-        />
-      )}
-    </div>
+      <AnimatePresence>
+        {state.showImageEditor && selectedParagraph && (
+          <motion.div
+            variants={overlayVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-0 bg-black bg-opacity-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <ImageEditor
+                onSave={(imageData: string | null, position: 'before' | 'after') => {
+                  handleParagraphUpdate({
+                    ...selectedParagraph,
+                    image: imageData ? { data: imageData, position } : undefined
+                  });
+                  actions.setShowImageEditor(false);
+                }}
+                onClose={() => actions.setShowImageEditor(false)}
+                isDarkMode={isDarkMode}
+                language={language}
+                initialImage={selectedParagraph.image?.data}
+                initialPosition={selectedParagraph.image?.position}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

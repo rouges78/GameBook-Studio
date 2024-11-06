@@ -1,33 +1,8 @@
-export interface MapSettings {
-  positions: {
-    [key: string]: {
-      x: number;
-      y: number;
-    };
-  };
-  backgroundImage: string | null;
-  imageAdjustments: {
-    contrast: number;
-    transparency: number;
-    blackAndWhite: number;
-    sharpness: number;
-    brightness: number;
-    width: number;
-    height: number;
-    maintainAspectRatio: boolean;
-  };
-}
+import { MapSettings as StoryMapSettings, ExtendedParagraph as StoryMapParagraph } from '../StoryMap/types';
 
-export interface Paragraph {
-  id: string;
-  text: string;
-  choices: {
-    text: string;
-    destination: string;
-  }[];
-  x?: number;
-  y?: number;
-}
+export type MapSettings = StoryMapSettings;
+export type ExtendedParagraph = StoryMapParagraph;
+export type Paragraph = ExtendedParagraph;
 
 export interface Project {
   bookTitle: string;
@@ -41,4 +16,28 @@ export interface Project {
 export interface ImageData {
   bookTitle: string;
   imageData: string;
+}
+
+export interface ParagraphEditorProps {
+  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'export') => void;
+  bookTitle: string;
+  author: string;
+  onSaveProject: (project: Project) => void;
+  isDarkMode: boolean;
+  language: 'it' | 'en';
+  initialParagraphs?: Paragraph[];
+  initialMapSettings?: MapSettings;
+  updateLastBackup?: (date: string) => void;
+}
+
+export interface NotificationType {
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
+export interface PopupState {
+  visible: boolean;
+  isExisting?: boolean;
+  paragraphId?: number;
+  actionIndex?: number | null;
 }

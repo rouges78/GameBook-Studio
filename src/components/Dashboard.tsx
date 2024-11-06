@@ -73,7 +73,7 @@ const ProjectBox: React.FC<ProjectBoxProps> = React.memo(({ project, isDarkMode,
       className="flex flex-col cursor-pointer h-full group"
       onClick={() => onProjectSelect(project)}
     >
-      <div className="border-2 rounded-lg overflow-hidden aspect-[3/4] relative transition-all duration-300 hover:border-blue-400 hover:shadow-lg border-gray-600 bg-gray-800 group-hover:ring-4 group-hover:ring-blue-500/50 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+      <div className="border-2 rounded-lg overflow-hidden aspect-[3/4] relative transition-all duration-300 hover:border-blue-400 hover:shadow-lg border-gray-600 bg-gray-800 hover:ring-4 hover:ring-blue-500/50 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]">
         {project.coverImage ? (
           <div className="w-full h-full">
             <img 

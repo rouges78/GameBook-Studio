@@ -1,11 +1,13 @@
 import React from 'react';
-import { Bold, Italic, Underline, Link, Code, Quote } from 'lucide-react';
+import { Bold, Italic, Underline, Link, Code, Quote, AlignLeft, AlignCenter, AlignRight, ChevronDown, Type } from 'lucide-react';
 import { ParagraphEditorControlsProps } from './types';
 import { translations } from './translations';
 
 const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
   selectedParagraph,
+  paragraphs,
   onUpdate,
+  onSelectParagraph,
   isDarkMode,
   language,
 }) => {
@@ -25,6 +27,29 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
     });
   };
 
+  const handleFontChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onUpdate({
+      ...selectedParagraph,
+      font: e.target.value
+    });
+  };
+
+  const handleAlignmentChange = (alignment: 'left' | 'center' | 'right') => {
+    onUpdate({
+      ...selectedParagraph,
+      alignment
+    });
+  };
+
+  const fonts = [
+    { value: 'Arial', label: 'Arial' },
+    { value: 'Times New Roman', label: 'Times New Roman' },
+    { value: 'Roboto', label: 'Roboto' },
+    { value: 'Open Sans', label: 'Open Sans' },
+    { value: 'Lato', label: 'Lato' },
+    { value: 'Montserrat', label: 'Montserrat' }
+  ];
+
   const formatButtons = [
     { icon: <Bold size={18} />, format: 'bold', title: t.formatButtons.bold },
     { icon: <Italic size={18} />, format: 'italic', title: t.formatButtons.italic },
@@ -38,12 +63,12 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
   ];
 
   const handleFormat = (format: string) => {
-    let newContent = selectedParagraph.content;
     const textarea = document.querySelector('textarea');
     if (textarea) {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
-      const selectedText = newContent.substring(start, end);
+      const content = selectedParagraph.content || '';
+      const selectedText = content.substring(start, end);
       let formattedText = '';
 
       switch (format) {
@@ -78,7 +103,7 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
           formattedText = selectedText;
       }
 
-      newContent = newContent.substring(0, start) + formattedText + newContent.substring(end);
+      const newContent = content.substring(0, start) + formattedText + content.substring(end);
       onUpdate({
         ...selectedParagraph,
         content: newContent
@@ -98,18 +123,33 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
       {/* Title Input and Node Type */}
       <div className="flex items-center justify-between bg-gray-800 border-b border-gray-700 px-4 py-2">
         <div className="flex items-center flex-1">
-          <input
-            type="text"
-            value={selectedParagraph.id}
-            readOnly
-            className="w-16 mr-2 px-2 py-1.5 bg-gray-600 text-white text-center rounded border-0 focus:outline-none focus:ring-0"
-          />
+          <div className="relative">
+            <button
+              onClick={() => document.getElementById('paragraph-select')?.click()}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded transition-colors duration-200"
+            >
+              <span className="text-white">{selectedParagraph.id}</span>
+              <ChevronDown size={16} className="text-gray-400" />
+            </button>
+            <select
+              id="paragraph-select"
+              value={selectedParagraph.id}
+              onChange={(e) => onSelectParagraph(Number(e.target.value))}
+              className="absolute inset-0 opacity-0 cursor-pointer"
+            >
+              {paragraphs.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.id} - {p.title || t.untitled}
+                </option>
+              ))}
+            </select>
+          </div>
           <input
             type="text"
             value={selectedParagraph.title}
             onChange={handleTitleChange}
             placeholder={t.enterTitle}
-            className="flex-1 mr-4 px-4 py-1.5 bg-gray-600 text-white border-0 rounded focus:outline-none focus:ring-0"
+            className="flex-1 ml-4 px-4 py-1.5 bg-gray-600 text-white border-0 rounded focus:outline-none focus:ring-0"
           />
         </div>
         <div className="flex items-center">
@@ -149,6 +189,54 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
 
       {/* Formatting Toolbar */}
       <div className="flex items-center h-10 px-2 bg-gray-800 border-b border-gray-700">
+        {/* Font Selection */}
+        <div className="flex items-center mr-4 border-r border-gray-600 pr-4">
+          <Type size={18} className="text-gray-400 mr-2" />
+          <select
+            value={selectedParagraph.font || 'Arial'}
+            onChange={handleFontChange}
+            className="h-8 px-2 bg-gray-700 text-white border-0 rounded focus:outline-none focus:ring-0"
+          >
+            {fonts.map(font => (
+              <option key={font.value} value={font.value}>
+                {font.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Alignment Buttons */}
+        <div className="flex mr-4 border-r border-gray-600 pr-4">
+          <button
+            onClick={() => handleAlignmentChange('left')}
+            className={`w-8 h-8 flex items-center justify-center rounded ${
+              selectedParagraph.alignment === 'left' ? 'bg-gray-600' : 'hover:bg-gray-700'
+            }`}
+            title={t.alignment.left}
+          >
+            <AlignLeft size={18} className="text-gray-300" />
+          </button>
+          <button
+            onClick={() => handleAlignmentChange('center')}
+            className={`w-8 h-8 flex items-center justify-center rounded ${
+              selectedParagraph.alignment === 'center' ? 'bg-gray-600' : 'hover:bg-gray-700'
+            }`}
+            title={t.alignment.center}
+          >
+            <AlignCenter size={18} className="text-gray-300" />
+          </button>
+          <button
+            onClick={() => handleAlignmentChange('right')}
+            className={`w-8 h-8 flex items-center justify-center rounded ${
+              selectedParagraph.alignment === 'right' ? 'bg-gray-600' : 'hover:bg-gray-700'
+            }`}
+            title={t.alignment.right}
+          >
+            <AlignRight size={18} className="text-gray-300" />
+          </button>
+        </div>
+
+        {/* Format Buttons */}
         {formatButtons.map((button) => (
           <button
             key={button.format}

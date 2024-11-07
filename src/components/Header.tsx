@@ -26,7 +26,15 @@ const Header: React.FC<HeaderProps> = ({
 
   const logoVariants = {
     initial: { scale: 0.8, rotate: -10 },
-    animate: { scale: 1, rotate: 0, transition: { duration: 0.4 } }
+    animate: { 
+      scale: [1, 1.1, 1],
+      rotate: [-5, 5, -5],
+      transition: { 
+        duration: 4,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }
+    }
   };
 
   const versionVariants = {

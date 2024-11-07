@@ -9,7 +9,7 @@ All handover documents are stored in the `/handover_docs` directory using the na
 ## Template Structure
 
 ### Date and Time of Handover
-Include the exact date and time of completing the handover.
+Include the exact date and time of completing the handover (check the windows's clock)
 
 ### Project Overview
 This is a Gamebook Studio application built with React, TypeScript and Vite. It's a comprehensive tool for creating interactive gamebooks/choose-your-own-adventure stories with features like:

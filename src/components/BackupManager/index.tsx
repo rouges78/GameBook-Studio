@@ -77,7 +77,8 @@ const BackupManager: React.FC<BackupManagerProps> = ({ setCurrentPage, isDarkMod
     try {
       switch (operation) {
         case 'create':
-          await window.electron['backup:create']();
+          const projects = await window.electron['db:getProjects']();
+          await window.electron['backup:create'](projects);
           break;
         case 'restore':
           if (!version) throw new Error(translations.operations.error.versionRequired);

@@ -158,6 +158,66 @@ ipcMain.handle('db:debugDatabase', async () => {
   }
 });
 
+// Register IPC handlers for backup operations
+ipcMain.handle('backup:create', async (_, projects) => {
+  try {
+    log.info('Creating backup...');
+    const version = await backupManager.createBackup(projects);
+    log.info('Backup created successfully:', version);
+    return version;
+  } catch (error) {
+    log.error('Error in backup:create handler:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('backup:restore', async (_, version) => {
+  try {
+    log.info('Restoring backup:', version);
+    const projects = await backupManager.restoreBackup(version);
+    log.info('Backup restored successfully');
+    return projects;
+  } catch (error) {
+    log.error('Error in backup:restore handler:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('backup:list', async () => {
+  try {
+    log.info('Listing backups...');
+    const backups = await backupManager.listBackups();
+    log.info('Backups listed successfully');
+    return backups;
+  } catch (error) {
+    log.error('Error in backup:list handler:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('backup:getSettings', async () => {
+  try {
+    log.info('Getting backup settings...');
+    const settings = await backupManager.getSettings();
+    log.info('Backup settings retrieved successfully');
+    return settings;
+  } catch (error) {
+    log.error('Error in backup:getSettings handler:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('backup:updateSettings', async (_, settings) => {
+  try {
+    log.info('Updating backup settings...');
+    await backupManager.updateSettings(settings);
+    log.info('Backup settings updated successfully');
+  } catch (error) {
+    log.error('Error in backup:updateSettings handler:', error);
+    throw error;
+  }
+});
+
 // Handle app ready
 app.whenReady().then(async () => {
   log.info('App ready, creating window...');

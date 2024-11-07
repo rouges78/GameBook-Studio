@@ -9,7 +9,7 @@ class DatabaseManager {
 
     async saveProject(project) {
         try {
-            const { bookTitle, author, paragraphs, lastEdited } = project;
+            const { bookTitle, author, paragraphs, lastEdited, coverImage } = project;
             
             // Find existing project by title
             const existingProject = await this.prisma.project.findFirst({
@@ -42,7 +42,24 @@ class DatabaseManager {
                                 outgoingConnections: JSON.stringify(p.outgoingConnections || []),
                                 type: p.type || 'normale'
                             }))
-                        }
+                        },
+                        // Update or create cover image asset
+                        assets: coverImage ? {
+                            upsert: {
+                                where: {
+                                    name: 'cover',
+                                    projectId: existingProject.id
+                                },
+                                create: {
+                                    name: 'cover',
+                                    type: 'image',
+                                    path: coverImage
+                                },
+                                update: {
+                                    path: coverImage
+                                }
+                            }
+                        } : undefined
                     }
                 });
             } else {
@@ -66,7 +83,15 @@ class DatabaseManager {
                                 outgoingConnections: JSON.stringify(p.outgoingConnections || []),
                                 type: p.type || 'normale'
                             }))
-                        }
+                        },
+                        // Create cover image asset if provided
+                        assets: coverImage ? {
+                            create: {
+                                name: 'cover',
+                                type: 'image',
+                                path: coverImage
+                            }
+                        } : undefined
                     }
                 });
             }
@@ -81,7 +106,8 @@ class DatabaseManager {
         try {
             const dbProjects = await this.prisma.project.findMany({
                 include: {
-                    paragraphs: true
+                    paragraphs: true,
+                    assets: true
                 }
             });
 
@@ -89,6 +115,7 @@ class DatabaseManager {
                 bookTitle: dbProject.title,
                 author: dbProject.description || '',
                 lastEdited: dbProject.updatedAt.toISOString(),
+                coverImage: dbProject.assets.find(asset => asset.name === 'cover')?.path || null,
                 paragraphs: dbProject.paragraphs.map(p => ({
                     id: parseInt(p.id),
                     title: p.title || '',
@@ -136,7 +163,8 @@ class DatabaseManager {
                     title: bookTitle
                 },
                 include: {
-                    paragraphs: true
+                    paragraphs: true,
+                    assets: true
                 }
             });
 
@@ -149,6 +177,7 @@ class DatabaseManager {
                 bookTitle: dbProject.title,
                 author: dbProject.description || '',
                 lastEdited: dbProject.updatedAt.toISOString(),
+                coverImage: dbProject.assets.find(asset => asset.name === 'cover')?.path || null,
                 paragraphs: dbProject.paragraphs.map(p => ({
                     id: parseInt(p.id),
                     title: p.title || '',

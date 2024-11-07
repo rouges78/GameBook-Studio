@@ -288,9 +288,9 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       </div>
 
       {/* Main Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6">
+      <div className="flex-1 overflow-y-auto px-6 pb-32"> {/* Increased bottom padding */}
         <div className="max-w-3xl mx-auto">
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 space-y-6 mb-20`}>
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 space-y-6`}>
             {/* Telemetry Dashboard */}
             <section>
               <h2 className="text-lg font-semibold mb-3 flex items-center">
@@ -478,8 +478,8 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
         </div>
       </div>
 
-      {/* Footer - Fixed at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-inherit border-t border-gray-700">
+      {/* Footer - Fixed at bottom with shadow */}
+      <div className={`fixed bottom-0 left-0 right-0 p-4 ${isDarkMode ? 'bg-gray-900 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)]' : 'bg-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]'}`}>
         <div className="max-w-3xl mx-auto">
           <button
             onClick={handleSaveChanges}

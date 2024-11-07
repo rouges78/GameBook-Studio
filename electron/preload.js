@@ -13,7 +13,7 @@ electron_1.contextBridge.exposeInMainWorld('electron', {
     'dialog:openFile': () => electron_1.ipcRenderer.invoke('dialog:openFile'),
     'dialog:saveFile': (content) => electron_1.ipcRenderer.invoke('dialog:saveFile', content),
     // Backup handlers
-    'backup:create': () => electron_1.ipcRenderer.invoke('backup:create'),
+    'backup:create': (projects) => electron_1.ipcRenderer.invoke('backup:create', projects),
     'backup:restore': (version) => electron_1.ipcRenderer.invoke('backup:restore', version),
     'backup:list': () => electron_1.ipcRenderer.invoke('backup:list'),
     'backup:export': (version, exportPath) => electron_1.ipcRenderer.invoke('backup:export', version, exportPath),

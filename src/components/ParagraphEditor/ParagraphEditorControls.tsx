@@ -1,3 +1,4 @@
+{/* Previous imports remain unchanged */}
 import React, { useState } from 'react';
 import { Bold, Italic, Underline, Link, Code, Quote, AlignLeft, AlignCenter, AlignRight, ChevronDown, Type, Book, Wand2, Brain } from 'lucide-react';
 import { ParagraphEditorControlsProps } from './types';
@@ -15,10 +16,10 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
   onSave,
   onShowStoryMap,
 }) => {
+  // Previous state and variables remain unchanged
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const t = translations[language];
 
-  // Initialize keyboard shortcuts
   useKeyboardShortcuts({
     selectedParagraph,
     onUpdate,
@@ -26,6 +27,7 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
     onShowStoryMap,
   });
 
+  // Previous handlers remain unchanged
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate({
       ...selectedParagraph,
@@ -64,17 +66,18 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
   ];
 
   const formatButtons = [
-    { icon: <Bold size={18} />, format: 'bold', title: t.formatButtons.bold, shortcut: 'Ctrl+B' },
-    { icon: <Italic size={18} />, format: 'italic', title: t.formatButtons.italic, shortcut: 'Ctrl+I' },
-    { icon: <Underline size={18} />, format: 'underline', title: t.formatButtons.underline, shortcut: 'Ctrl+U' },
-    { text: 'H1', format: 'heading1', title: t.formatButtons.heading1, shortcut: 'Alt+1' },
-    { text: 'H2', format: 'heading2', title: t.formatButtons.heading2, shortcut: 'Alt+2' },
-    { text: 'H3', format: 'heading3', title: t.formatButtons.heading3, shortcut: 'Alt+3' },
+    { icon: <Bold size={18} />, format: 'bold', title: t.formatButtons.bold },
+    { icon: <Italic size={18} />, format: 'italic', title: t.formatButtons.italic },
+    { icon: <Underline size={18} />, format: 'underline', title: t.formatButtons.underline },
+    { text: 'H1', format: 'heading1', title: t.formatButtons.heading1 },
+    { text: 'H2', format: 'heading2', title: t.formatButtons.heading2 },
+    { text: 'H3', format: 'heading3', title: t.formatButtons.heading3 },
     { icon: <Quote size={18} />, format: 'quote', title: t.formatButtons.quote },
-    { icon: <Code size={18} />, format: 'code', title: t.formatButtons.code, shortcut: 'Ctrl+`' },
-    { icon: <Link size={18} />, format: 'link', title: t.formatButtons.link, shortcut: 'Ctrl+K' },
+    { icon: <Code size={18} />, format: 'code', title: t.formatButtons.code },
+    { icon: <Link size={18} />, format: 'link', title: t.formatButtons.link },
   ];
 
+  // Previous handlers remain unchanged
   const handleFormat = (format: string) => {
     const textarea = document.querySelector('textarea');
     if (textarea) {
@@ -122,7 +125,6 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
         content: newContent
       });
 
-      // Restore selection
       setTimeout(() => {
         textarea.selectionStart = start;
         textarea.selectionEnd = start + formattedText.length;
@@ -151,7 +153,6 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
     }
   };
 
-  // Get LED color based on paragraph type
   const getLedColor = (type: string) => {
     switch (type) {
       case 'nodo':
@@ -226,29 +227,37 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
           {/* LED indicator */}
           <div className={`w-3 h-3 rounded-full ${getLedColor(selectedParagraph.type)} shadow-lg`} />
           
-          {/* Title input with reduced width */}
+          {/* Title input with increased width */}
           <input
             type="text"
             value={selectedParagraph.title}
             onChange={handleTitleChange}
             placeholder={t.enterTitle}
-            className="w-96 px-4 py-2 bg-gray-600 text-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200"
+            className="w-[600px] px-4 py-2 bg-gray-600 text-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200"
           />
 
-          {/* AI Buttons */}
+          {/* AI Buttons with glowing effect */}
           <button
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200"
+            className="flex items-center gap-2 px-4 py-2 bg-transparent text-white rounded-lg transition-all duration-200 border border-white/20 hover:border-white/40 relative group"
             onClick={() => {/* TODO: Implement AICheck */}}
+            style={{
+              boxShadow: '0 0 10px rgba(255, 255, 255, 0.1)',
+            }}
           >
-            <Wand2 size={18} />
-            AICheck
+            <Wand2 size={18} className="text-white group-hover:animate-pulse" />
+            <span className="text-white group-hover:animate-pulse">AICheck</span>
+            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
           </button>
           <button
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors duration-200"
+            className="flex items-center gap-2 px-4 py-2 bg-transparent text-white rounded-lg transition-all duration-200 border border-white/20 hover:border-white/40 relative group"
             onClick={() => {/* TODO: Implement AICreate */}}
+            style={{
+              boxShadow: '0 0 10px rgba(255, 255, 255, 0.1)',
+            }}
           >
-            <Brain size={18} />
-            AICreate
+            <Brain size={18} className="text-white group-hover:animate-pulse" />
+            <span className="text-white group-hover:animate-pulse">AICreate</span>
+            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
           </button>
         </div>
 
@@ -349,19 +358,10 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => handleFormat(button.format)}
-            title={`${button.title}${button.shortcut ? ` (${button.shortcut})` : ''}`}
-            className="w-10 h-8 flex items-center justify-center rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white group relative"
+            title={button.title}
+            className="w-10 h-8 flex items-center justify-center rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white"
           >
             {button.icon || <span className="text-sm font-medium">{button.text}</span>}
-            {button.shortcut && (
-              <motion.span
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 text-xs bg-gray-900 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap shadow-lg z-50"
-              >
-                {button.shortcut}
-              </motion.span>
-            )}
           </motion.button>
         ))}
       </div>

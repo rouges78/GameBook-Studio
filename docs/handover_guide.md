@@ -70,7 +70,7 @@ When beginning a new session:
 2. Understand the current project status and pending tasks
 3. Note any unresolved issues or requirements
 4. Begin work based on the "Next Steps" section
-5. Always create a new handover document at the end of your session
+5. Always create a new handover document at the end of your session and a summary for committing to the repository
 
 ## Best Practices
 

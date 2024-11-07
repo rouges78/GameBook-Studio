@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bold, Italic, Underline, Link, Code, Quote, AlignLeft, AlignCenter, AlignRight, ChevronDown, Type, Book } from 'lucide-react';
+import { Bold, Italic, Underline, Link, Code, Quote, AlignLeft, AlignCenter, AlignRight, ChevronDown, Type, Book, Wand2, Brain } from 'lucide-react';
 import { ParagraphEditorControlsProps } from './types';
 import { translations } from './translations';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -151,11 +151,23 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
     }
   };
 
+  // Get LED color based on paragraph type
+  const getLedColor = (type: string) => {
+    switch (type) {
+      case 'nodo':
+        return 'bg-orange-500';
+      case 'finale':
+        return 'bg-red-500';
+      default:
+        return 'bg-green-500';
+    }
+  };
+
   return (
     <div className="flex-none bg-gray-800">
       {/* Title Input and Node Type */}
       <div className="flex items-center justify-between bg-gray-800 border-b border-gray-700 px-4 py-2">
-        <div className="flex items-center flex-1">
+        <div className="flex items-center flex-1 gap-2">
           <div className="relative">
             <motion.button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -210,14 +222,36 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
               )}
             </AnimatePresence>
           </div>
+
+          {/* LED indicator */}
+          <div className={`w-3 h-3 rounded-full ${getLedColor(selectedParagraph.type)} shadow-lg`} />
+          
+          {/* Title input with reduced width */}
           <input
             type="text"
             value={selectedParagraph.title}
             onChange={handleTitleChange}
             placeholder={t.enterTitle}
-            className="flex-1 ml-4 px-4 py-2 bg-gray-600 text-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200"
+            className="w-96 px-4 py-2 bg-gray-600 text-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200"
           />
+
+          {/* AI Buttons */}
+          <button
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200"
+            onClick={() => {/* TODO: Implement AICheck */}}
+          >
+            <Wand2 size={18} />
+            AICheck
+          </button>
+          <button
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors duration-200"
+            onClick={() => {/* TODO: Implement AICreate */}}
+          >
+            <Brain size={18} />
+            AICreate
+          </button>
         </div>
+
         <div className="flex items-center">
           <span className="text-gray-400 mr-2">{t.nodeTypes.title}</span>
           <button
@@ -321,9 +355,9 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
             {button.icon || <span className="text-sm font-medium">{button.text}</span>}
             {button.shortcut && (
               <motion.span
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-900 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap shadow-lg"
+                className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 text-xs bg-gray-900 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap shadow-lg z-50"
               >
                 {button.shortcut}
               </motion.span>

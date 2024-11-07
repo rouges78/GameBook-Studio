@@ -22,6 +22,16 @@ export const translations = {
     confirm: "Conferma",
     selectParagraph: "Seleziona un paragrafo per iniziare",
     searchPlaceholder: "Cerca...",
+    completeLastAction: "Completa l'ultima azione prima di aggiungerne una nuova",
+    newParagraphCreated: "Nuovo paragrafo creato con successo",
+    aiCheck: {
+      title: "Controllo AI",
+      tooltip: "Controlla ortografia, punteggiatura e migliora il testo"
+    },
+    aiCreate: {
+      title: "Crea con AI",
+      tooltip: "Genera alternative per il paragrafo"
+    },
     nodeTypes: {
       title: "Tipo:",
       normal: "Normale",
@@ -87,6 +97,16 @@ export const translations = {
     confirm: "Confirm",
     selectParagraph: "Select a paragraph to begin",
     searchPlaceholder: "Search...",
+    completeLastAction: "Complete the last action before adding a new one",
+    newParagraphCreated: "New paragraph created successfully",
+    aiCheck: {
+      title: "AI Check",
+      tooltip: "Check spelling, punctuation and improve text flow"
+    },
+    aiCreate: {
+      title: "AI Create",
+      tooltip: "Generate paragraph alternatives"
+    },
     nodeTypes: {
       title: "Type:",
       normal: "Normal",

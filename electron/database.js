@@ -15,10 +15,16 @@ class DatabaseManager {
             const existingProject = await this.prisma.project.findFirst({
                 where: {
                     title: bookTitle
+                },
+                include: {
+                    assets: true
                 }
             });
 
             if (existingProject) {
+                // Find existing cover asset
+                const existingCover = existingProject.assets.find(asset => asset.name === 'cover');
+
                 // Update existing project
                 await this.prisma.project.update({
                     where: {
@@ -43,22 +49,24 @@ class DatabaseManager {
                                 type: p.type || 'normale'
                             }))
                         },
-                        // Update or create cover image asset
+                        // Handle cover image asset
                         assets: coverImage ? {
-                            upsert: {
-                                where: {
-                                    name: 'cover',
-                                    projectId: existingProject.id
-                                },
+                            ...(existingCover ? {
+                                update: {
+                                    where: {
+                                        id: existingCover.id
+                                    },
+                                    data: {
+                                        path: coverImage
+                                    }
+                                }
+                            } : {
                                 create: {
                                     name: 'cover',
                                     type: 'image',
                                     path: coverImage
-                                },
-                                update: {
-                                    path: coverImage
                                 }
-                            }
+                            })
                         } : undefined
                     }
                 });

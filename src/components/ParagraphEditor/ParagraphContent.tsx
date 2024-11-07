@@ -52,17 +52,17 @@ const ParagraphContent: React.FC<ParagraphContentProps> = ({
         initial="initial"
         animate="animate"
         exit="exit"
-        className="flex-1 flex flex-col min-h-0 bg-gray-800 relative"
+        className="h-full flex flex-col bg-gray-800"
       >
         <motion.div
-          className="absolute inset-0 flex flex-col"
+          className="flex-1 flex flex-col"
           variants={textareaVariants}
         >
           <textarea
             value={selectedParagraph.content || ''}
             onChange={handleContentChange}
             className={`
-              flex-1 w-full h-full p-8 
+              flex-1 w-full
               bg-gray-800 text-gray-100 
               border-0 resize-none 
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 
@@ -79,13 +79,12 @@ const ParagraphContent: React.FC<ParagraphContentProps> = ({
               scrollbarWidth: 'thin',
               scrollbarColor: '#4B5563 #1F2937',
               textAlign: selectedParagraph.alignment || 'left',
-              minHeight: 'calc(100vh - 16rem)', // Reduced height to make room for bottom controls
               padding: '2rem 4rem'
             }}
           />
 
           <motion.div 
-            className="flex justify-between items-center px-8 py-4 text-sm text-gray-400 border-t border-gray-700 bg-gray-900"
+            className="flex-none flex justify-between items-center px-8 py-4 text-sm text-gray-400 border-t border-gray-700 bg-gray-900"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ 

@@ -51,181 +51,55 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
     return p.tags?.some(tag => tag.toLowerCase().includes(searchValue)) || false;
   }, [isHashtagSearch, searchValue]);
 
-  const containerVariants = {
-    initial: { opacity: 0, x: -20 },
-    animate: { opacity: 1, x: 0, transition: { duration: 0.3 } },
-    exit: { opacity: 0, x: -20, transition: { duration: 0.2 } }
-  };
-
-  const searchVariants = {
-    initial: { opacity: 0, height: 0 },
-    animate: { opacity: 1, height: "auto", transition: { duration: 0.3 } },
-    exit: { opacity: 0, height: 0, transition: { duration: 0.2 } }
-  };
-
-  const cardVariants = {
-    initial: { opacity: 0, y: 20, scale: 0.95 },
-    animate: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1,
-      transition: { 
-        type: "spring",
-        stiffness: 500,
-        damping: 25
-      }
-    },
-    exit: { 
-      opacity: 0, 
-      y: -20,
-      scale: 0.95,
-      transition: { duration: 0.2 }
-    },
-    hover: {
-      scale: 1.02,
-      y: -2,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 20
-      }
-    },
-    tap: {
-      scale: 0.98,
-      y: 0
-    }
-  };
-
-  const connectionsVariants = {
-    initial: { opacity: 0, scale: 0.95, y: -10 },
-    animate: { 
-      opacity: 1, 
-      scale: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 25,
-        mass: 0.8
-      }
-    },
-    exit: { 
-      opacity: 0,
-      scale: 0.95,
-      y: -10,
-      transition: {
-        duration: 0.2,
-        ease: "easeInOut"
-      }
-    }
-  };
-
-  const iconButtonVariants = {
-    initial: { scale: 1 },
-    hover: { 
-      scale: 1.15,
-      rotate: 15,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 10
-      }
-    },
-    tap: { 
-      scale: 0.9,
-      rotate: 0,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 10
-      }
-    }
-  };
-
   const handleSelectParagraph = (id: number) => {
-    // Ensure we only call onSelectParagraph with a valid number
-    if (typeof id === 'number') {
-      onSelectParagraph(id);
-    }
+    onSelectParagraph(id);
   };
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      className={`w-72 flex-none border-r ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-brown-200 bg-brown-100'}`}
-    >
+    <div className="w-56 flex-none border-r border-gray-700 bg-gray-800">
       <div className="flex flex-col h-full">
-        <div className={`flex items-center justify-between p-3 border-b ${isDarkMode ? 'border-gray-700' : 'border-brown-200'}`}>
-          <motion.button
-            variants={iconButtonVariants}
-            initial="initial"
-            whileHover="hover"
-            whileTap="tap"
+        <div className="flex items-center justify-between p-2 border-b border-gray-700">
+          <button
             onClick={onToggleSearch}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode 
-                ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-300'
-                : 'hover:bg-brown-200 text-brown-600 hover:text-brown-700'
-            }`}
+            className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-gray-300"
           >
-            <Search size={18} />
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05, y: -1 }}
-            whileTap={{ scale: 0.95, y: 0 }}
+            <Search size={16} />
+          </button>
+          <button
             onClick={onAddParagraph}
-            className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all"
           >
-            <Plus size={16} />
+            <Plus size={14} />
             {t.addParagraph}
-          </motion.button>
+          </button>
         </div>
 
         <AnimatePresence>
           {showSearch && (
-            <motion.div
-              variants={searchVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className={`p-3 border-b ${isDarkMode ? 'border-gray-700' : 'border-brown-200'}`}
-            >
-              <motion.div
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-                className="relative"
-              >
+            <div className="p-2 border-b border-gray-700">
+              <div className="relative">
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder={t.searchPlaceholder}
-                  className={`w-full px-3 py-2 rounded-lg text-sm ${
-                    isDarkMode
-                      ? 'bg-gray-700 text-white focus:ring-blue-500'
-                      : 'bg-brown-50 text-brown-800 focus:ring-brown-500'
-                  } focus:outline-none focus:ring-2 shadow-inner`}
+                  className="w-full px-2 py-1.5 rounded-lg text-xs bg-gray-700 text-white focus:ring-blue-500 focus:outline-none focus:ring-2 shadow-inner"
                 />
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           )}
         </AnimatePresence>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        <div className="flex-1 overflow-y-auto p-2 space-y-2">
           <AnimatePresence>
-            {filteredParagraphs.map((p, index) => (
+            {filteredParagraphs.map((p) => (
               <motion.div
                 key={p.id}
-                variants={cardVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                whileHover="hover"
-                whileTap="tap"
-                custom={index}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98, y: 0 }}
                 onClick={() => handleSelectParagraph(p.id)}
                 className={`
                   rounded-lg cursor-pointer overflow-hidden shadow-lg hover:shadow-xl transition-shadow
@@ -236,59 +110,43 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
                   ${showConnections === p.id ? 'ring-2 ring-green-400 ring-opacity-100' : ''}
                 `}
               >
-                <div className="p-3">
+                <div className="p-2">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <motion.span 
-                        className="text-sm font-bold text-white bg-black bg-opacity-20 px-2 py-1 rounded-md"
-                        whileHover={{ scale: 1.1 }}
-                      >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-bold text-white bg-black bg-opacity-20 px-1.5 py-0.5 rounded">
                         {p.id}
-                      </motion.span>
-                      <span className="text-sm font-medium text-white truncate">
+                      </span>
+                      <span className="text-xs font-medium text-white truncate">
                         {p.title || t.untitled}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                    <div className="flex items-center gap-1 flex-shrink-0 ml-1">
                       {p.image && (
-                        <motion.button
-                          variants={iconButtonVariants}
-                          initial="initial"
-                          whileHover="hover"
-                          whileTap="tap"
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             onImageEdit(p.id);
                           }}
-                          className="p-1.5 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30"
+                          className="p-1 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30"
                         >
-                          <Image size={14} className="text-white" />
-                        </motion.button>
+                          <Image size={12} className="text-white" />
+                        </button>
                       )}
                       {matchesTagSearch(p) && (
-                        <motion.div
-                          initial={{ scale: 0, rotate: -45 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          transition={{ type: "spring", stiffness: 500 }}
-                          className="p-1.5 rounded-full bg-white bg-opacity-20"
-                        >
-                          <Hash size={14} className="text-white" />
-                        </motion.div>
+                        <div className="p-1 rounded-full bg-white bg-opacity-20">
+                          <Hash size={12} className="text-white" />
+                        </div>
                       )}
                       {hasValidConnections(p) && (
-                        <motion.button
-                          variants={iconButtonVariants}
-                          initial="initial"
-                          whileHover="hover"
-                          whileTap="tap"
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             onToggleConnections(showConnections === p.id ? null : p.id);
                           }}
-                          className="p-1.5 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30"
+                          className="p-1 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30"
                         >
-                          <Link2 size={14} className="text-white" />
-                        </motion.button>
+                          <Link2 size={12} className="text-white" />
+                        </button>
                       )}
                     </div>
                   </div>
@@ -296,16 +154,15 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
                   <AnimatePresence>
                     {showConnections === p.id && (
                       <motion.div
-                        variants={connectionsVariants}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        className="mt-3 text-sm text-white bg-black bg-opacity-10 rounded-lg p-2"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-2 text-xs text-white bg-black bg-opacity-10 rounded-lg p-2"
                       >
                         {p.incomingConnections && p.incomingConnections.length > 0 && (
                           <div className="mb-2">
                             <span className="opacity-90 font-medium">{t.connections.incoming}: {p.incomingConnections.length}</span>
-                            <div className="pl-3 mt-1 space-y-1">
+                            <div className="pl-2 mt-1 space-y-1">
                               {p.incomingConnections.map((id) => (
                                 <div key={id} className="opacity-75 truncate hover:opacity-100 transition-opacity">
                                   {paragraphs.find((para) => para.id === id)?.title || `${t.connections.paragraph} ${id}`}
@@ -317,7 +174,7 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
                         {p.actions.filter(a => a.text.trim() !== '' && a['N.Par.'] !== '').length > 0 && (
                           <div>
                             <span className="opacity-90 font-medium">{t.connections.outgoing}: {p.actions.filter(a => a.text.trim() !== '' && a['N.Par.'] !== '').length}</span>
-                            <div className="pl-3 mt-1 space-y-1">
+                            <div className="pl-2 mt-1 space-y-1">
                               {p.actions.filter(a => a.text.trim() !== '' && a['N.Par.'] !== '').map((action, idx) => (
                                 <div key={idx} className="opacity-75 truncate hover:opacity-100 transition-opacity">
                                   {paragraphs.find((para) => para.id === Number(action['N.Par.']))?.title || `${t.connections.paragraph} ${action['N.Par.']}`}
@@ -335,7 +192,7 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
           </AnimatePresence>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

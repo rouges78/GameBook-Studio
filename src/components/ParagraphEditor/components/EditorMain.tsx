@@ -53,7 +53,7 @@ const EditorMain: React.FC<EditorMainProps> = ({
   });
 
   return (
-    <main className="flex-1 flex flex-col min-h-0">
+    <main className="flex-1 flex flex-col h-full">
       <ParagraphEditorControls
         selectedParagraph={selectedParagraph}
         paragraphs={paragraphs}
@@ -65,7 +65,7 @@ const EditorMain: React.FC<EditorMainProps> = ({
         onShowStoryMap={onShowStoryMap}
       />
 
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 overflow-auto">
         <ParagraphContent
           selectedParagraph={selectedParagraph}
           onUpdate={onUpdate}

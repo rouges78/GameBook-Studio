@@ -1,19 +1,12 @@
-import { useCallback, useState } from 'react';
-import { Paragraph, Action, NotificationType } from '../types';
-
-interface PopupState {
-  visible: boolean;
-  actionIndex: number | null;
-  paragraphId?: number;
-  isExisting?: boolean;
-}
+import { useState, useCallback } from 'react';
+import { Paragraph, NotificationType, PopupState } from '../types';
 
 interface UseActionsProps {
   selectedParagraph: Paragraph;
   paragraphs: Paragraph[];
   onUpdate: (updatedParagraph: Paragraph) => void;
   onNotification: (notification: NotificationType | null) => void;
-  translations: any; // TODO: Add proper type
+  translations: Record<string, any>;
 }
 
 export const useActions = ({
@@ -21,48 +14,46 @@ export const useActions = ({
   paragraphs,
   onUpdate,
   onNotification,
-  translations: t
+  translations
 }: UseActionsProps) => {
   const [popupState, setPopupState] = useState<PopupState>({
     visible: false,
     actionIndex: null
   });
 
-  const getNextId = useCallback(() => Math.max(...paragraphs.map((p) => p.id)) + 1, [paragraphs]);
-
-  const handleActionChange = useCallback((index: number, field: keyof Action, value: string) => {
+  const handleActionChange = useCallback((index: number, field: 'text' | 'N.Par.', value: string) => {
     const updatedActions = [...selectedParagraph.actions];
-    updatedActions[index] = { ...updatedActions[index], [field]: value };
-    onUpdate({
-      ...selectedParagraph,
-      actions: updatedActions
-    });
+    if (index >= 0 && index < updatedActions.length) {
+      updatedActions[index] = {
+        ...updatedActions[index],
+        [field]: value
+      };
+
+      onUpdate({
+        ...selectedParagraph,
+        actions: updatedActions
+      });
+    }
   }, [selectedParagraph, onUpdate]);
 
   const handleActionBlur = useCallback((index: number) => {
     const action = selectedParagraph.actions[index];
-    if (action.text.trim() !== '' && action['N.Par.'] === '') {
-      const firstAvailableParagraphId = getNextId();
+    if (action && action['N.Par.'] && !paragraphs.some(p => p.id === Number(action['N.Par.']))) {
       setPopupState({
         visible: true,
-        actionIndex: index,
-        paragraphId: firstAvailableParagraphId,
         isExisting: false,
+        paragraphId: Number(action['N.Par.']),
+        actionIndex: index
       });
     }
-  }, [selectedParagraph, getNextId]);
+  }, [selectedParagraph.actions, paragraphs]);
 
   const handleRemoveAction = useCallback((index: number) => {
     const updatedActions = selectedParagraph.actions.filter((_, i) => i !== index);
-    const updatedParagraph = {
+    onUpdate({
       ...selectedParagraph,
-      actions: updatedActions,
-      outgoingConnections: updatedActions
-        .map(a => a['N.Par.'])
-        .filter(Boolean)
-        .filter((value, idx, self) => self.indexOf(value) === idx)
-    };
-    onUpdate(updatedParagraph);
+      actions: updatedActions
+    });
   }, [selectedParagraph, onUpdate]);
 
   const handleAddAction = useCallback(() => {
@@ -73,131 +64,42 @@ export const useActions = ({
   }, [selectedParagraph, onUpdate]);
 
   const handlePopupConfirm = useCallback(() => {
-    if (popupState.actionIndex !== null && popupState.paragraphId) {
-      if (!popupState.isExisting) {
-        // Create new paragraph
-        const newParagraph: Paragraph = {
-          id: popupState.paragraphId,
-          title: '',
-          content: '',
-          actions: [],
-          incomingConnections: [selectedParagraph.id],
-          outgoingConnections: [],
-          type: 'normale',
-          tags: []
-        };
+    if (popupState.paragraphId && selectedParagraph) {
+      const newParagraph: Paragraph = {
+        id: popupState.paragraphId,
+        title: '',
+        content: '',
+        actions: [],
+        incomingConnections: [selectedParagraph.id],
+        outgoingConnections: [],
+        type: 'normale',
+        tags: []
+      };
+      onUpdate(newParagraph);
+      onNotification({
+        message: 'New paragraph created successfully',
+        type: 'success'
+      });
+    }
+    setPopupState({ visible: false, actionIndex: null });
+  }, [popupState.paragraphId, selectedParagraph, onUpdate, onNotification]);
 
-        // Update current paragraph's action and connections
-        const updatedActions = [...selectedParagraph.actions];
+  const handlePopupCancel = useCallback(() => {
+    if (typeof popupState.actionIndex === 'number' && popupState.actionIndex >= 0) {
+      const updatedActions = [...selectedParagraph.actions];
+      if (popupState.actionIndex < updatedActions.length) {
         updatedActions[popupState.actionIndex] = {
           ...updatedActions[popupState.actionIndex],
-          'N.Par.': popupState.paragraphId.toString()
+          'N.Par.': ''
         };
-
-        const updatedCurrentParagraph = {
+        onUpdate({
           ...selectedParagraph,
-          actions: updatedActions,
-          outgoingConnections: [...(selectedParagraph.outgoingConnections || []), popupState.paragraphId.toString()]
-        };
-
-        // Update both paragraphs at once
-        const updatedParagraphs = paragraphs.map(p => 
-          p.id === selectedParagraph.id ? updatedCurrentParagraph : p
-        );
-        updatedParagraphs.push(newParagraph);
-
-        // Update each paragraph
-        updatedParagraphs.forEach(p => onUpdate(p));
-
-        // Show success notification
-        onNotification({
-          message: t.paragraphCreated || 'New paragraph created successfully',
-          type: 'success'
+          actions: updatedActions
         });
       }
     }
     setPopupState({ visible: false, actionIndex: null });
-  }, [popupState, selectedParagraph, paragraphs, onUpdate, onNotification, t]);
-
-  const handlePopupCancel = useCallback(() => {
-    if (popupState.actionIndex !== null) {
-      const updatedActions = [...selectedParagraph.actions];
-      updatedActions[popupState.actionIndex] = { text: '', 'N.Par.': '' };
-      onUpdate({
-        ...selectedParagraph,
-        actions: updatedActions
-      });
-    }
-    setPopupState({ visible: false, actionIndex: null });
-  }, [popupState, selectedParagraph, onUpdate]);
-
-  const handleLinkParagraphs = useCallback((sourceId: number, targetId: number) => {
-    // Find source and target paragraphs
-    const sourceParagraph = paragraphs.find(p => p.id === sourceId);
-    const targetParagraph = paragraphs.find(p => p.id === targetId);
-
-    if (!sourceParagraph || !targetParagraph) {
-      onNotification({
-        message: t.errors.invalidConnection,
-        type: 'error'
-      });
-      return;
-    }
-
-    // Check if connection already exists
-    if (sourceParagraph.outgoingConnections.includes(targetId.toString())) {
-      onNotification({
-        message: t.errors.connectionExists,
-        type: 'error'
-      });
-      return;
-    }
-
-    // Update source paragraph
-    onUpdate({
-      ...sourceParagraph,
-      actions: [...sourceParagraph.actions, { text: '', 'N.Par.': targetId.toString() }],
-      outgoingConnections: [...(sourceParagraph.outgoingConnections || []), targetId.toString()]
-    });
-
-    // Update target paragraph
-    onUpdate({
-      ...targetParagraph,
-      incomingConnections: [...(targetParagraph.incomingConnections || []), sourceId]
-    });
-  }, [paragraphs, onUpdate, onNotification, t]);
-
-  const handleUnlinkParagraphs = useCallback((sourceId: number, targetId: number) => {
-    // Find source and target paragraphs
-    const sourceParagraph = paragraphs.find(p => p.id === sourceId);
-    const targetParagraph = paragraphs.find(p => p.id === targetId);
-
-    if (!sourceParagraph || !targetParagraph) {
-      onNotification({
-        message: t.errors.invalidConnection,
-        type: 'error'
-      });
-      return;
-    }
-
-    // Update source paragraph
-    onUpdate({
-      ...sourceParagraph,
-      actions: sourceParagraph.actions.filter(a => a['N.Par.'] !== targetId.toString()),
-      outgoingConnections: sourceParagraph.outgoingConnections.filter(id => id !== targetId.toString())
-    });
-
-    // Update target paragraph
-    onUpdate({
-      ...targetParagraph,
-      incomingConnections: targetParagraph.incomingConnections.filter(id => id !== sourceId)
-    });
-  }, [paragraphs, onUpdate, onNotification, t]);
-
-  const handleCheckConnection = useCallback((sourceId: number, targetId: number) => {
-    const sourceParagraph = paragraphs.find(p => p.id === sourceId);
-    return sourceParagraph?.outgoingConnections.includes(targetId.toString()) || false;
-  }, [paragraphs]);
+  }, [popupState.actionIndex, selectedParagraph, onUpdate]);
 
   return {
     popupState,
@@ -206,10 +108,6 @@ export const useActions = ({
     handleRemoveAction,
     handleAddAction,
     handlePopupConfirm,
-    handlePopupCancel,
-    handleLinkParagraphs,
-    handleUnlinkParagraphs,
-    handleCheckConnection,
-    getNextId
+    handlePopupCancel
   };
 };

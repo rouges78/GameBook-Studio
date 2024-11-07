@@ -5,6 +5,7 @@ import ParagraphContent from '../ParagraphContent';
 import ParagraphActions from '../ParagraphActions';
 import TagInput from '../TagInput';
 import { useActions } from '../hooks/useActions';
+import { Save, Image, Map, Trash2, ExternalLink } from 'lucide-react';
 
 interface EditorMainProps {
   selectedParagraph: Paragraph;
@@ -73,7 +74,7 @@ const EditorMain: React.FC<EditorMainProps> = ({
         />
       </div>
 
-      <div className="flex-none">
+      <div className="flex-none bg-gray-800">
         <ParagraphActions
           actions={selectedParagraph.actions}
           isDarkMode={isDarkMode}
@@ -92,21 +93,23 @@ const EditorMain: React.FC<EditorMainProps> = ({
           isDarkMode={isDarkMode}
         />
 
-        <div className="flex items-center justify-between px-6 py-2 border-t border-gray-600">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-600">
           {/* Left side */}
           <button
             onClick={onShowImageEditor}
-            className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-md flex items-center"
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-md flex items-center gap-2 transition-colors duration-200"
           >
+            <Image size={18} />
             {selectedParagraph.image ? t.modifyImage : t.addImage}
           </button>
 
           {/* Center */}
           <button
             onClick={onShowStoryMap}
-            className="px-3 py-1 bg-amber-900 hover:bg-amber-800 text-white text-sm rounded-md flex items-center"
+            className="px-4 py-2 bg-amber-900 hover:bg-amber-800 text-white text-sm rounded-md flex items-center gap-2 transition-colors duration-200"
             title={t.shortcuts.map}
           >
+            <Map size={18} />
             {t.showMap}
           </button>
 
@@ -114,22 +117,25 @@ const EditorMain: React.FC<EditorMainProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={onDelete}
-              className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md flex items-center"
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md flex items-center gap-2 transition-colors duration-200"
             >
+              <Trash2 size={18} />
               {t.delete}
             </button>
             <button
               onClick={onExport}
-              className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded-md flex items-center"
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded-md flex items-center gap-2 transition-colors duration-200"
             >
+              <ExternalLink size={18} />
               {t.export}
             </button>
             <button
               onClick={onSave}
-              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md flex items-center"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md flex items-center gap-2 transition-colors duration-200"
               title={t.shortcuts.save}
             >
-              {t.save}
+              <Save size={18} />
+              {t.saveParagraph || 'Save Paragraph'}
             </button>
           </div>
         </div>

@@ -21,6 +21,11 @@ import packageJson from '../package.json';
 import type { Project, Paragraph as EditorParagraph } from './components/ParagraphEditor/types';
 import type { Paragraph as ExportParagraph } from './components/ExportPage/types';
 
+const isElectron = !!window.electron;
+
+// Mock storage for browser context
+let browserProjects: Project[] = [];
+
 interface Theme {
   primaryColor: string;
   secondaryColor: string;
@@ -118,14 +123,26 @@ const App: React.FC = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        await migrateProjectData();
-        console.log('Project migration completed');
+        if (isElectron) {
+          await migrateProjectData();
+          console.log('Project migration completed');
 
-        const savedProjects = await getProjects();
-        setProjects(savedProjects || []);
-        
-        const dbContent = await debugDatabase();
-        console.log('Database content:', dbContent);
+          const savedProjects = await getProjects();
+          setProjects(savedProjects || []);
+          
+          const dbContent = await debugDatabase();
+          console.log('Database content:', dbContent);
+          
+          startAutoBackup(5);
+          console.log('Auto backup initialized in App component');
+        } else {
+          // Use browser storage
+          const savedProjects = localStorage.getItem('projects');
+          if (savedProjects) {
+            browserProjects = JSON.parse(savedProjects);
+            setProjects(browserProjects);
+          }
+        }
       } catch (error) {
         console.error('Failed to initialize app:', error);
         showNotification('Errore nell\'inizializzazione dell\'app', 'error');
@@ -133,12 +150,12 @@ const App: React.FC = () => {
     };
 
     initializeApp();
-    startAutoBackup(5);
-    console.log('Auto backup initialized in App component');
 
     return () => {
-      stopAutoBackup();
-      console.log('Auto backup stopped in App component cleanup');
+      if (isElectron) {
+        stopAutoBackup();
+        console.log('Auto backup stopped in App component cleanup');
+      }
     };
   }, []);
 
@@ -149,7 +166,13 @@ const App: React.FC = () => {
 
   const handleCreateProject = useCallback(async (project: Project) => {
     try {
-      await saveProject(project);
+      if (isElectron) {
+        await saveProject(project);
+      } else {
+        // Browser storage
+        browserProjects.push(project);
+        localStorage.setItem('projects', JSON.stringify(browserProjects));
+      }
       setProjects(prevProjects => [...prevProjects, project]);
       setCurrentProject(project);
       showNotification('Progetto creato con successo', 'success');
@@ -161,7 +184,18 @@ const App: React.FC = () => {
 
   const handleSaveProject = useCallback(async (project: Project) => {
     try {
-      await saveProject(project);
+      if (isElectron) {
+        await saveProject(project);
+      } else {
+        // Browser storage
+        const index = browserProjects.findIndex(p => p.bookTitle === project.bookTitle);
+        if (index !== -1) {
+          browserProjects[index] = project;
+        } else {
+          browserProjects.push(project);
+        }
+        localStorage.setItem('projects', JSON.stringify(browserProjects));
+      }
       setProjects(prevProjects =>
         prevProjects.map((p) => (p.bookTitle === project.bookTitle ? project : p))
       );
@@ -178,7 +212,13 @@ const App: React.FC = () => {
 
   const handleDeleteProject = useCallback(async (bookTitle: string) => {
     try {
-      await deleteProject(bookTitle);
+      if (isElectron) {
+        await deleteProject(bookTitle);
+      } else {
+        // Browser storage
+        browserProjects = browserProjects.filter(p => p.bookTitle !== bookTitle);
+        localStorage.setItem('projects', JSON.stringify(browserProjects));
+      }
       setProjects((prevProjects) => prevProjects.filter((p) => p.bookTitle !== bookTitle));
       showNotification('Progetto eliminato con successo', 'success');
     } catch (error) {
@@ -192,7 +232,9 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogout = useCallback(() => {
-    window.electron?.closeWindow();
+    if (isElectron) {
+      window.electron?.closeWindow();
+    }
   }, []);
 
   return (

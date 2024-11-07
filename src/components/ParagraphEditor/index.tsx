@@ -11,7 +11,7 @@ import Notification from '../Notification';
 import CustomPopup from '../CustomPopup';
 import ImageEditor from '../ImageEditor';
 
-const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
+const ParagraphEditor = ({
   setCurrentPage, 
   bookTitle, 
   author, 
@@ -21,7 +21,7 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
   initialParagraphs = [], 
   initialMapSettings,
   updateLastBackup
-}) => {
+}: ParagraphEditorProps) => {
   const [mapSettings, setMapSettings] = useState(initialMapSettings);
 
   const { state, actions } = useParagraphEditor({
@@ -37,11 +37,19 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
   const selectedParagraph = state.paragraphs.find(p => p.id === state.selectedParagraph);
 
   const handleParagraphUpdate = useCallback((updatedParagraph: Paragraph) => {
-    actions.setParagraphs(prevParagraphs =>
-      prevParagraphs.map(p =>
-        p.id === updatedParagraph.id ? updatedParagraph : p
-      )
-    );
+    actions.setParagraphs(prevParagraphs => {
+      // Check if paragraph exists
+      const exists = prevParagraphs.some(p => p.id === updatedParagraph.id);
+      if (exists) {
+        // Update existing paragraph
+        return prevParagraphs.map(p =>
+          p.id === updatedParagraph.id ? updatedParagraph : p
+        );
+      } else {
+        // Add new paragraph
+        return [...prevParagraphs, updatedParagraph];
+      }
+    });
   }, [actions]);
 
   const handleAddParagraph = useCallback(() => {
@@ -53,7 +61,8 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
       actions: [],
       incomingConnections: [],
       outgoingConnections: [],
-      type: 'normale'
+      type: 'normale',
+      tags: []
     };
     actions.setParagraphs((prev) => [...prev, newParagraph]);
     actions.setSelectedParagraph(newId);
@@ -274,7 +283,22 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
                     ? `${t.confirmConnection} ${state.showPopup.paragraphId}?`
                     : t.createNewParagraph
                 }
-                onConfirm={() => {/* Handle confirm */}}
+                onConfirm={() => {
+                  if (state.showPopup.paragraphId && selectedParagraph) {
+                    const newParagraph: Paragraph = {
+                      id: state.showPopup.paragraphId,
+                      title: '',
+                      content: '',
+                      actions: [],
+                      incomingConnections: [selectedParagraph.id],
+                      outgoingConnections: [],
+                      type: 'normale',
+                      tags: []
+                    };
+                    handleParagraphUpdate(newParagraph);
+                  }
+                  actions.setShowPopup({ visible: false, actionIndex: null });
+                }}
                 onCancel={() => actions.setShowPopup({ visible: false, actionIndex: null })}
                 isDarkMode={isDarkMode}
               />

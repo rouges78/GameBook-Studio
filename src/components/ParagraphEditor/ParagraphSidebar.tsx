@@ -28,16 +28,15 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
     if (!searchTerm) return paragraphs;
 
     return paragraphs.filter((p) => {
+      const matchesTitle = p.title.toLowerCase().includes(searchValue);
+      const matchesContent = (p.content || '').toLowerCase().includes(searchValue);
+      const matchesTags = p.tags?.some(tag => tag.toLowerCase().includes(searchValue)) || false;
+      
       if (isHashtagSearch) {
-        return p.tags?.some(tag => tag.toLowerCase().includes(searchValue)) || false;
+        return matchesTags;
       }
-
-      const matchesSearch = p.title.toLowerCase().includes(searchValue) ||
-                          (p.content || '').toLowerCase().includes(searchValue);
       
-      const matchesHashtag = p.tags?.some(tag => tag.toLowerCase().includes(searchValue)) || false;
-      
-      return matchesSearch || matchesHashtag;
+      return matchesTitle || matchesContent || matchesTags;
     });
   }, [paragraphs, searchTerm, isHashtagSearch, searchValue]);
 
@@ -98,20 +97,55 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
   };
 
   const connectionsVariants = {
-    initial: { opacity: 0, height: 0 },
+    initial: { opacity: 0, scale: 0.95, y: -10 },
     animate: { 
       opacity: 1, 
-      height: "auto",
+      scale: 1,
+      y: 0,
       transition: {
         type: "spring",
-        stiffness: 500,
-        damping: 30
+        stiffness: 400,
+        damping: 25,
+        mass: 0.8
       }
     },
     exit: { 
-      opacity: 0, 
-      height: 0,
-      transition: { duration: 0.2 }
+      opacity: 0,
+      scale: 0.95,
+      y: -10,
+      transition: {
+        duration: 0.2,
+        ease: "easeInOut"
+      }
+    }
+  };
+
+  const iconButtonVariants = {
+    initial: { scale: 1 },
+    hover: { 
+      scale: 1.15,
+      rotate: 15,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }
+    },
+    tap: { 
+      scale: 0.9,
+      rotate: 0,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }
+    }
+  };
+
+  const handleSelectParagraph = (id: number) => {
+    // Ensure we only call onSelectParagraph with a valid number
+    if (typeof id === 'number') {
+      onSelectParagraph(id);
     }
   };
 
@@ -126,8 +160,10 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
       <div className="flex flex-col h-full">
         <div className={`flex items-center justify-between p-3 border-b ${isDarkMode ? 'border-gray-700' : 'border-brown-200'}`}>
           <motion.button
-            whileHover={{ scale: 1.1, rotate: 15 }}
-            whileTap={{ scale: 0.9 }}
+            variants={iconButtonVariants}
+            initial="initial"
+            whileHover="hover"
+            whileTap="tap"
             onClick={onToggleSearch}
             className={`p-2 rounded-lg transition-colors ${
               isDarkMode 
@@ -190,7 +226,7 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
                 whileHover="hover"
                 whileTap="tap"
                 custom={index}
-                onClick={() => onSelectParagraph(p.id)}
+                onClick={() => handleSelectParagraph(p.id)}
                 className={`
                   rounded-lg cursor-pointer overflow-hidden shadow-lg hover:shadow-xl transition-shadow
                   ${p.type === 'nodo' ? 'bg-gradient-to-br from-orange-500 to-orange-600' : 
@@ -216,8 +252,10 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
                     <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                       {p.image && (
                         <motion.button
-                          whileHover={{ scale: 1.2, rotate: 15 }}
-                          whileTap={{ scale: 0.9 }}
+                          variants={iconButtonVariants}
+                          initial="initial"
+                          whileHover="hover"
+                          whileTap="tap"
                           onClick={(e) => {
                             e.stopPropagation();
                             onImageEdit(p.id);
@@ -239,8 +277,10 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
                       )}
                       {hasValidConnections(p) && (
                         <motion.button
-                          whileHover={{ scale: 1.2, rotate: 15 }}
-                          whileTap={{ scale: 0.9 }}
+                          variants={iconButtonVariants}
+                          initial="initial"
+                          whileHover="hover"
+                          whileTap="tap"
                           onClick={(e) => {
                             e.stopPropagation();
                             onToggleConnections(showConnections === p.id ? null : p.id);

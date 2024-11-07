@@ -37,9 +37,8 @@ class DatabaseManager {
                         paragraphs: {
                             deleteMany: {},
                             create: paragraphs.map(p => ({
-                                id: p.id.toString(), // Convert id to string
                                 number: parseInt(p.id),
-                                title: p.title || '', // Use paragraph title if available
+                                title: p.title || '',
                                 content: p.content || '',
                                 x: p.x,
                                 y: p.y,
@@ -80,9 +79,8 @@ class DatabaseManager {
                         updatedAt: new Date(lastEdited),
                         paragraphs: {
                             create: paragraphs.map(p => ({
-                                id: p.id.toString(), // Convert id to string
                                 number: parseInt(p.id),
-                                title: p.title || '', // Use paragraph title if available
+                                title: p.title || '',
                                 content: p.content || '',
                                 x: p.x,
                                 y: p.y,
@@ -125,7 +123,7 @@ class DatabaseManager {
                 lastEdited: dbProject.updatedAt.toISOString(),
                 coverImage: dbProject.assets.find(asset => asset.name === 'cover')?.path || null,
                 paragraphs: dbProject.paragraphs.map(p => ({
-                    id: parseInt(p.id),
+                    id: p.number,
                     title: p.title || '',
                     content: p.content || '',
                     actions: JSON.parse(p.actions || '[]'),
@@ -138,7 +136,7 @@ class DatabaseManager {
                 mapSettings: {
                     positions: dbProject.paragraphs.reduce((acc, p) => {
                         if (p.x !== null && p.y !== null) {
-                            acc[parseInt(p.id)] = { x: p.x, y: p.y };
+                            acc[p.number] = { x: p.x, y: p.y };
                         }
                         return acc;
                     }, {}),
@@ -187,7 +185,7 @@ class DatabaseManager {
                 lastEdited: dbProject.updatedAt.toISOString(),
                 coverImage: dbProject.assets.find(asset => asset.name === 'cover')?.path || null,
                 paragraphs: dbProject.paragraphs.map(p => ({
-                    id: parseInt(p.id),
+                    id: p.number,
                     title: p.title || '',
                     content: p.content || '',
                     actions: JSON.parse(p.actions || '[]'),
@@ -200,7 +198,7 @@ class DatabaseManager {
                 mapSettings: {
                     positions: dbProject.paragraphs.reduce((acc, p) => {
                         if (p.x !== null && p.y !== null) {
-                            acc[parseInt(p.id)] = { x: p.x, y: p.y };
+                            acc[p.number] = { x: p.x, y: p.y };
                         }
                         return acc;
                     }, {}),

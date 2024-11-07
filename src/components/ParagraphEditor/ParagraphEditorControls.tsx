@@ -1,8 +1,9 @@
-import React from 'react';
-import { Bold, Italic, Underline, Link, Code, Quote, AlignLeft, AlignCenter, AlignRight, ChevronDown, Type } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bold, Italic, Underline, Link, Code, Quote, AlignLeft, AlignCenter, AlignRight, ChevronDown, Type, Book } from 'lucide-react';
 import { ParagraphEditorControlsProps } from './types';
 import { translations } from './translations';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
   selectedParagraph,
@@ -14,6 +15,7 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
   onSave,
   onShowStoryMap,
 }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const t = translations[language];
 
   // Initialize keyboard shortcuts
@@ -129,47 +131,100 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
     }
   };
 
+  const dropdownVariants = {
+    hidden: { opacity: 0, y: -10, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      y: -10, 
+      scale: 0.95,
+      transition: { duration: 0.2 }
+    }
+  };
+
   return (
     <div className="flex-none bg-gray-800">
       {/* Title Input and Node Type */}
       <div className="flex items-center justify-between bg-gray-800 border-b border-gray-700 px-4 py-2">
         <div className="flex items-center flex-1">
           <div className="relative">
-            <button
-              onClick={() => document.getElementById('paragraph-select')?.click()}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded transition-colors duration-200"
+            <motion.button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-200 min-w-[120px]"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <span className="text-white">{selectedParagraph.id}</span>
-              <ChevronDown size={16} className="text-gray-400" />
-            </button>
-            <select
-              id="paragraph-select"
-              value={selectedParagraph.id}
-              onChange={(e) => onSelectParagraph(Number(e.target.value))}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-            >
-              {paragraphs.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.id} - {p.title || t.untitled}
-                </option>
-              ))}
-            </select>
+              <Book size={16} className="text-blue-400" />
+              <span className="text-white font-medium">{selectedParagraph.id}</span>
+              <motion.div
+                animate={{ rotate: isDropdownOpen ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronDown size={16} className="text-gray-400" />
+              </motion.div>
+            </motion.button>
+
+            <AnimatePresence>
+              {isDropdownOpen && (
+                <motion.div
+                  variants={dropdownVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="absolute z-50 mt-2 w-64 bg-gray-700 rounded-lg shadow-lg border border-gray-600 py-1 max-h-64 overflow-y-auto"
+                >
+                  {paragraphs.map((p) => (
+                    <motion.button
+                      key={p.id}
+                      onClick={() => {
+                        onSelectParagraph(p.id);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left hover:bg-gray-600 flex items-center gap-2 ${
+                        selectedParagraph.id === p.id ? 'bg-gray-600' : ''
+                      }`}
+                      whileHover={{ x: 4 }}
+                    >
+                      <span className={`w-8 h-6 rounded flex items-center justify-center text-sm font-medium ${
+                        p.type === 'nodo' ? 'bg-orange-600' :
+                        p.type === 'finale' ? 'bg-red-600' :
+                        'bg-blue-600'
+                      }`}>
+                        {p.id}
+                      </span>
+                      <span className="text-gray-200 truncate">
+                        {p.title || t.untitled}
+                      </span>
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           <input
             type="text"
             value={selectedParagraph.title}
             onChange={handleTitleChange}
             placeholder={t.enterTitle}
-            className="flex-1 ml-4 px-4 py-1.5 bg-gray-600 text-white border-0 rounded focus:outline-none focus:ring-0"
+            className="flex-1 ml-4 px-4 py-2 bg-gray-600 text-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200"
           />
         </div>
         <div className="flex items-center">
           <span className="text-gray-400 mr-2">{t.nodeTypes.title}</span>
           <button
             onClick={() => handleTypeChange('normale')}
-            className={`px-3 py-1 rounded text-sm font-medium mr-2 ${
+            className={`px-3 py-1 rounded-lg text-sm font-medium mr-2 transition-all duration-200 ${
               selectedParagraph.type === 'normale'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-blue-600 text-white shadow-lg'
                 : 'bg-gray-600 text-gray-300 hover:bg-blue-600 hover:text-white'
             }`}
           >
@@ -177,9 +232,9 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
           </button>
           <button
             onClick={() => handleTypeChange('nodo')}
-            className={`px-3 py-1 rounded text-sm font-medium mr-2 ${
+            className={`px-3 py-1 rounded-lg text-sm font-medium mr-2 transition-all duration-200 ${
               selectedParagraph.type === 'nodo'
-                ? 'bg-orange-600 text-white'
+                ? 'bg-orange-600 text-white shadow-lg'
                 : 'bg-gray-600 text-gray-300 hover:bg-orange-600 hover:text-white'
             }`}
           >
@@ -187,9 +242,9 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
           </button>
           <button
             onClick={() => handleTypeChange('finale')}
-            className={`px-3 py-1 rounded text-sm font-medium ${
+            className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${
               selectedParagraph.type === 'finale'
-                ? 'bg-red-600 text-white'
+                ? 'bg-red-600 text-white shadow-lg'
                 : 'bg-gray-600 text-gray-300 hover:bg-red-600 hover:text-white'
             }`}
           >
@@ -206,7 +261,7 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
           <select
             value={selectedParagraph.font || 'Arial'}
             onChange={handleFontChange}
-            className="h-8 px-2 bg-gray-700 text-white border-0 rounded focus:outline-none focus:ring-0"
+            className="h-8 px-3 bg-gray-700 text-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200"
           >
             {fonts.map(font => (
               <option key={font.value} value={font.value}>
@@ -218,50 +273,62 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
 
         {/* Alignment Buttons */}
         <div className="flex mr-4 border-r border-gray-600 pr-4">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => handleAlignmentChange('left')}
-            className={`w-8 h-8 flex items-center justify-center rounded ${
-              selectedParagraph.alignment === 'left' ? 'bg-gray-600' : 'hover:bg-gray-700'
+            className={`w-8 h-8 flex items-center justify-center rounded-lg ${
+              selectedParagraph.alignment === 'left' ? 'bg-gray-600 shadow-inner' : 'hover:bg-gray-700'
             }`}
             title={t.alignment.left}
           >
             <AlignLeft size={18} className="text-gray-300" />
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => handleAlignmentChange('center')}
-            className={`w-8 h-8 flex items-center justify-center rounded ${
-              selectedParagraph.alignment === 'center' ? 'bg-gray-600' : 'hover:bg-gray-700'
+            className={`w-8 h-8 flex items-center justify-center rounded-lg ${
+              selectedParagraph.alignment === 'center' ? 'bg-gray-600 shadow-inner' : 'hover:bg-gray-700'
             }`}
             title={t.alignment.center}
           >
             <AlignCenter size={18} className="text-gray-300" />
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => handleAlignmentChange('right')}
-            className={`w-8 h-8 flex items-center justify-center rounded ${
-              selectedParagraph.alignment === 'right' ? 'bg-gray-600' : 'hover:bg-gray-700'
+            className={`w-8 h-8 flex items-center justify-center rounded-lg ${
+              selectedParagraph.alignment === 'right' ? 'bg-gray-600 shadow-inner' : 'hover:bg-gray-700'
             }`}
             title={t.alignment.right}
           >
             <AlignRight size={18} className="text-gray-300" />
-          </button>
+          </motion.button>
         </div>
 
         {/* Format Buttons */}
         {formatButtons.map((button) => (
-          <button
+          <motion.button
             key={button.format}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => handleFormat(button.format)}
             title={`${button.title}${button.shortcut ? ` (${button.shortcut})` : ''}`}
-            className="w-10 h-8 flex items-center justify-center rounded text-gray-300 hover:bg-gray-700 hover:text-white group relative"
+            className="w-10 h-8 flex items-center justify-center rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white group relative"
           >
             {button.icon || <span className="text-sm font-medium">{button.text}</span>}
             {button.shortcut && (
-              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-900 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+              <motion.span
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-900 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap shadow-lg"
+              >
                 {button.shortcut}
-              </span>
+              </motion.span>
             )}
-          </button>
+          </motion.button>
         ))}
       </div>
     </div>

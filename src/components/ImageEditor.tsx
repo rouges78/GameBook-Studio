@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Upload, Download, Trash2, Sun, Contrast, Droplet, Palette, Image as ImageIcon, Scale, Maximize2, Lock, Unlock } from 'lucide-react';
+import { X, Upload, Download, Trash2, Sun, Contrast, Droplet, Palette, Image as ImageIcon, Scale, Maximize2, Lock, Unlock, AlertTriangle } from 'lucide-react';
 
 interface ImageEditorProps {
   onSave: (imageData: string | null, position: 'before' | 'after') => void;
@@ -20,6 +20,9 @@ interface ImageAdjustments {
   width: number;
   height: number;
 }
+
+const MAX_RECOMMENDED_WIDTH = 1200;
+const MAX_RECOMMENDED_HEIGHT = 800;
 
 const ImageEditor: React.FC<ImageEditorProps> = ({
   onSave,
@@ -43,6 +46,8 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
   });
   const [aspectRatioLocked, setAspectRatioLocked] = useState(true);
   const [originalAspectRatio, setOriginalAspectRatio] = useState(1);
+  const [showSizeWarning, setShowSizeWarning] = useState(false);
+  const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,7 +73,10 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
       width: "Larghezza",
       height: "Altezza",
       lockAspectRatio: "Blocca proporzioni",
-      unlockAspectRatio: "Sblocca proporzioni"
+      unlockAspectRatio: "Sblocca proporzioni",
+      sizeWarning: "L'immagine è molto grande. Si consiglia di ridimensionarla per una migliore visualizzazione nel libro.",
+      resize: "Ridimensiona",
+      keepOriginal: "Mantieni originale"
     },
     en: {
       title: "Image Editor",
@@ -90,7 +98,10 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
       width: "Width",
       height: "Height",
       lockAspectRatio: "Lock aspect ratio",
-      unlockAspectRatio: "Unlock aspect ratio"
+      unlockAspectRatio: "Unlock aspect ratio",
+      sizeWarning: "The image is very large. It's recommended to resize it for better display in the book.",
+      resize: "Resize",
+      keepOriginal: "Keep original"
     }
   };
 
@@ -155,17 +166,43 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         img.onload = () => {
           const ratio = img.width / img.height;
           setOriginalAspectRatio(ratio);
-          setAdjustments(prev => ({
-            ...prev,
-            width: img.width,
-            height: img.height
-          }));
+          setOriginalDimensions({ width: img.width, height: img.height });
+          
+          // Check if image dimensions exceed recommended size
+          if (img.width > MAX_RECOMMENDED_WIDTH || img.height > MAX_RECOMMENDED_HEIGHT) {
+            setShowSizeWarning(true);
+            // Calculate new dimensions maintaining aspect ratio
+            const scaleWidth = MAX_RECOMMENDED_WIDTH / img.width;
+            const scaleHeight = MAX_RECOMMENDED_HEIGHT / img.height;
+            const scale = Math.min(scaleWidth, scaleHeight);
+            
+            setAdjustments(prev => ({
+              ...prev,
+              width: Math.round(img.width * scale),
+              height: Math.round(img.height * scale)
+            }));
+          } else {
+            setAdjustments(prev => ({
+              ...prev,
+              width: img.width,
+              height: img.height
+            }));
+          }
           setImage(e.target?.result as string);
         };
         img.src = e.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleKeepOriginalSize = () => {
+    setAdjustments(prev => ({
+      ...prev,
+      width: originalDimensions.width,
+      height: originalDimensions.height
+    }));
+    setShowSizeWarning(false);
   };
 
   const handleDimensionChange = (dimension: 'width' | 'height', value: number) => {
@@ -226,6 +263,29 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
             <X size={24} />
           </button>
         </div>
+
+        {showSizeWarning && (
+          <div className="mb-4 p-4 bg-amber-900 bg-opacity-50 rounded-lg flex items-start">
+            <AlertTriangle className="text-amber-500 mr-3 flex-shrink-0 mt-1" size={20} />
+            <div className="flex-1">
+              <p className="text-amber-200 mb-2">{t.sizeWarning}</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowSizeWarning(false)}
+                  className="px-3 py-1 bg-amber-600 hover:bg-amber-700 rounded text-sm"
+                >
+                  {t.resize}
+                </button>
+                <button
+                  onClick={handleKeepOriginalSize}
+                  className="px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded text-sm"
+                >
+                  {t.keepOriginal}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="col-span-2">

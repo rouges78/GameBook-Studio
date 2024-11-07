@@ -8,6 +8,8 @@ export const translations = {
     enterContent: "Inizia a scrivere il paragrafo qui...",
     untitled: "Senza titolo",
     save: "Salvataggio completato",
+    saveParagraph: "Salva paragrafo",
+    saveCompleted: "Salvataggio completato",
     delete: "Elimina",
     export: "Esporta",
     showMap: "Mostra Mappa",
@@ -55,7 +57,12 @@ export const translations = {
     shortcuts: {
       save: "Ctrl+S per salvare",
       map: "Ctrl+M per mostrare la mappa"
-    }
+    },
+    errors: {
+      invalidConnection: "Connessione non valida",
+      connectionExists: "La connessione esiste già"
+    },
+    paragraphCreated: "Nuovo paragrafo creato con successo"
   },
   en: {
     backToHome: "Back to Home",
@@ -66,6 +73,8 @@ export const translations = {
     enterContent: "Start writing your paragraph here...",
     untitled: "Untitled",
     save: "Save completed",
+    saveParagraph: "Save paragraph",
+    saveCompleted: "Save completed",
     delete: "Delete",
     export: "Export",
     showMap: "Show Map",
@@ -113,6 +122,11 @@ export const translations = {
     shortcuts: {
       save: "Ctrl+S to save",
       map: "Ctrl+M to show map"
-    }
+    },
+    errors: {
+      invalidConnection: "Invalid connection",
+      connectionExists: "Connection already exists"
+    },
+    paragraphCreated: "New paragraph created successfully"
   }
 };

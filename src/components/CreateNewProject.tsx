@@ -113,58 +113,131 @@ const CreateNewProject: React.FC<CreateNewProjectProps> = ({
     }
   };
 
+  const pageTransition = {
+    initial: { opacity: 0, scale: 0.98 },
+    animate: { 
+      opacity: 1, 
+      scale: 1,
+      transition: {
+        duration: 0.5,
+        ease: [0.645, 0.045, 0.355, 1]
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      scale: 0.98,
+      transition: {
+        duration: 0.3
+      }
+    }
+  };
+
   const formVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      y: 0,
       transition: {
-        duration: 0.4,
-        ease: "easeOut",
-        staggerChildren: 0.1
+        staggerChildren: 0.12,
+        delayChildren: 0.1
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, x: -10 },
+    hidden: { 
+      opacity: 0, 
+      y: 20,
+      scale: 0.95
+    },
     visible: {
       opacity: 1,
-      x: 0,
-      transition: { duration: 0.2 }
+      y: 0,
+      scale: 1,
+      transition: { 
+        type: "spring",
+        stiffness: 400,
+        damping: 25
+      }
     }
   };
 
   const buttonVariants = {
-    hover: { scale: 1.02 },
-    tap: { scale: 0.98 }
+    initial: { scale: 1 },
+    hover: { 
+      scale: 1.03,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }
+    },
+    tap: { 
+      scale: 0.97,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }
+    }
   };
 
   const coverVariants = {
-    hidden: { opacity: 0, scale: 0.95 },
+    hidden: { 
+      opacity: 0, 
+      scale: 0.8,
+      rotateY: -20
+    },
     visible: {
       opacity: 1,
       scale: 1,
+      rotateY: 0,
       transition: {
         type: "spring",
         stiffness: 300,
-        damping: 25
+        damping: 20
+      }
+    },
+    hover: {
+      scale: 1.05,
+      boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }
+    }
+  };
+
+  const inputVariants = {
+    focus: { 
+      scale: 1.01,
+      boxShadow: "0px 0px 8px rgba(var(--primary-rgb), 0.2)",
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 17
       }
     }
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      variants={pageTransition}
+      initial="initial"
+      animate="animate"
+      exit="exit"
       className="min-h-screen bg-background p-8"
     >
       <div className="max-w-3xl mx-auto">
         <motion.button
-          initial={{ x: -10, opacity: 0 }}
+          initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           whileHover={{ x: -5 }}
+          transition={{
+            type: "spring",
+            stiffness: 400,
+            damping: 25
+          }}
           onClick={() => setCurrentPage('dashboard')}
           className="mb-6 text-primary hover:text-primary/80 flex items-center transition-colors"
         >
@@ -173,8 +246,14 @@ const CreateNewProject: React.FC<CreateNewProjectProps> = ({
         </motion.button>
 
         <motion.h1
-          initial={{ y: -10, opacity: 0 }}
+          initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 400,
+            damping: 25,
+            delay: 0.1
+          }}
           className={`text-2xl font-bold text-center mb-8 ${isDarkMode ? 'glass-dark' : 'glass'} py-4 rounded-lg`}
         >
           {t.createNewProject}
@@ -186,12 +265,17 @@ const CreateNewProject: React.FC<CreateNewProjectProps> = ({
           animate="visible"
           className={`${isDarkMode ? 'glass-dark' : 'glass'} rounded-lg p-8`}
         >
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {error && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -20, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -20, height: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 30
+                }}
                 className="mb-6 p-3 bg-destructive text-destructive-foreground rounded-lg text-sm"
               >
                 {error}
@@ -204,7 +288,8 @@ const CreateNewProject: React.FC<CreateNewProjectProps> = ({
               {t.bookTitle}
             </label>
             <motion.input
-              whileFocus={{ scale: 1.005 }}
+              variants={inputVariants}
+              whileFocus="focus"
               type="text"
               id="title"
               value={title}
@@ -218,7 +303,8 @@ const CreateNewProject: React.FC<CreateNewProjectProps> = ({
               {t.author}
             </label>
             <motion.input
-              whileFocus={{ scale: 1.005 }}
+              variants={inputVariants}
+              whileFocus="focus"
               type="text"
               id="author"
               value={author}
@@ -234,7 +320,8 @@ const CreateNewProject: React.FC<CreateNewProjectProps> = ({
                   {t.endings}: {endings}
                 </label>
                 <motion.input
-                  whileFocus={{ scale: 1.005 }}
+                  variants={inputVariants}
+                  whileFocus="focus"
                   type="range"
                   id="endings"
                   min="1"
@@ -249,7 +336,8 @@ const CreateNewProject: React.FC<CreateNewProjectProps> = ({
                   {t.intermediateNodes}: {intermediateNodes}
                 </label>
                 <motion.input
-                  whileFocus={{ scale: 1.005 }}
+                  variants={inputVariants}
+                  whileFocus="focus"
                   type="range"
                   id="intermediateNodes"
                   min="1"
@@ -265,16 +353,26 @@ const CreateNewProject: React.FC<CreateNewProjectProps> = ({
               <p className="text-sm font-medium mb-2">{t.bookCover}</p>
               <motion.div
                 variants={coverVariants}
-                className={`${isDarkMode ? 'glass-dark' : 'glass'} rounded-lg p-4 flex flex-col items-center justify-center transition-all duration-200 hover:ring-2 hover:ring-primary/50`}
+                whileHover="hover"
+                className={`${isDarkMode ? 'glass-dark' : 'glass'} rounded-lg p-4 flex flex-col items-center justify-center transition-all duration-200`}
                 style={{ aspectRatio: '3/4' }}
               >
                 <AnimatePresence mode="wait">
                   {coverImage ? (
                     <motion.img
                       key="cover"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
+                      initial={{ opacity: 0, scale: 0.8, rotateY: -20 }}
+                      animate={{ 
+                        opacity: 1, 
+                        scale: 1, 
+                        rotateY: 0,
+                        transition: {
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 20
+                        }
+                      }}
+                      exit={{ opacity: 0, scale: 0.8, rotateY: 20 }}
                       src={coverImage}
                       alt="Book Cover"
                       className="max-w-full max-h-full object-contain rounded-md"
@@ -288,8 +386,22 @@ const CreateNewProject: React.FC<CreateNewProjectProps> = ({
                       className="text-center"
                     >
                       <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        animate={{ 
+                          rotate: 360,
+                          scale: [1, 1.1, 1],
+                        }}
+                        transition={{ 
+                          rotate: {
+                            duration: 20,
+                            repeat: Infinity,
+                            ease: "linear"
+                          },
+                          scale: {
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }
+                        }}
                       >
                         <Upload size={32} className="mx-auto text-primary/70 mb-2" strokeWidth={1.5} />
                       </motion.div>

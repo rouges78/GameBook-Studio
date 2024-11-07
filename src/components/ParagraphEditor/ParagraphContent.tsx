@@ -79,8 +79,8 @@ const ParagraphContent: React.FC<ParagraphContentProps> = ({
               scrollbarWidth: 'thin',
               scrollbarColor: '#4B5563 #1F2937',
               textAlign: selectedParagraph.alignment || 'left',
-              minHeight: 'calc(100vh - 8rem)', // Increased height
-              padding: '2rem 4rem' // Increased padding
+              minHeight: 'calc(100vh - 16rem)', // Reduced height to make room for bottom controls
+              padding: '2rem 4rem'
             }}
           />
 

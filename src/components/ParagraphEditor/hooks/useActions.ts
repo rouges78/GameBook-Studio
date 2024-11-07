@@ -73,8 +73,8 @@ export const useActions = ({
   }, [selectedParagraph, onUpdate]);
 
   const handlePopupConfirm = useCallback(() => {
-    if (popupState.actionIndex !== null) {
-      if (!popupState.isExisting && popupState.paragraphId) {
+    if (popupState.actionIndex !== null && popupState.paragraphId) {
+      if (!popupState.isExisting) {
         // Create new paragraph
         const newParagraph: Paragraph = {
           id: popupState.paragraphId,
@@ -84,29 +84,40 @@ export const useActions = ({
           incomingConnections: [selectedParagraph.id],
           outgoingConnections: [],
           type: 'normale',
-          tags: [],
+          tags: []
         };
 
-        // Update current paragraph's action
+        // Update current paragraph's action and connections
         const updatedActions = [...selectedParagraph.actions];
         updatedActions[popupState.actionIndex] = {
           ...updatedActions[popupState.actionIndex],
           'N.Par.': popupState.paragraphId.toString()
         };
 
-        // Update connections
-        onUpdate({
+        const updatedCurrentParagraph = {
           ...selectedParagraph,
           actions: updatedActions,
-          outgoingConnections: [...selectedParagraph.outgoingConnections, popupState.paragraphId.toString()]
-        });
+          outgoingConnections: [...(selectedParagraph.outgoingConnections || []), popupState.paragraphId.toString()]
+        };
 
-        // Add new paragraph
-        onUpdate(newParagraph);
+        // Update both paragraphs at once
+        const updatedParagraphs = paragraphs.map(p => 
+          p.id === selectedParagraph.id ? updatedCurrentParagraph : p
+        );
+        updatedParagraphs.push(newParagraph);
+
+        // Update each paragraph
+        updatedParagraphs.forEach(p => onUpdate(p));
+
+        // Show success notification
+        onNotification({
+          message: t.paragraphCreated || 'New paragraph created successfully',
+          type: 'success'
+        });
       }
     }
     setPopupState({ visible: false, actionIndex: null });
-  }, [popupState, selectedParagraph, onUpdate]);
+  }, [popupState, selectedParagraph, paragraphs, onUpdate, onNotification, t]);
 
   const handlePopupCancel = useCallback(() => {
     if (popupState.actionIndex !== null) {
@@ -146,13 +157,13 @@ export const useActions = ({
     onUpdate({
       ...sourceParagraph,
       actions: [...sourceParagraph.actions, { text: '', 'N.Par.': targetId.toString() }],
-      outgoingConnections: [...sourceParagraph.outgoingConnections, targetId.toString()]
+      outgoingConnections: [...(sourceParagraph.outgoingConnections || []), targetId.toString()]
     });
 
     // Update target paragraph
     onUpdate({
       ...targetParagraph,
-      incomingConnections: [...targetParagraph.incomingConnections, sourceId]
+      incomingConnections: [...(targetParagraph.incomingConnections || []), sourceId]
     });
   }, [paragraphs, onUpdate, onNotification, t]);
 

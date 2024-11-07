@@ -56,7 +56,7 @@ export interface ParagraphEditorControlsProps {
 
 export interface ParagraphSidebarProps {
   paragraphs: Paragraph[];
-  selectedParagraph: number;
+  selectedParagraph: number | null;
   isDarkMode: boolean;
   showSearch: boolean;
   searchTerm: string;

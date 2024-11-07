@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld('electron', {
     'dialog:saveFile': (content: string) => ipcRenderer.invoke('dialog:saveFile', content),
     
     // Backup handlers
-    'backup:create': () => ipcRenderer.invoke('backup:create'),
+    'backup:create': (projects: any[]) => ipcRenderer.invoke('backup:create', projects),
     'backup:restore': (version: string) => ipcRenderer.invoke('backup:restore', version),
     'backup:list': () => ipcRenderer.invoke('backup:list'),
     'backup:export': (version: string, exportPath: string) => 

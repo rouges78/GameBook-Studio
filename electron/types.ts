@@ -17,7 +17,7 @@ export interface IpcApi {
     'dialog:saveFile': (content: string) => Promise<string | null>;
     
     // Backup handlers
-    'backup:create': () => Promise<string>;
+    'backup:create': (projects: Project[]) => Promise<string>;
     'backup:restore': (version: string) => Promise<any[]>;
     'backup:list': () => Promise<BackupMetadata[]>;
     'backup:export': (version: string, exportPath: string) => Promise<void>;

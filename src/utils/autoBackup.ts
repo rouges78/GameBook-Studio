@@ -1,6 +1,7 @@
 import { saveProject, getProjects } from './storage';
 
 let backupInterval: NodeJS.Timeout | null = null;
+const isElectron = !!window.electron;
 
 export const startAutoBackup = (intervalMinutes: number = 5) => {
   if (backupInterval) {
@@ -28,9 +29,13 @@ export const startAutoBackup = (intervalMinutes: number = 5) => {
         });
       }
 
-      // Then create a backup using the Electron IPC
-      const version = await window.electron['backup:create'](projects);
-      console.log('Auto backup completed at', new Date().toLocaleString(), 'Version:', version);
+      // Then create a backup using the Electron IPC if available
+      if (isElectron) {
+        const version = await window.electron['backup:create'](projects);
+        console.log('Auto backup completed at', new Date().toLocaleString(), 'Version:', version);
+      } else {
+        console.log('Auto save completed at', new Date().toLocaleString());
+      }
     } catch (error) {
       console.error('Auto backup failed:', error);
     }
@@ -49,7 +54,11 @@ export const stopAutoBackup = () => {
 
 export const createBackup = async () => {
   try {
-    const projects = await getProjects();
+    if (!isElectron) {
+      console.warn('Backup functionality is only available in the desktop app');
+      return false;
+    }
+    const projects = await getProjects(); // Make sure database is up to date
     const version = await window.electron['backup:create'](projects);
     console.log('Manual backup created:', version);
     return true;
@@ -61,6 +70,10 @@ export const createBackup = async () => {
 
 export const restoreBackup = async (version: string): Promise<boolean> => {
   try {
+    if (!isElectron) {
+      console.warn('Backup functionality is only available in the desktop app');
+      return false;
+    }
     const projects = await window.electron['backup:restore'](version);
     
     // Save restored projects to database
@@ -77,6 +90,10 @@ export const restoreBackup = async (version: string): Promise<boolean> => {
 
 export const listBackups = async () => {
   try {
+    if (!isElectron) {
+      console.warn('Backup functionality is only available in the desktop app');
+      return [];
+    }
     return await window.electron['backup:list']();
   } catch (error) {
     console.error('Failed to list backups:', error);
@@ -86,6 +103,10 @@ export const listBackups = async () => {
 
 export const exportBackup = async (version: string): Promise<boolean> => {
   try {
+    if (!isElectron) {
+      console.warn('Backup functionality is only available in the desktop app');
+      return false;
+    }
     const result = await window.electron.dialog.showSaveDialog({
       defaultPath: `gamebook-backup-${version}.json`,
       filters: [
@@ -106,6 +127,10 @@ export const exportBackup = async (version: string): Promise<boolean> => {
 
 export const importBackup = async (): Promise<boolean> => {
   try {
+    if (!isElectron) {
+      console.warn('Backup functionality is only available in the desktop app');
+      return false;
+    }
     const result = await window.electron.dialog.showOpenDialog({
       filters: [
         { name: 'JSON Files', extensions: ['json'] }

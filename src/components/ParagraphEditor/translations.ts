@@ -66,7 +66,13 @@ export const translations = {
     },
     shortcuts: {
       save: "Ctrl+S per salvare",
-      map: "Ctrl+M per mostrare la mappa"
+      map: "Ctrl+M per mostrare la mappa",
+      undo: "Ctrl+Z per annullare",
+      redo: "Ctrl+Shift+Z per ripetere"
+    },
+    history: {
+      undo: "Annulla",
+      redo: "Ripeti"
     },
     errors: {
       invalidConnection: "Connessione non valida",
@@ -141,7 +147,13 @@ export const translations = {
     },
     shortcuts: {
       save: "Ctrl+S to save",
-      map: "Ctrl+M to show map"
+      map: "Ctrl+M to show map",
+      undo: "Ctrl+Z to undo",
+      redo: "Ctrl+Shift+Z to redo"
+    },
+    history: {
+      undo: "Undo",
+      redo: "Redo"
     },
     errors: {
       invalidConnection: "Invalid connection",

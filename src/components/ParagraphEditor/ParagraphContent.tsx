@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ParagraphContentProps } from './types';
 import { translations } from './translations';
+import { useHistory } from './hooks/useHistory';
 
 const ParagraphContent: React.FC<ParagraphContentProps> = ({
   selectedParagraph,
@@ -10,20 +11,37 @@ const ParagraphContent: React.FC<ParagraphContentProps> = ({
   language,
 }) => {
   const t = translations[language];
+  const {
+    content,
+    handleContentChange,
+    undo,
+    redo,
+    canUndo,
+    canRedo
+  } = useHistory(selectedParagraph, onUpdate);
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onUpdate({
-      ...selectedParagraph,
-      content: e.target.value
-    });
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    handleContentChange(e.target.value);
   };
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // Handle undo/redo keyboard shortcuts
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+      e.preventDefault();
+      if (e.shiftKey) {
+        redo();
+      } else {
+        undo();
+      }
+    }
+  }, [undo, redo]);
+
   const stats = useMemo(() => {
-    const content = selectedParagraph.content || '';
-    const words = content.trim() ? content.trim().split(/\s+/).length : 0;
-    const characters = content.length;
+    const currentContent = content || '';
+    const words = currentContent.trim() ? currentContent.trim().split(/\s+/).length : 0;
+    const characters = currentContent.length;
     return { words, characters };
-  }, [selectedParagraph.content]);
+  }, [content]);
 
   const containerVariants = {
     initial: { opacity: 0 },
@@ -59,8 +77,9 @@ const ParagraphContent: React.FC<ParagraphContentProps> = ({
           variants={textareaVariants}
         >
           <textarea
-            value={selectedParagraph.content || ''}
-            onChange={handleContentChange}
+            value={content}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
             className={`
               flex-1 w-full
               bg-gray-800 text-gray-100 
@@ -107,6 +126,33 @@ const ParagraphContent: React.FC<ParagraphContentProps> = ({
                 <div className="w-2 h-2 rounded-full bg-blue-500" />
                 <span className="font-medium">{selectedParagraph.type}</span>
               </motion.div>
+              <div className="w-px h-4 bg-gray-700" />
+              <div className="flex items-center gap-4">
+                <motion.button
+                  onClick={undo}
+                  disabled={!canUndo}
+                  whileHover={{ scale: canUndo ? 1.05 : 1 }}
+                  className={`flex items-center gap-1 ${canUndo ? 'text-gray-300 hover:text-white' : 'text-gray-600'}`}
+                  title="Undo (Ctrl+Z)"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 7v6h6" />
+                    <path d="M3 13c0-4.97 4.03-9 9-9a9 9 0 0 1 9 9" />
+                  </svg>
+                </motion.button>
+                <motion.button
+                  onClick={redo}
+                  disabled={!canRedo}
+                  whileHover={{ scale: canRedo ? 1.05 : 1 }}
+                  className={`flex items-center gap-1 ${canRedo ? 'text-gray-300 hover:text-white' : 'text-gray-600'}`}
+                  title="Redo (Ctrl+Shift+Z)"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 7v6h-6" />
+                    <path d="M21 13c0-4.97-4.03-9-9-9a9 9 0 0 0-9 9" />
+                  </svg>
+                </motion.button>
+              </div>
             </div>
             <div className="flex gap-6 text-sm font-medium">
               <motion.div

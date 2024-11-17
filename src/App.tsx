@@ -281,6 +281,7 @@ const App: React.FC = () => {
           <BackupManager
             setCurrentPage={setCurrentPage}
             isDarkMode={isDarkMode}
+            language={language}
           />
         )}
         {currentPage === 'telemetryDashboard' && (

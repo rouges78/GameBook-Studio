@@ -111,9 +111,9 @@ const Library: React.FC<LibraryProps> = ({
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>, book: Book) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert(t.imageTooLarge || 'Image too large. Maximum size is 5MB.');
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert(t.imageTooLarge || 'Image too large. Maximum size is 10MB.');
         return;
       }
 

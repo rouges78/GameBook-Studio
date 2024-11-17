@@ -23,6 +23,7 @@ interface ImageAdjustments {
 
 const MAX_RECOMMENDED_WIDTH = 1200;
 const MAX_RECOMMENDED_HEIGHT = 800;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 
 const ImageEditor: React.FC<ImageEditorProps> = ({
   onSave,
@@ -76,7 +77,8 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
       unlockAspectRatio: "Sblocca proporzioni",
       sizeWarning: "L'immagine è molto grande. Si consiglia di ridimensionarla per una migliore visualizzazione nel libro.",
       resize: "Ridimensiona",
-      keepOriginal: "Mantieni originale"
+      keepOriginal: "Mantieni originale",
+      fileSizeError: "L'immagine è troppo grande. La dimensione massima consentita è 10MB."
     },
     en: {
       title: "Image Editor",
@@ -101,7 +103,8 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
       unlockAspectRatio: "Unlock aspect ratio",
       sizeWarning: "The image is very large. It's recommended to resize it for better display in the book.",
       resize: "Resize",
-      keepOriginal: "Keep original"
+      keepOriginal: "Keep original",
+      fileSizeError: "The image is too large. Maximum allowed size is 10MB."
     }
   };
 
@@ -160,6 +163,12 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        alert(t.fileSizeError);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();

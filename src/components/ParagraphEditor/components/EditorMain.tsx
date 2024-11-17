@@ -82,6 +82,7 @@ const EditorMain: React.FC<EditorMainProps> = ({
           onActionBlur={handleActionBlur}
           onRemoveAction={handleRemoveAction}
           onAddAction={handleAddAction}
+          totalParagraphs={paragraphs.length}
         />
 
         <TagInput

@@ -21,7 +21,7 @@ export const translations = {
     paragraphs: "paragrafi",
     enterBookTitle: "Inserisci il titolo del libro",
     enterAuthorName: "Inserisci il nome dell'autore",
-    imageTooLarge: "Immagine troppo grande. La dimensione massima è 5MB.",
+    imageTooLarge: "Immagine troppo grande. La dimensione massima è 10MB.",
     invalidImageType: "Seleziona un file immagine valido.",
     invalidImage: "File immagine non valido.",
     words: "parole"
@@ -48,7 +48,7 @@ export const translations = {
     paragraphs: "paragraphs",
     enterBookTitle: "Enter book title",
     enterAuthorName: "Enter author name",
-    imageTooLarge: "Image too large. Maximum size is 5MB.",
+    imageTooLarge: "Image too large. Maximum size is 10MB.",
     invalidImageType: "Please select a valid image file.",
     invalidImage: "Invalid image file.",
     words: "words"

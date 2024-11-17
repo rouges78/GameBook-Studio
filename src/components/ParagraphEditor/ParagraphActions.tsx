@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Info } from 'lucide-react';
 import { Action } from './types';
 
 interface ParagraphActionsProps {
@@ -9,6 +9,7 @@ interface ParagraphActionsProps {
   onActionBlur: (index: number) => void;
   onRemoveAction: (index: number) => void;
   onAddAction: () => void;
+  totalParagraphs: number; // Nuovo prop per il numero totale di paragrafi
 }
 
 interface ActionInputProps {
@@ -18,6 +19,8 @@ interface ActionInputProps {
   placeholder: string;
   className: string;
   type?: 'text' | 'number';
+  max?: number;
+  title?: string;
 }
 
 const ActionInput: React.FC<ActionInputProps> = React.memo(({
@@ -26,7 +29,9 @@ const ActionInput: React.FC<ActionInputProps> = React.memo(({
   onBlur,
   placeholder,
   className,
-  type = 'text'
+  type = 'text',
+  max,
+  title
 }) => (
   <input
     type={type}
@@ -35,6 +40,8 @@ const ActionInput: React.FC<ActionInputProps> = React.memo(({
     onBlur={onBlur}
     className={className}
     placeholder={placeholder}
+    max={max}
+    title={title}
   />
 ));
 
@@ -47,6 +54,7 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
   onActionBlur,
   onRemoveAction,
   onAddAction,
+  totalParagraphs
 }) => {
   const handleActionChange = React.useCallback((
     index: number,
@@ -56,7 +64,9 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
     if (field === 'N.Par.' && value !== '') {
       // Ensure only numbers are entered for paragraph references
       const numValue = value.replace(/[^0-9]/g, '');
-      onActionChange(index, field, numValue);
+      // Ensure the value doesn't exceed totalParagraphs
+      const finalValue = Math.min(parseInt(numValue) || 0, totalParagraphs).toString();
+      onActionChange(index, field, finalValue);
     } else {
       onActionChange(index, field, value);
       
@@ -69,7 +79,7 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
         }
       }
     }
-  }, [onActionChange, onAddAction, actions]);
+  }, [onActionChange, onAddAction, actions, totalParagraphs]);
 
   const handleActionBlur = React.useCallback((index: number) => {
     const action = actions[index];
@@ -119,13 +129,23 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
               placeholder="Inserisci azione"
               className={`flex-1 ${baseInputClass}`}
             />
-            <ActionInput
-              value={action['N.Par.']}
-              onChange={(value) => handleActionChange(index, 'N.Par.', value)}
-              placeholder="N.Par."
-              className={`w-16 ${baseInputClass}`}
-              type="number"
-            />
+            <div className="relative">
+              <ActionInput
+                value={action['N.Par.']}
+                onChange={(value) => handleActionChange(index, 'N.Par.', value)}
+                placeholder="N.Par."
+                className={`w-16 ${baseInputClass}`}
+                type="number"
+                max={totalParagraphs}
+                title={`Inserisci un numero da 1 a ${totalParagraphs}`}
+              />
+              <div 
+                className="absolute -right-6 top-1/2 -translate-y-1/2 cursor-help"
+                title={`Paragrafi disponibili: 1-${totalParagraphs}`}
+              >
+                <Info size={14} className="text-gray-400" />
+              </div>
+            </div>
             <button
               onClick={() => onRemoveAction(index)}
               className={`
@@ -151,7 +171,8 @@ function areEqual(prevProps: ParagraphActionsProps, nextProps: ParagraphActionsP
     prevProps.onActionChange === nextProps.onActionChange &&
     prevProps.onActionBlur === nextProps.onActionBlur &&
     prevProps.onRemoveAction === nextProps.onRemoveAction &&
-    prevProps.onAddAction === nextProps.onAddAction
+    prevProps.onAddAction === nextProps.onAddAction &&
+    prevProps.totalParagraphs === nextProps.totalParagraphs
   );
 }
 

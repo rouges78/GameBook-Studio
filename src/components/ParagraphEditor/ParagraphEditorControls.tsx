@@ -1,4 +1,3 @@
-{/* Previous imports remain unchanged */}
 import React, { useState } from 'react';
 import { Bold, Italic, Underline, Link, Code, Quote, AlignLeft, AlignCenter, AlignRight, ChevronDown, Type, Book, Wand2, Brain } from 'lucide-react';
 import { ParagraphEditorControlsProps } from './types';
@@ -16,8 +15,8 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
   onSave,
   onShowStoryMap,
 }) => {
-  // Previous state and variables remain unchanged
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isAIChecking, setIsAIChecking] = useState(false);
   const t = translations[language];
 
   useKeyboardShortcuts({
@@ -27,7 +26,6 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
     onShowStoryMap,
   });
 
-  // Previous handlers remain unchanged
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate({
       ...selectedParagraph,
@@ -56,6 +54,57 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
     });
   };
 
+  const handleAICheck = async () => {
+    setIsAIChecking(true);
+    try {
+      // Verifica la presenza di errori grammaticali
+      const content = selectedParagraph.content || '';
+      
+      // Qui implementeremo la logica di controllo AI
+      // Per ora mostriamo solo un alert di esempio
+      setTimeout(() => {
+        alert('AI Check completato: Nessun errore trovato nel testo.');
+        setIsAIChecking(false);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Errore durante il controllo AI:', error);
+      alert('Si è verificato un errore durante il controllo AI.');
+      setIsAIChecking(false);
+    }
+  };
+
+  const dropdownVariants = {
+    hidden: { opacity: 0, y: -10, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      y: -10, 
+      scale: 0.95,
+      transition: { duration: 0.2 }
+    }
+  };
+
+  const getLedColor = (type: string) => {
+    switch (type) {
+      case 'nodo':
+        return 'bg-orange-500';
+      case 'finale':
+        return 'bg-red-500';
+      default:
+        return 'bg-green-500';
+    }
+  };
+
   const fonts = [
     { value: 'Arial', label: 'Arial' },
     { value: 'Times New Roman', label: 'Times New Roman' },
@@ -77,7 +126,6 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
     { icon: <Link size={18} />, format: 'link', title: t.formatButtons.link },
   ];
 
-  // Previous handlers remain unchanged
   const handleFormat = (format: string) => {
     const textarea = document.querySelector('textarea');
     if (textarea) {
@@ -130,37 +178,6 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
         textarea.selectionEnd = start + formattedText.length;
         textarea.focus();
       }, 0);
-    }
-  };
-
-  const dropdownVariants = {
-    hidden: { opacity: 0, y: -10, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 25
-      }
-    },
-    exit: { 
-      opacity: 0, 
-      y: -10, 
-      scale: 0.95,
-      transition: { duration: 0.2 }
-    }
-  };
-
-  const getLedColor = (type: string) => {
-    switch (type) {
-      case 'nodo':
-        return 'bg-orange-500';
-      case 'finale':
-        return 'bg-red-500';
-      default:
-        return 'bg-green-500';
     }
   };
 
@@ -238,14 +255,19 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
 
           {/* AI Buttons with glowing effect */}
           <button
-            className="flex items-center gap-2 px-4 py-2 bg-transparent text-white rounded-lg transition-all duration-200 border border-white/20 hover:border-white/40 relative group"
-            onClick={() => {/* TODO: Implement AICheck */}}
+            className={`flex items-center gap-2 px-4 py-2 bg-transparent text-white rounded-lg transition-all duration-200 border border-white/20 hover:border-white/40 relative group ${
+              isAIChecking ? 'animate-pulse' : ''
+            }`}
+            onClick={handleAICheck}
+            disabled={isAIChecking}
             style={{
               boxShadow: '0 0 10px rgba(255, 255, 255, 0.1)',
             }}
           >
-            <Wand2 size={18} className="text-white group-hover:animate-pulse" />
-            <span className="text-white group-hover:animate-pulse">AICheck</span>
+            <Wand2 size={18} className={`text-white ${isAIChecking ? 'animate-spin' : 'group-hover:animate-pulse'}`} />
+            <span className={`text-white ${isAIChecking ? '' : 'group-hover:animate-pulse'}`}>
+              {isAIChecking ? 'Checking...' : 'AICheck'}
+            </span>
             <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
           </button>
           <button

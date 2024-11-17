@@ -20,7 +20,11 @@ export const translations = {
     lastEdited: "Ultima modifica",
     paragraphs: "paragrafi",
     enterBookTitle: "Inserisci il titolo del libro",
-    enterAuthorName: "Inserisci il nome dell'autore"
+    enterAuthorName: "Inserisci il nome dell'autore",
+    imageTooLarge: "Immagine troppo grande. La dimensione massima è 5MB.",
+    invalidImageType: "Seleziona un file immagine valido.",
+    invalidImage: "File immagine non valido.",
+    words: "parole"
   },
   en: {
     backToHome: "Back to Home",
@@ -43,7 +47,11 @@ export const translations = {
     lastEdited: "Last edited",
     paragraphs: "paragraphs",
     enterBookTitle: "Enter book title",
-    enterAuthorName: "Enter author name"
+    enterAuthorName: "Enter author name",
+    imageTooLarge: "Image too large. Maximum size is 5MB.",
+    invalidImageType: "Please select a valid image file.",
+    invalidImage: "Invalid image file.",
+    words: "words"
   }
 } as const;
 

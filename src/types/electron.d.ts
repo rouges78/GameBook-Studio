@@ -51,7 +51,7 @@ type GenericEventCallback = () => void;
 
 interface ElectronAPI {
   // Window operations
-  closeWindow: () => void;
+  'window:close': () => Promise<void>;
 
   // File operations
   'dialog:openFile': () => Promise<{ path: string; content: string; } | null>;

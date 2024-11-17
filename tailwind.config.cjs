@@ -7,6 +7,9 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
+      spacing: {
+        '128': '32rem', // This adds w-128 and h-128 classes
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

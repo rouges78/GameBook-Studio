@@ -6,6 +6,7 @@ const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 2000;
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const isElectron = !!(window as any).electron;
 
 export function useAutoUpdater() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -18,6 +19,8 @@ export function useAutoUpdater() {
   const [isRetrying, setIsRetrying] = useState(false);
 
   useEffect(() => {
+    if (!isElectron) return;
+
     // Create callback functions
     const handleUpdateAvailable = (info: UpdateInfo) => {
       setUpdateAvailable(true);
@@ -92,6 +95,8 @@ export function useAutoUpdater() {
   }, [retryCount, updateInfo]);
 
   const startDownload = useCallback(async () => {
+    if (!isElectron) return;
+
     try {
       setIsDownloading(true);
       setError(undefined);
@@ -121,6 +126,8 @@ export function useAutoUpdater() {
   }, [retryCount, updateInfo]);
 
   const retryOperation = useCallback(async () => {
+    if (!isElectron) return;
+
     if (retryCount >= MAX_RETRY_ATTEMPTS) {
       const maxRetryError = {
         message: 'Maximum retry attempts reached',
@@ -170,6 +177,8 @@ export function useAutoUpdater() {
   }, [retryCount, isDownloading]);
 
   const installUpdate = useCallback(() => {
+    if (!isElectron) return;
+
     telemetry.trackEvent({
       category: 'auto-update',
       action: 'install-started',
@@ -180,6 +189,8 @@ export function useAutoUpdater() {
   }, [updateInfo]);
 
   const checkForUpdates = useCallback(async () => {
+    if (!isElectron) return;
+
     try {
       setError(undefined);
       telemetry.trackEvent({

@@ -37,3 +37,4 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 release/
+.code-split-metadata_p1.part

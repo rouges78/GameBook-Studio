@@ -87,7 +87,8 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
 
   // Ensure there's always at least one empty action line
   React.useEffect(() => {
-    if (actions.length === 0 || actions.every(a => a.text.trim() !== '')) {
+    const hasEmptyAction = actions.some(a => a.text.trim() === '');
+    if (actions.length === 0 || (!hasEmptyAction && actions.every(a => a.text.trim() !== ''))) {
       onAddAction();
     }
   }, [actions, onAddAction]);

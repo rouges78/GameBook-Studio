@@ -112,6 +112,13 @@ async function createWindow() {
   }
 }
 
+// Register IPC handlers for window operations
+ipcMain.handle('window:close', () => {
+  if (mainWindow) {
+    mainWindow.close();
+  }
+});
+
 // Register IPC handlers for database operations
 ipcMain.handle('db:getProjects', async () => {
   try {

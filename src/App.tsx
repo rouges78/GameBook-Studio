@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import CreateNewProject from './components/CreateNewProject';
@@ -17,57 +17,20 @@ import { TelemetryDashboard } from './components/TelemetryDashboard';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
 import { saveProject, getProjects, deleteProject, debugDatabase, migrateProjectData } from './utils/storage';
 import { startAutoBackup, stopAutoBackup } from './utils/autoBackup';
+import { ThemeContext, defaultTheme, type Theme } from './contexts/ThemeContext';
 import packageJson from '../package.json';
 import type { Project, Paragraph as EditorParagraph } from './components/ParagraphEditor/types';
 import type { Paragraph as ExportParagraph } from './components/ExportPage/types';
 
-const isElectron = !!window.electron;
+const isElectron = !!(window as any).electron;
 
 // Mock storage for browser context
 let browserProjects: Project[] = [];
-
-interface Theme {
-  primaryColor: string;
-  secondaryColor: string;
-  textColor: string;
-  backgroundColor: string;
-  fontSize: number;
-  fontFamily: string;
-  borderRadius: number;
-  buttonStyle: 'rounded' | 'square' | 'pill';
-  spacing: number;
-  paragraphBackground: string;
-  animationSpeed: number;
-  iconSet: 'default' | 'minimal' | 'colorful';
-  layout: 'grid' | 'list';
-}
 
 interface NotificationType {
   message: string;
   type: 'success' | 'error' | 'info';
 }
-
-export const ThemeContext = createContext<{
-  theme: Theme;
-  setTheme: React.Dispatch<React.SetStateAction<Theme>>;
-}>({
-  theme: {
-    primaryColor: '#3B82F6',
-    secondaryColor: '#10B981',
-    textColor: '#F9FAFB',
-    backgroundColor: '#111827',
-    fontSize: 16,
-    fontFamily: 'Roboto',
-    borderRadius: 4,
-    buttonStyle: 'rounded',
-    spacing: 16,
-    paragraphBackground: '#1F2937',
-    animationSpeed: 300,
-    iconSet: 'default',
-    layout: 'grid',
-  },
-  setTheme: () => {},
-});
 
 type PageType = 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 
                 'settings' | 'help' | 'export' | 'backupManager' | 'telemetryDashboard';
@@ -80,21 +43,7 @@ const App: React.FC = () => {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [lastBackup, setLastBackup] = useState<string>('');
   const [notification, setNotification] = useState<NotificationType | null>(null);
-  const [theme, setTheme] = useState<Theme>({
-    primaryColor: '#3B82F6',
-    secondaryColor: '#10B981',
-    textColor: '#F9FAFB',
-    backgroundColor: '#111827',
-    fontSize: 16,
-    fontFamily: 'Roboto',
-    borderRadius: 4,
-    buttonStyle: 'rounded',
-    spacing: 16,
-    paragraphBackground: '#1F2937',
-    animationSpeed: 300,
-    iconSet: 'default',
-    layout: 'grid',
-  });
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
 
   const {
     updateAvailable,
@@ -233,7 +182,7 @@ const App: React.FC = () => {
 
   const handleLogout = useCallback(() => {
     if (isElectron) {
-      window.electron?.closeWindow();
+      window.electron['window:close']();
     }
   }, []);
 
@@ -325,6 +274,47 @@ const App: React.FC = () => {
             author={currentProject.author}
             paragraphs={transformParagraphsForExport(currentProject.paragraphs)}
             isDarkMode={isDarkMode}
+            language={language}
+          />
+        )}
+        {currentPage === 'backupManager' && (
+          <BackupManager
+            setCurrentPage={setCurrentPage}
+            isDarkMode={isDarkMode}
+          />
+        )}
+        {currentPage === 'telemetryDashboard' && (
+          <TelemetryDashboard isDarkMode={isDarkMode} />
+        )}
+        <Footer
+          projectCount={projects.length}
+          lastBackup={lastBackup}
+          isDarkMode={isDarkMode}
+          language={language}
+        />
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+            isDarkMode={isDarkMode}
+          />
+        )}
+        <UpdateErrorBoundary>
+          <UpdateNotification
+            updateAvailable={updateAvailable}
+            updateInfo={updateInfo}
+            downloadProgress={downloadProgress}
+            isDownloading={isDownloading}
+            error={error}
+            isRetrying={isRetrying}
+            onStartDownload={startDownload}
+            onInstallUpdate={installUpdate}
+            onDismiss={dismissUpdate}
+            onRetry={retryOperation}
+          />
+        </UpdateErrorBoundary>
+      </div>
             language={language}
           />
         )}

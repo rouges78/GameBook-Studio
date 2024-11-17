@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import React, { createContext } from 'react';
 
 export interface Theme {
   primaryColor: string;
@@ -41,11 +41,3 @@ export const ThemeContext = createContext<ThemeContextType>({
   theme: defaultTheme,
   setTheme: () => {},
 });
-
-export const useTheme = () => {
-  const context = React.useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};

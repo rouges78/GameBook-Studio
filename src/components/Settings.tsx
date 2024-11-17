@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, Bell, Database, Clock, ToggleLeft, ToggleRight, Brain, BarChart2, Archive } from 'lucide-react';
+import { 
+  ArrowLeft, Bell, Database, Clock, ToggleLeft, ToggleRight, 
+  Brain, BarChart2, Archive, Settings as SettingsIcon
+} from 'lucide-react';
 import { saveProject, getProjects } from '../utils/storage';
 import { 
   requestNotificationPermission, 
@@ -19,6 +22,7 @@ interface SettingsProps {
 type NotificationStyle = 'modern' | 'minimal' | 'standard';
 type NotificationPosition = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right' | 'center';
 type AIProvider = 'anthropic' | 'openai' | 'openrouter';
+type SettingsTab = 'general' | 'notifications' | 'database' | 'ai';
 
 const PROVIDER_MODELS = {
   anthropic: [
@@ -30,11 +34,11 @@ const PROVIDER_MODELS = {
     'claude-instant-1.2'
   ] as const,
   openai: [
-    'gpt-4-0125-preview',      // GPT-4 Turbo
-    'gpt-4-1106-preview',      // Previous GPT-4 Turbo
-    'gpt-4-vision-preview',    // GPT-4 Vision
+    'gpt-4-0125-preview',
+    'gpt-4-1106-preview',
+    'gpt-4-vision-preview',
     'gpt-4',
-    'gpt-3.5-turbo-0125',     // Latest GPT-3.5
+    'gpt-3.5-turbo-0125',
     'gpt-3.5-turbo'
   ] as const,
   openrouter: [
@@ -59,6 +63,7 @@ interface NotificationMessage {
 }
 
 const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, language }) => {
+  const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
   const [autoSaveInterval, setAutoSaveInterval] = useState(5);
   const [notification, setNotification] = useState<NotificationMessage | null>(null);
@@ -73,7 +78,10 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
     it: {
       backToDashboard: "Torna alla Dashboard",
       settings: "Impostazioni",
-      notificationSettings: "Stile Notifiche",
+      general: "Generale",
+      notificationSettings: "Notifiche",
+      databaseSettings: "Database",
+      aiSettings: "Impostazioni AI",
       notificationStyle: "Tipologia Notifica",
       notificationPosition: "Posizione Notifica",
       modern: "Moderno",
@@ -93,12 +101,10 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       openBackupManager: "Apri Gestione Backup",
       autoSave: "Salvataggio automatico",
       autoSaveInterval: "Intervallo di salvataggio automatico (minuti)",
-      saveChanges: "Salva modifiche",
       databaseExported: "Database esportato con successo",
       databaseImported: "Database importato con successo",
       invalidFile: "File non valido. Seleziona un file JSON valido.",
-      settingsSaved: "Impostazioni salvate con successo",
-      aiSettings: "Impostazioni AI",
+      settingsSaved: "Impostazioni salvate",
       enableAI: "Abilita AI",
       aiProvider: "Provider AI",
       aiModel: "Modello AI",
@@ -112,7 +118,10 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
     en: {
       backToDashboard: "Back to Dashboard",
       settings: "Settings",
-      notificationSettings: "Notification Style",
+      general: "General",
+      notificationSettings: "Notifications",
+      databaseSettings: "Database",
+      aiSettings: "AI Settings",
       notificationStyle: "Notification Type",
       notificationPosition: "Notification Position",
       modern: "Modern",
@@ -132,12 +141,10 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       openBackupManager: "Open Backup Manager",
       autoSave: "Auto-save",
       autoSaveInterval: "Auto-save interval (minutes)",
-      saveChanges: "Save changes",
       databaseExported: "Database exported successfully",
       databaseImported: "Database imported successfully",
       invalidFile: "Invalid file. Please select a valid JSON file.",
-      settingsSaved: "Settings saved successfully",
-      aiSettings: "AI Settings",
+      settingsSaved: "Settings saved",
       enableAI: "Enable AI",
       aiProvider: "AI Provider",
       aiModel: "AI Model",
@@ -153,7 +160,6 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
   const t = translations[language];
 
   useEffect(() => {
-    // Load settings from localStorage
     const savedSettings = localStorage.getItem('gamebookSettings');
     if (savedSettings) {
       const settings = JSON.parse(savedSettings);
@@ -168,8 +174,7 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
     }
   }, []);
 
-  const handleSaveChanges = () => {
-    // Save settings to localStorage
+  const saveSettings = (newSettings: any) => {
     const settings = {
       autoSaveEnabled,
       autoSaveInterval,
@@ -178,22 +183,25 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       aiEnabled,
       aiProvider,
       aiModel,
-      apiKey
+      apiKey,
+      ...newSettings
     };
     localStorage.setItem('gamebookSettings', JSON.stringify(settings));
 
-    // Dispatch custom event for auto-save settings change
-    window.dispatchEvent(new CustomEvent('autoSaveSettingsChanged', {
-      detail: { enabled: autoSaveEnabled, interval: autoSaveInterval }
-    }));
+    if (newSettings.autoSaveEnabled !== undefined || newSettings.autoSaveInterval !== undefined) {
+      window.dispatchEvent(new CustomEvent('autoSaveSettingsChanged', {
+        detail: { 
+          enabled: newSettings.autoSaveEnabled ?? autoSaveEnabled, 
+          interval: newSettings.autoSaveInterval ?? autoSaveInterval 
+        }
+      }));
+    }
 
-    // Show notification
     setNotification({
       message: t.settingsSaved,
       type: 'success'
     });
 
-    // Clear notification after 3 seconds
     setTimeout(() => {
       setNotification(null);
     }, 3000);
@@ -242,9 +250,7 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
           const content = e.target?.result as string;
           const projects = JSON.parse(content);
           
-          // Validate projects structure
           if (Array.isArray(projects) && projects.every(p => p.bookTitle && p.author)) {
-            // Import each project
             for (const project of projects) {
               await saveProject(project);
             }
@@ -273,24 +279,35 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
     }
   };
 
-  return (
-    <div className={`h-screen flex flex-col ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
-      {/* Header */}
-      <div className="flex-none px-6 py-4">
-        <button
-          onClick={() => setCurrentPage('dashboard')}
-          className={`${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-brown-600 hover:text-brown-700'} flex items-center`}
-        >
-          <ArrowLeft size={20} className="mr-2" />
-          {t.backToDashboard}
-        </button>
-        <h1 className="text-2xl font-bold text-center mt-2">{t.settings}</h1>
-      </div>
+  const TabButton: React.FC<{
+    tab: SettingsTab;
+    icon: React.ReactNode;
+    label: string;
+  }> = ({ tab, icon, label }) => (
+    <button
+      onClick={() => setActiveTab(tab)}
+      className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+        activeTab === tab
+          ? isDarkMode
+            ? 'bg-blue-600 text-white'
+            : 'bg-brown-600 text-white'
+          : isDarkMode
+          ? 'hover:bg-gray-700'
+          : 'hover:bg-gray-200'
+      }`}
+      aria-selected={activeTab === tab}
+      role="tab"
+    >
+      {icon}
+      <span className="ml-2">{label}</span>
+    </button>
+  );
 
-      {/* Main Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 pb-32"> {/* Increased bottom padding */}
-        <div className="max-w-3xl mx-auto">
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 space-y-6`}>
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'general':
+        return (
+          <div className="space-y-6">
             {/* Telemetry Dashboard */}
             <section>
               <h2 className="text-lg font-semibold mb-3 flex items-center">
@@ -305,7 +322,58 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
               </button>
             </section>
 
-            {/* Notification Settings */}
+            {/* Auto Save Settings */}
+            <section>
+              <h2 className="text-lg font-semibold mb-3 flex items-center justify-between">
+                <div className="flex items-center">
+                  <Clock size={20} className="mr-2" />
+                  {t.autoSave}
+                </div>
+                <button
+                  onClick={() => {
+                    const newValue = !autoSaveEnabled;
+                    setAutoSaveEnabled(newValue);
+                    saveSettings({ autoSaveEnabled: newValue });
+                  }}
+                  className="focus:outline-none"
+                  aria-label={autoSaveEnabled ? "Disable auto-save" : "Enable auto-save"}
+                >
+                  {autoSaveEnabled ? (
+                    <ToggleRight size={20} className="text-green-500" />
+                  ) : (
+                    <ToggleLeft size={20} className="text-gray-500" />
+                  )}
+                </button>
+              </h2>
+              {autoSaveEnabled && (
+                <div className="flex items-center">
+                  <label htmlFor="autoSaveInterval" className="mr-2 text-sm">
+                    {t.autoSaveInterval}
+                  </label>
+                  <input
+                    type="number"
+                    id="autoSaveInterval"
+                    value={autoSaveInterval}
+                    onChange={(e) => {
+                      const newValue = parseInt(e.target.value);
+                      setAutoSaveInterval(newValue);
+                      saveSettings({ autoSaveInterval: newValue });
+                    }}
+                    min="1"
+                    max="60"
+                    className={`w-16 px-2 py-1 rounded text-sm ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}
+                  />
+                </div>
+              )}
+            </section>
+          </div>
+        );
+
+      case 'notifications':
+        return (
+          <div className="space-y-6">
             <section>
               <h2 className="text-lg font-semibold mb-3 flex items-center">
                 <Bell size={20} className="mr-2" />
@@ -316,8 +384,14 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
                   <label className="block mb-1 text-sm">{t.notificationStyle}</label>
                   <select
                     value={notificationStyle}
-                    onChange={(e) => setNotificationStyle(e.target.value as NotificationStyle)}
-                    className={`w-full p-1.5 rounded text-sm ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}
+                    onChange={(e) => {
+                      const newValue = e.target.value as NotificationStyle;
+                      setNotificationStyle(newValue);
+                      saveSettings({ notificationStyle: newValue });
+                    }}
+                    className={`w-full p-1.5 rounded text-sm ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}
                   >
                     <option value="modern">{t.modern}</option>
                     <option value="minimal">{t.minimal}</option>
@@ -328,8 +402,14 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
                   <label className="block mb-1 text-sm">{t.notificationPosition}</label>
                   <select
                     value={notificationPosition}
-                    onChange={(e) => setNotificationPosition(e.target.value as NotificationPosition)}
-                    className={`w-full p-1.5 rounded text-sm ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}
+                    onChange={(e) => {
+                      const newValue = e.target.value as NotificationPosition;
+                      setNotificationPosition(newValue);
+                      saveSettings({ notificationPosition: newValue });
+                    }}
+                    className={`w-full p-1.5 rounded text-sm ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}
                   >
                     <option value="top-left">{t.topLeft}</option>
                     <option value="top-center">{t.topCenter}</option>
@@ -342,8 +422,12 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
                 </div>
               </div>
             </section>
+          </div>
+        );
 
-            {/* Database Management */}
+      case 'database':
+        return (
+          <div className="space-y-6">
             <section>
               <h2 className="text-lg font-semibold mb-3 flex items-center">
                 <Database size={20} className="mr-2" />
@@ -351,13 +435,19 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
               </h2>
               <div className="space-y-3">
                 <div className="flex gap-3">
-                  <button 
+                  <button
                     onClick={handleExportDatabase}
-                    className={`${isDarkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'} text-white font-medium py-1.5 px-3 rounded text-sm`}
+                    className={`${
+                      isDarkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'
+                    } text-white font-medium py-1.5 px-3 rounded text-sm`}
                   >
                     {t.exportDatabase}
                   </button>
-                  <label className={`${isDarkMode ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-yellow-500 hover:bg-yellow-600'} text-white font-medium py-1.5 px-3 rounded cursor-pointer text-sm`}>
+                  <label
+                    className={`${
+                      isDarkMode ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-yellow-500 hover:bg-yellow-600'
+                    } text-white font-medium py-1.5 px-3 rounded cursor-pointer text-sm`}
+                  >
                     {t.importDatabase}
                     <input
                       type="file"
@@ -370,7 +460,9 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
                 <div>
                   <button
                     onClick={() => setCurrentPage('backupManager')}
-                    className={`${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white font-medium py-1.5 px-3 rounded text-sm flex items-center`}
+                    className={`${
+                      isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'
+                    } text-white font-medium py-1.5 px-3 rounded text-sm flex items-center`}
                   >
                     <Archive size={16} className="mr-2" />
                     {t.openBackupManager}
@@ -378,42 +470,12 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
                 </div>
               </div>
             </section>
+          </div>
+        );
 
-            {/* Auto Save Settings */}
-            <section>
-              <h2 className="text-lg font-semibold mb-3 flex items-center justify-between">
-                <div className="flex items-center">
-                  <Clock size={20} className="mr-2" />
-                  {t.autoSave}
-                </div>
-                <button
-                  onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
-                  className="focus:outline-none"
-                >
-                  {autoSaveEnabled ? (
-                    <ToggleRight size={20} className="text-green-500" />
-                  ) : (
-                    <ToggleLeft size={20} className="text-gray-500" />
-                  )}
-                </button>
-              </h2>
-              {autoSaveEnabled && (
-                <div className="flex items-center">
-                  <label htmlFor="autoSaveInterval" className="mr-2 text-sm">{t.autoSaveInterval}</label>
-                  <input
-                    type="number"
-                    id="autoSaveInterval"
-                    value={autoSaveInterval}
-                    onChange={(e) => setAutoSaveInterval(parseInt(e.target.value))}
-                    min="1"
-                    max="60"
-                    className={`w-16 px-2 py-1 rounded text-sm ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}
-                  />
-                </div>
-              )}
-            </section>
-
-            {/* AI Settings */}
+      case 'ai':
+        return (
+          <div className="space-y-6">
             <section>
               <h2 className="text-lg font-semibold mb-3 flex items-center justify-between">
                 <div className="flex items-center">
@@ -421,8 +483,13 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
                   {t.aiSettings}
                 </div>
                 <button
-                  onClick={() => setAiEnabled(!aiEnabled)}
+                  onClick={() => {
+                    const newValue = !aiEnabled;
+                    setAiEnabled(newValue);
+                    saveSettings({ aiEnabled: newValue });
+                  }}
                   className="focus:outline-none"
+                  aria-label={aiEnabled ? "Disable AI" : "Enable AI"}
                 >
                   {aiEnabled ? (
                     <ToggleRight size={20} className="text-green-500" />
@@ -439,10 +506,14 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
                       value={aiProvider}
                       onChange={(e) => {
                         const provider = e.target.value as AIProvider;
+                        const newModel = PROVIDER_MODELS[provider][0];
                         setAiProvider(provider);
-                        setAiModel(PROVIDER_MODELS[provider][0]);
+                        setAiModel(newModel);
+                        saveSettings({ aiProvider: provider, aiModel: newModel });
                       }}
-                      className={`w-full p-1.5 rounded text-sm ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}
+                      className={`w-full p-1.5 rounded text-sm ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                      }`}
                     >
                       <option value="anthropic">{t.anthropic}</option>
                       <option value="openai">{t.openai}</option>
@@ -453,11 +524,19 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
                     <label className="block mb-1 text-sm">{t.aiModel}</label>
                     <select
                       value={aiModel}
-                      onChange={(e) => setAiModel(e.target.value as ProviderModels[AIProvider])}
-                      className={`w-full p-1.5 rounded text-sm ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}
+                      onChange={(e) => {
+                        const newValue = e.target.value as ProviderModels[AIProvider];
+                        setAiModel(newValue);
+                        saveSettings({ aiModel: newValue });
+                      }}
+                      className={`w-full p-1.5 rounded text-sm ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                      }`}
                     >
                       {PROVIDER_MODELS[aiProvider].map((model) => (
-                        <option key={model} value={model}>{model}</option>
+                        <option key={model} value={model}>
+                          {model}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -466,8 +545,14 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
                     <input
                       type="password"
                       value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      className={`w-full p-1.5 rounded text-sm ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}
+                      onChange={(e) => {
+                        const newValue = e.target.value;
+                        setApiKey(newValue);
+                        saveSettings({ apiKey: newValue });
+                      }}
+                      className={`w-full p-1.5 rounded text-sm ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                      }`}
                       placeholder="sk-..."
                     />
                   </div>
@@ -475,19 +560,73 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
               )}
             </section>
           </div>
-        </div>
+        );
+    }
+  };
+
+  return (
+    <div
+      className={`h-screen flex flex-col ${
+        isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
+      }`}
+    >
+      {/* Header */}
+      <div className="flex-none px-6 py-4">
+        <button
+          onClick={() => setCurrentPage('dashboard')}
+          className={`${
+            isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-brown-600 hover:text-brown-700'
+          } flex items-center`}
+        >
+          <ArrowLeft size={20} className="mr-2" />
+          {t.backToDashboard}
+        </button>
+        <h1 className="text-2xl font-bold text-center mt-2">{t.settings}</h1>
       </div>
 
-      {/* Footer - Fixed at bottom with shadow */}
-      <div className={`fixed bottom-0 left-0 right-0 p-4 ${isDarkMode ? 'bg-gray-900 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)]' : 'bg-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]'}`}>
-        <div className="max-w-3xl mx-auto">
-          <button
-            onClick={handleSaveChanges}
-            className={`w-full ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-brown-700 hover:bg-brown-800'} text-white font-bold py-2 px-4 rounded flex items-center justify-center`}
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full flex">
+          {/* Sidebar */}
+          <div
+            className={`w-64 p-4 border-r ${
+              isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+            }`}
           >
-            <Save size={20} className="mr-2" />
-            {t.saveChanges}
-          </button>
+            <nav className="space-y-2" role="tablist">
+              <TabButton
+                tab="general"
+                icon={<SettingsIcon size={20} />}
+                label={t.general}
+              />
+              <TabButton
+                tab="notifications"
+                icon={<Bell size={20} />}
+                label={t.notificationSettings}
+              />
+              <TabButton
+                tab="database"
+                icon={<Database size={20} />}
+                label={t.databaseSettings}
+              />
+              <TabButton
+                tab="ai"
+                icon={<Brain size={20} />}
+                label={t.aiSettings}
+              />
+            </nav>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div
+              className={`max-w-3xl mx-auto ${
+                isDarkMode ? 'bg-gray-800' : 'bg-white'
+              } rounded-lg p-6`}
+            >
+              {renderTabContent()}
+            </div>
+          </div>
         </div>
       </div>
 

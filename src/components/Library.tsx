@@ -57,8 +57,17 @@ const Library: React.FC<LibraryProps> = ({
   };
 
   const handleSaveTitleAuthor = () => {
-    if (editingBook) {
+    if (editingBook && editingBook.bookTitle.trim() && editingBook.author.trim()) {
       onSaveBook(editingBook);
+      setEditingBook(null);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveTitleAuthor();
+    } else if (e.key === 'Escape') {
       setEditingBook(null);
     }
   };
@@ -106,67 +115,69 @@ const Library: React.FC<LibraryProps> = ({
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-brown-50">
+    <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900">
       {/* Header */}
-      <div className="flex-none h-12 bg-brown-800 flex items-center justify-between px-6">
+      <div className="flex-none h-16 bg-gradient-to-r from-blue-800 to-indigo-800 shadow-lg flex items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setCurrentPage('dashboard')}
-            className="text-brown-100 hover:text-brown-200 flex items-center"
+            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center transition-colors duration-200 shadow-md"
           >
             <ArrowLeft size={18} className="mr-2" />
             {t.backToHome}
           </button>
-          <h1 className="text-lg font-bold text-brown-50">{t.gamebookLibrary}</h1>
+          <h1 className="text-2xl font-bold text-white">{t.gamebookLibrary}</h1>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="relative">
+          <div className="flex items-center bg-white/10 rounded-lg backdrop-blur-sm border border-white/20 shadow-lg">
+            <div className="px-3">
+              <Search className="text-white/70" size={18} />
+            </div>
             <input
               type="text"
               placeholder={t.searchByTitleOrAuthor}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 bg-brown-100 text-brown-800 border-brown-300 border rounded-full py-1.5 px-4 pl-9 focus:outline-none focus:border-brown-500 focus:ring-1 focus:ring-brown-500"
+              className="w-64 bg-transparent text-white py-2 px-2 focus:outline-none placeholder-white/50"
             />
-            <Search className="absolute left-3 top-2 text-brown-500" size={16} />
           </div>
           
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             <button
               onClick={() => setSortBy('title')}
-              className={`p-1.5 rounded-full ${sortBy === 'title' ? 'bg-brown-600' : 'bg-brown-700'} text-brown-100`}
+              className={`p-2 rounded-lg ${sortBy === 'title' ? 'bg-blue-600 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'} transition-colors duration-200`}
               title={t.sortByTitleAZ}
             >
-              <AlignLeft size={16} />
+              <AlignLeft size={18} />
             </button>
             <button
               onClick={() => setSortBy('author')}
-              className={`p-1.5 rounded-full ${sortBy === 'author' ? 'bg-brown-600' : 'bg-brown-700'} text-brown-100`}
+              className={`p-2 rounded-lg ${sortBy === 'author' ? 'bg-blue-600 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'} transition-colors duration-200`}
               title={t.sortByAuthorAZ}
             >
-              <User size={16} />
+              <User size={18} />
             </button>
             <button
               onClick={() => setSortBy('date')}
-              className={`p-1.5 rounded-full ${sortBy === 'date' ? 'bg-brown-600' : 'bg-brown-700'} text-brown-100`}
+              className={`p-2 rounded-lg ${sortBy === 'date' ? 'bg-blue-600 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'} transition-colors duration-200`}
               title={t.sortByDate}
             >
-              <Calendar size={16} />
+              <Calendar size={18} />
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-full ${viewMode === 'grid' ? 'bg-brown-600' : 'bg-brown-700'} text-brown-100`}
+              className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'} transition-colors duration-200`}
               title={t.gridView}
             >
-              <Grid size={16} />
+              <Grid size={18} />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-full ${viewMode === 'list' ? 'bg-brown-600' : 'bg-brown-700'} text-brown-100`}
+              className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'} transition-colors duration-200`}
               title={t.listView}
             >
-              <List size={16} />
+              <List size={18} />
             </button>
           </div>
         </div>
@@ -180,15 +191,16 @@ const Library: React.FC<LibraryProps> = ({
               <div 
                 key={book.bookTitle} 
                 className={`
-                  bg-brown-100 border border-brown-200
-                  rounded-lg shadow-md 
+                  bg-white/10 backdrop-blur-sm border border-white/20
+                  rounded-xl shadow-xl hover:shadow-2xl transition-all duration-200
+                  hover:scale-105 hover:bg-white/15
                   ${viewMode === 'grid' ? 'flex flex-col h-fit' : 'flex flex-row items-center p-4'}
                 `}
               >
                 {/* Cover Image */}
                 <div 
                   className={`
-                    relative 
+                    relative overflow-hidden
                     ${viewMode === 'grid' ? 'aspect-[3/4] w-full' : 'w-24 h-32 flex-shrink-0'}
                   `}
                 >
@@ -196,11 +208,11 @@ const Library: React.FC<LibraryProps> = ({
                     <img 
                       src={book.coverImage} 
                       alt={book.bookTitle} 
-                      className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                      className="absolute inset-0 w-full h-full object-cover rounded-t-xl"
                     />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-brown-200 rounded-lg">
-                      <FileText size={32} className="text-brown-500" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-t-xl">
+                      <FileText size={32} className="text-white/50" />
                     </div>
                   )}
                 </div>
@@ -217,24 +229,28 @@ const Library: React.FC<LibraryProps> = ({
                         type="text"
                         value={editingBook.bookTitle}
                         onChange={(e) => handleTitleAuthorChange('bookTitle', e.target.value)}
-                        className="w-full p-2 rounded text-sm bg-brown-50 text-brown-800 border border-brown-300 focus:border-brown-500 focus:ring-1 focus:ring-brown-500"
+                        onKeyDown={handleKeyDown}
+                        className="w-full p-2 rounded-lg text-sm bg-white/20 text-white border border-white/30 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 placeholder-white/50"
+                        placeholder={t.enterBookTitle}
                       />
                       <input
                         type="text"
                         value={editingBook.author}
                         onChange={(e) => handleTitleAuthorChange('author', e.target.value)}
-                        className="w-full p-2 rounded text-sm bg-brown-50 text-brown-800 border border-brown-300 focus:border-brown-500 focus:ring-1 focus:ring-brown-500"
+                        onKeyDown={handleKeyDown}
+                        className="w-full p-2 rounded-lg text-sm bg-white/20 text-white border border-white/30 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 placeholder-white/50"
+                        placeholder={t.enterAuthorName}
                       />
                       <div className="flex justify-between">
                         <button
                           onClick={handleSaveTitleAuthor}
-                          className="bg-brown-600 hover:bg-brown-700 text-brown-50 px-4 py-1.5 rounded text-sm"
+                          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg text-sm transition-colors duration-200"
                         >
                           {t.save}
                         </button>
                         <button
                           onClick={() => setEditingBook(null)}
-                          className="bg-brown-400 hover:bg-brown-500 text-brown-50 px-4 py-1.5 rounded text-sm"
+                          className="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-lg text-sm transition-colors duration-200"
                         >
                           {t.cancel}
                         </button>
@@ -243,23 +259,43 @@ const Library: React.FC<LibraryProps> = ({
                   ) : (
                     <>
                       <div className={viewMode === 'grid' ? '' : 'flex-1'}>
-                        <h3 className="text-base font-semibold text-brown-800">{book.bookTitle}</h3>
-                        <p className="text-xs text-brown-600">{t.by} {book.author}</p>
+                        <h3 className="text-base font-semibold text-white">{book.bookTitle}</h3>
+                        <p className="text-xs text-white/70">{t.by} {book.author}</p>
                       </div>
                       <div className={`flex ${viewMode === 'grid' ? 'justify-between' : 'gap-3'}`}>
-                        <button onClick={() => handleAction('edit', book)} className="text-brown-600 hover:text-brown-700" title={t.editBook}>
+                        <button 
+                          onClick={() => handleAction('edit', book)} 
+                          className="p-1.5 rounded-lg bg-white/10 hover:bg-blue-500/50 text-white/70 hover:text-white transition-colors duration-200" 
+                          title={t.editBook}
+                        >
                           <Edit3 size={16} />
                         </button>
-                        <button onClick={() => handleAction('delete', book)} className="text-red-600 hover:text-red-700" title={t.deleteBook}>
+                        <button 
+                          onClick={() => handleAction('delete', book)} 
+                          className="p-1.5 rounded-lg bg-white/10 hover:bg-red-500/50 text-white/70 hover:text-white transition-colors duration-200" 
+                          title={t.deleteBook}
+                        >
                           <Trash2 size={16} />
                         </button>
-                        <button onClick={() => handleAction('changeImage', book)} className="text-green-600 hover:text-green-700" title={t.changeCover}>
+                        <button 
+                          onClick={() => handleAction('changeImage', book)} 
+                          className="p-1.5 rounded-lg bg-white/10 hover:bg-green-500/50 text-white/70 hover:text-white transition-colors duration-200" 
+                          title={t.changeCover}
+                        >
                           <ImageIcon size={16} />
                         </button>
-                        <button onClick={() => handleAction('changeTitle', book)} className="text-brown-600 hover:text-brown-700" title={t.changeTitleAuthor}>
+                        <button 
+                          onClick={() => handleAction('changeTitle', book)} 
+                          className="p-1.5 rounded-lg bg-white/10 hover:bg-purple-500/50 text-white/70 hover:text-white transition-colors duration-200" 
+                          title={t.changeTitleAuthor}
+                        >
                           <FileText size={16} />
                         </button>
-                        <button onClick={() => handleAction('export', book)} className="text-brown-600 hover:text-brown-700" title={t.exportBook}>
+                        <button 
+                          onClick={() => handleAction('export', book)} 
+                          className="p-1.5 rounded-lg bg-white/10 hover:bg-indigo-500/50 text-white/70 hover:text-white transition-colors duration-200" 
+                          title={t.exportBook}
+                        >
                           <ExternalLink size={16} />
                         </button>
                       </div>
@@ -276,12 +312,6 @@ const Library: React.FC<LibraryProps> = ({
             ))}
           </div>
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="flex-none h-10 bg-brown-800 text-brown-100 flex items-center justify-between px-6">
-        <div className="text-sm">Version: 0.1.0</div>
-        <div className="text-sm">© 2023 GameBook Studio. All Rights Reserved.</div>
       </div>
     </div>
   );

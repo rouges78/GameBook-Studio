@@ -18,7 +18,9 @@ export const translations = {
     cancel: "Annulla",
     untitled: "Senza titolo",
     lastEdited: "Ultima modifica",
-    paragraphs: "paragrafi"
+    paragraphs: "paragrafi",
+    enterBookTitle: "Inserisci il titolo del libro",
+    enterAuthorName: "Inserisci il nome dell'autore"
   },
   en: {
     backToHome: "Back to Home",
@@ -39,7 +41,9 @@ export const translations = {
     cancel: "Cancel",
     untitled: "Untitled",
     lastEdited: "Last edited",
-    paragraphs: "paragraphs"
+    paragraphs: "paragraphs",
+    enterBookTitle: "Enter book title",
+    enterAuthorName: "Enter author name"
   }
 } as const;
 

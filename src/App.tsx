@@ -315,47 +315,6 @@ const App: React.FC = () => {
           />
         </UpdateErrorBoundary>
       </div>
-            language={language}
-          />
-        )}
-        {currentPage === 'backupManager' && (
-          <BackupManager
-            setCurrentPage={setCurrentPage}
-            isDarkMode={isDarkMode}
-          />
-        )}
-        {currentPage === 'telemetryDashboard' && (
-          <TelemetryDashboard isDarkMode={isDarkMode} />
-        )}
-        <Footer
-          projectCount={projects.length}
-          lastBackup={lastBackup}
-          isDarkMode={isDarkMode}
-          language={language}
-        />
-        {notification && (
-          <Notification
-            message={notification.message}
-            type={notification.type}
-            onClose={() => setNotification(null)}
-            isDarkMode={isDarkMode}
-          />
-        )}
-        <UpdateErrorBoundary>
-          <UpdateNotification
-            updateAvailable={updateAvailable}
-            updateInfo={updateInfo}
-            downloadProgress={downloadProgress}
-            isDownloading={isDownloading}
-            error={error}
-            isRetrying={isRetrying}
-            onStartDownload={startDownload}
-            onInstallUpdate={installUpdate}
-            onDismiss={dismissUpdate}
-            onRetry={retryOperation}
-          />
-        </UpdateErrorBoundary>
-      </div>
     </ThemeContext.Provider>
   );
 };

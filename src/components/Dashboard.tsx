@@ -84,45 +84,81 @@ const ProjectBox = React.memo<ProjectBoxProps>(({ project, isDarkMode, translati
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: index * 0.1 }}
-      whileHover={{
-        scale: 1.05,
-        filter: "brightness(1.1) drop-shadow(0 0 20px rgb(59, 130, 246))"
-      }}
-      className="flex flex-col cursor-pointer h-full group"
+      className="flex flex-col cursor-pointer"
       onClick={() => onProjectSelect(project)}
     >
-      <div className={`${isDarkMode ? 'glass-card-dark' : 'glass-card'} rounded-lg overflow-hidden aspect-[3/4] relative backdrop-blur-sm bg-opacity-50`}>
-        {project.coverImage ? (
-          <div className="w-full h-full">
-            <img 
-              src={project.coverImage} 
-              alt={project.bookTitle}
-              className="w-full h-full object-contain"
-              loading="lazy"
-            />
-          </div>
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <FileText size={32} className="text-primary" strokeWidth={1.5} />
-          </div>
-        )}
-      </div>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="text-center mt-2 space-y-0.5"
+      {/* Cover container with glow effects */}
+      <motion.div 
+        className="relative mb-2 group hover:scale-[1.02] transition-transform duration-200"
       >
-        <h3 className="text-xs font-semibold">
+        {/* Glow effect */}
+        <motion.div
+          className="absolute -inset-2 rounded-lg transition-all duration-300 group-hover:bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.7)_0%,transparent_70%)] group-hover:opacity-100"
+          animate={{
+            rotate: 360,
+            background: [
+              "radial-gradient(circle at center, rgba(59, 130, 246, 0.5) 0%, transparent 70%)",
+              "radial-gradient(circle at center, rgba(99, 102, 241, 0.5) 0%, transparent 70%)",
+              "radial-gradient(circle at center, rgba(59, 130, 246, 0.5) 0%, transparent 70%)"
+            ]
+          }}
+          transition={{
+            rotate: {
+              duration: 8,
+              repeat: Infinity,
+              ease: "linear"
+            },
+            background: {
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }
+          }}
+          style={{
+            opacity: 0.75
+          }}
+        />
+        
+        {/* Card content */}
+        <div
+          className={`${isDarkMode ? 'glass-card-dark' : 'glass-card'} rounded-lg overflow-hidden aspect-[3/4] relative backdrop-blur-sm bg-opacity-50 z-10 transition-all duration-300 group-hover:shadow-[0_0_25px_rgba(255,215,0,0.7),0_0_50px_rgba(255,215,0,0.5)]`}
+        >
+          {project.coverImage ? (
+            <div className="w-full h-full pointer-events-none">
+              <img 
+                src={project.coverImage} 
+                alt={project.bookTitle}
+                className="w-full h-full object-contain"
+                loading="lazy"
+              />
+            </div>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <FileText size={32} className="text-primary" strokeWidth={1.5} />
+            </div>
+          )}
+        </div>
+      </motion.div>
+      
+      {/* Text content in exactly 4 lines */}
+      <div className="text-center flex flex-col gap-0.5">
+        {/* Line 1: Title */}
+        <h3 className="text-xs font-semibold truncate">
           {project.bookTitle}
         </h3>
+        {/* Line 2: Author */}
         <p className="text-[10px] text-muted-foreground">
           {t.by} {project.author}
         </p>
+        {/* Line 3: Last edit date */}
         <p className="text-[10px] text-muted-foreground">
-          {t.lastEdit}: {new Date(project.lastEdited).toLocaleDateString()} · {project.paragraphs.length} {t.paragraphs}
+          {t.lastEdit}: {new Date(project.lastEdited).toLocaleDateString()}
         </p>
-      </motion.div>
+        {/* Line 4: Paragraph count */}
+        <p className="text-[10px] text-muted-foreground">
+          {project.paragraphs.length} {t.paragraphs}
+        </p>
+      </div>
     </motion.div>
   );
 });
@@ -134,14 +170,29 @@ const ActionBox: React.FC<{
   isDarkMode: boolean;
 }> = ({ icon, title, onClick, isDarkMode }) => (
   <motion.div
-    whileHover={{ scale: 1.05, filter: "brightness(1.2)" }}
+    whileHover={{
+      y: -5,
+      transition: {
+        duration: 0.2,
+        ease: "easeOut"
+      }
+    }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
     className={`${isDarkMode ? 'bg-gray-800/90' : 'bg-white/90'} p-8 rounded-2xl cursor-pointer flex flex-col items-center gap-4 backdrop-blur-sm hover:bg-opacity-100 transition-all duration-200 shadow-xl hover:shadow-2xl w-72 h-72 border border-blue-500/30 hover:border-blue-500/50`}
   >
-    <div className="text-white w-32 h-32 flex items-center justify-center bg-blue-500 rounded-full shadow-lg">
+    <motion.div 
+      className="text-white w-32 h-32 flex items-center justify-center bg-blue-500 rounded-full shadow-lg"
+      whileHover={{
+        rotate: [0, -10, 10, -10, 10, 0],
+        transition: {
+          duration: 0.5,
+          ease: "easeInOut"
+        }
+      }}
+    >
       {icon}
-    </div>
+    </motion.div>
     <span className="text-2xl font-medium text-center">{title}</span>
   </motion.div>
 );

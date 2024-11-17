@@ -50,10 +50,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const t = translations[language];
 
-  const handleLogout = () => {
-    window.electron?.closeWindow();
-  };
-
   const buttonVariants = {
     initial: { scale: 1 },
     hover: { scale: 1.02 },
@@ -180,7 +176,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         initial="initial"
         whileHover="hover"
         whileTap="tap"
-        onClick={handleLogout}
+        onClick={onLogout}
         className="w-full flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-md bg-red-500 hover:bg-red-600 text-white mt-6"
       >
         <LogOut size={16} strokeWidth={2} />

@@ -114,7 +114,7 @@ const Notification: React.FC<NotificationProps> = ({
     <AnimatePresence>
       <motion.div
         {...getAnimation()}
-        className={`fixed z-50 max-w-md ${getPositionClasses()}`}
+        className={`fixed z-[9999] max-w-md ${getPositionClasses()}`}
       >
         <div className={getStyleClasses()}>
           <div className="mr-3 flex-shrink-0">{getIcon()}</div>

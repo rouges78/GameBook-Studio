@@ -34,22 +34,38 @@ const PROVIDER_MODELS = {
     'claude-instant-1.2'
   ] as const,
   openai: [
-    'gpt-4-0125-preview',
-    'gpt-4-1106-preview',
-    'gpt-4-vision-preview',
-    'gpt-4',
-    'gpt-3.5-turbo-0125',
-    'gpt-3.5-turbo'
+    'gpt-4-turbo-preview',  // Latest GPT-4 Turbo
+    'gpt-4-0125-preview',   // Updated base model
+    'gpt-4-vision-preview', // Vision capabilities
+    'gpt-4',               // Standard GPT-4
+    'gpt-3.5-turbo-0125',  // Latest GPT-3.5
+    'gpt-3.5-turbo',       // Standard GPT-3.5
+    'gpt-3.5-turbo-16k'    // Extended context
   ] as const,
   openrouter: [
+    // Anthropic Models
     'anthropic/claude-3-opus-20240229',
     'anthropic/claude-3-sonnet-20240229',
     'anthropic/claude-3-haiku-20240229',
+    // OpenAI Models
+    'openai/gpt-4-turbo-preview',
     'openai/gpt-4-0125-preview',
+    'openai/gpt-4-vision-preview',
+    // Google Models
     'google/gemini-pro',
+    'google/gemini-pro-vision',
+    // Meta Models
     'meta/llama-2-70b-chat',
+    'meta/llama-2-13b-chat',
+    // Mistral Models
     'mistral/mistral-large-latest',
-    'mistral/mixtral-8x7b'
+    'mistral/mixtral-8x7b-instruct',
+    'mistral/mistral-medium',
+    'mistral/mistral-small',
+    // Other Notable Models
+    'perplexity/pplx-70b-online',
+    'anthropic/claude-2.1',
+    'google/palm-2-chat-bison'
   ] as const
 } as const;
 

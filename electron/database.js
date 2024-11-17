@@ -229,16 +229,41 @@ class DatabaseManager {
             const project = await this.prisma.project.findFirst({
                 where: {
                     title: bookTitle
+                },
+                include: {
+                    paragraphs: true,
+                    assets: true,
+                    settings: true
                 }
             });
 
             if (project) {
-                await this.prisma.project.delete({
-                    where: {
-                        id: project.id
+                // Delete in a transaction to ensure all related records are deleted
+                await this.prisma.$transaction(async (prisma) => {
+                    // Delete settings first due to one-to-one relation
+                    if (project.settings) {
+                        await prisma.settings.delete({
+                            where: { projectId: project.id }
+                        });
                     }
+
+                    // Delete paragraphs
+                    await prisma.paragraph.deleteMany({
+                        where: { projectId: project.id }
+                    });
+
+                    // Delete assets
+                    await prisma.asset.deleteMany({
+                        where: { projectId: project.id }
+                    });
+
+                    // Finally delete the project
+                    await prisma.project.delete({
+                        where: { id: project.id }
+                    });
                 });
-                log.info('Project deleted successfully:', bookTitle);
+
+                log.info('Project and all related records deleted successfully:', bookTitle);
             } else {
                 log.warn('Project not found for deletion:', bookTitle);
             }

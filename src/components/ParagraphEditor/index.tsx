@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ParagraphEditorProps, Paragraph, Project } from './types';
@@ -23,6 +23,7 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
   updateLastBackup
 }: ParagraphEditorProps) => {
   const [mapSettings, setMapSettings] = useState(initialMapSettings);
+  const [isMapVisible, setIsMapVisible] = useState(false);
 
   const { state, actions } = useParagraphEditor({
     initialParagraphs,
@@ -86,11 +87,16 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
   }, [selectedParagraph, state.paragraphs, actions, t]);
 
   const handleSave = useCallback(() => {
+    const now = new Date();
     const project: Project = {
+      id: 'current',
+      name: bookTitle,
       bookTitle,
       author,
       paragraphs: state.paragraphs,
-      lastEdited: new Date().toISOString(),
+      created: now,
+      modified: now,
+      lastEdited: now.toISOString(),
       mapSettings
     };
     onSaveProject(project);
@@ -143,6 +149,11 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
     );
   }, [actions]);
 
+  const toggleMap = useCallback(() => {
+    console.log('Toggling map visibility');
+    setIsMapVisible(prev => !prev);
+  }, []);
+
   return (
     <div className="h-screen flex flex-col bg-gray-900 text-white">
       {/* Header */}
@@ -164,7 +175,7 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
 
       {/* Main Content */}
       <div className="flex-1 flex min-h-0">
-        {/* Sidebar - reduced width from w-64 to w-56 */}
+        {/* Sidebar */}
         <div className="flex-none w-56 border-r border-gray-700">
           <ParagraphSidebar
             paragraphs={state.paragraphs}
@@ -186,7 +197,7 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
           />
         </div>
 
-        {/* Editor Area - added min-w-0 to prevent content overflow */}
+        {/* Editor Area */}
         <div className="flex-1 flex flex-col min-h-0 min-w-0">
           {selectedParagraph ? (
             <EditorMain
@@ -196,12 +207,13 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
               language={language}
               onUpdate={handleParagraphUpdate}
               onShowImageEditor={() => actions.setShowImageEditor(true)}
-              onShowStoryMap={() => actions.setShowStoryMap(true)}
+              onShowStoryMap={toggleMap}
               onDelete={handleDelete}
               onExport={handleExport}
               onSave={handleSave}
               onNotification={actions.setNotification}
               translations={t}
+              onReturnToEditor={toggleMap}
             />
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-500">
@@ -213,12 +225,12 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
 
       {/* Modals */}
       <AnimatePresence>
-        {state.showStoryMap && (
+        {isMapVisible && (
           <div className="fixed inset-0 bg-black bg-opacity-50">
             <StoryMap
               paragraphs={state.paragraphs}
               mapSettings={mapSettings}
-              onClose={() => actions.setShowStoryMap(false)}
+              onClose={toggleMap}
               isDarkMode={isDarkMode}
               language={language}
               onEditParagraph={actions.setSelectedParagraph}

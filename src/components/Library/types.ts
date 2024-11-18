@@ -1,17 +1,14 @@
-export interface Book {
-  bookTitle: string;
-  author: string;
-  coverImage?: string;
-  lastEdited: string;
-  paragraphs: any[];
-}
+import { PageType, Project } from '../../types/pages';
 
 export interface LibraryProps {
-  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'export') => void;
-  books: Book[];
+  setCurrentPage: (page: PageType) => void;
+  books: Project[];
   isDarkMode: boolean;
   onEditBook: (bookTitle: string) => void;
   onDeleteBook: (bookTitle: string) => void;
-  onSaveBook: (book: Book) => void;
+  onSaveBook: (book: Project) => Promise<void>;
   language: 'it' | 'en';
 }
+
+// Re-export Project type as Book for backward compatibility
+export type Book = Project;

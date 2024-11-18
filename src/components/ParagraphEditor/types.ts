@@ -1,46 +1,63 @@
-import { MapSettings, ExtendedParagraph } from '../../types/storymap';
+import { PageType } from '../../types/pages';
 
-export type Paragraph = ExtendedParagraph & {
+export interface Project {
+  id: string;
+  name: string;
+  bookTitle: string;
+  author: string;
+  description?: string;
+  created: Date;
+  modified: Date;
+  lastEdited: string;
+  paragraphs: Paragraph[];
+  mapSettings?: any;
+}
+
+export interface Paragraph {
+  id: number;
+  title: string;
+  content: string;
+  actions: Action[];
+  incomingConnections: number[];
+  outgoingConnections: string[];
+  type: 'normale' | 'nodo' | 'finale';
+  tags: string[];
   font?: string;
   alignment?: 'left' | 'center' | 'right';
-};
+  image?: { 
+    data: string;
+    position: 'before' | 'after';
+  };
+  note?: string;
+  x?: number;
+  y?: number;
+  locked?: boolean;
+}
 
 export interface Action {
   text: string;
   'N.Par.': string;
 }
 
-export interface Project {
-  bookTitle: string;
-  author: string;
-  paragraphs: Paragraph[];
-  lastEdited: string;
-  coverImage?: string;
-  mapSettings?: MapSettings;
-}
-
-export interface ImageData {
-  bookTitle: string;
-  imageData: string;
-}
-
 export interface ParagraphEditorProps {
-  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'export') => void;
+  setCurrentPage: (page: PageType) => void;
   bookTitle: string;
   author: string;
   onSaveProject: (project: Project) => void;
   isDarkMode: boolean;
   language: 'it' | 'en';
   initialParagraphs?: Paragraph[];
-  initialMapSettings?: MapSettings;
-  updateLastBackup?: (date: string) => void;
+  initialMapSettings?: any;
+  updateLastBackup: (date: string) => void;
 }
 
 export interface ParagraphContentProps {
   selectedParagraph: Paragraph;
+  paragraphs: Paragraph[];
   onUpdate: (updatedParagraph: Paragraph) => void;
   isDarkMode: boolean;
   language: 'it' | 'en';
+  onReturnToEditor?: () => void;
 }
 
 export interface ParagraphEditorControlsProps {
@@ -54,36 +71,17 @@ export interface ParagraphEditorControlsProps {
   onShowStoryMap: () => void;
 }
 
-export interface ParagraphSidebarProps {
-  paragraphs: Paragraph[];
-  selectedParagraph: number | null;
-  isDarkMode: boolean;
-  showSearch: boolean;
-  searchTerm: string;
-  showConnections: number | null;
-  language: 'it' | 'en';
-  onAddParagraph: () => void;
-  onSelectParagraph: (id: number) => void;
-  onToggleSearch: () => void;
-  onSearchChange: (term: string) => void;
-  onToggleConnections: (id: number | null) => void;
-  onImageEdit: (id: number) => void;
-}
-
 export interface NotificationType {
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error' | 'info' | 'warning';
 }
 
 export interface PopupState {
   visible: boolean;
+  actionIndex: number | null;
   isExisting?: boolean;
   paragraphId?: number;
-  actionIndex?: number | null;
 }
 
-export interface TagInputProps {
-  tags: string[];
-  onTagsChange: (tags: string[]) => void;
-  isDarkMode: boolean;
-}
+// Alias per compatibilità
+export type Book = Project;

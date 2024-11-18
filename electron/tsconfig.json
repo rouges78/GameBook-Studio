@@ -7,15 +7,23 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": ".",
-    "rootDir": ".",
+    "rootDir": "..",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": "..",
+    "paths": {
+      "*": ["./*"],
+      "@src/*": ["./src/*"],
+      "@electron/*": ["./electron/*"]
+    }
   },
   "include": [
-    "*.ts"
+    "*.ts",
+    "types/**/*.ts",
+    "../src/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

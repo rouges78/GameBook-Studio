@@ -20,6 +20,7 @@ interface EditorMainProps {
   onSave: () => void;
   onNotification: (notification: NotificationType | null) => void;
   translations: any;
+  onReturnToEditor: () => void;
 }
 
 const EditorMain: React.FC<EditorMainProps> = ({
@@ -34,7 +35,8 @@ const EditorMain: React.FC<EditorMainProps> = ({
   onExport,
   onSave,
   onNotification,
-  translations: t
+  translations: t,
+  onReturnToEditor
 }) => {
   const {
     popupState,
@@ -68,6 +70,7 @@ const EditorMain: React.FC<EditorMainProps> = ({
       <div className="flex-1 overflow-auto">
         <ParagraphContent
           selectedParagraph={selectedParagraph}
+          paragraphs={paragraphs}
           onUpdate={onUpdate}
           isDarkMode={isDarkMode}
           language={language}
@@ -111,7 +114,7 @@ const EditorMain: React.FC<EditorMainProps> = ({
             title={t.shortcuts.map}
           >
             <Map size={18} />
-            {t.showMap}
+            {t.backToEditor}
           </button>
 
           {/* Right side */}

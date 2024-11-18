@@ -9,7 +9,7 @@ interface ParagraphActionsProps {
   onActionBlur: (index: number) => void;
   onRemoveAction: (index: number) => void;
   onAddAction: () => void;
-  totalParagraphs: number; // Nuovo prop per il numero totale di paragrafi
+  totalParagraphs: number;
 }
 
 interface ActionInputProps {
@@ -21,6 +21,8 @@ interface ActionInputProps {
   type?: 'text' | 'number';
   max?: number;
   title?: string;
+  index: number;
+  onKeyDown?: (e: React.KeyboardEvent, index: number) => void;
 }
 
 const ActionInput: React.FC<ActionInputProps> = React.memo(({
@@ -31,13 +33,16 @@ const ActionInput: React.FC<ActionInputProps> = React.memo(({
   className,
   type = 'text',
   max,
-  title
+  title,
+  index,
+  onKeyDown
 }) => (
   <input
     type={type}
     value={value}
     onChange={(e) => onChange(e.target.value)}
     onBlur={onBlur}
+    onKeyDown={(e) => onKeyDown?.(e, index)}
     className={className}
     placeholder={placeholder}
     max={max}
@@ -62,24 +67,23 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
     value: string
   ) => {
     if (field === 'N.Par.' && value !== '') {
-      // Ensure only numbers are entered for paragraph references
+      // Accetta qualsiasi numero valido
       const numValue = value.replace(/[^0-9]/g, '');
-      // Ensure the value doesn't exceed totalParagraphs
-      const finalValue = Math.min(parseInt(numValue) || 0, totalParagraphs).toString();
-      onActionChange(index, field, finalValue);
+      if (numValue) {
+        onActionChange(index, field, numValue);
+      }
     } else {
       onActionChange(index, field, value);
       
-      // Automatically add new action line if this is the last one and has content
+      // Se è l'ultima azione e ha del testo, aggiungi una nuova azione vuota
       if (field === 'text' && value.trim() !== '') {
         const isLastAction = index === actions.length - 1;
-        const hasNoEmptyActions = actions.every(a => a.text.trim() !== '');
-        if (isLastAction && hasNoEmptyActions) {
+        if (isLastAction) {
           onAddAction();
         }
       }
     }
-  }, [onActionChange, onAddAction, actions, totalParagraphs]);
+  }, [onActionChange, onAddAction, actions]);
 
   const handleActionBlur = React.useCallback((index: number) => {
     const action = actions[index];
@@ -88,6 +92,21 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
     }
   }, [actions, onActionBlur]);
 
+  const handleKeyDown = React.useCallback((e: React.KeyboardEvent, index: number) => {
+    const action = actions[index];
+    if ((e.key === 'Tab' || e.key === 'Enter') && action.text.trim() !== '') {
+      e.preventDefault();
+      
+      // Se non c'è già un N.Par. impostato, suggeriamo il prossimo numero disponibile
+      if (!action['N.Par.']) {
+        const nextParagraphNumber = (totalParagraphs + 1).toString();
+        handleActionChange(index, 'N.Par.', nextParagraphNumber);
+        // Forziamo l'onActionBlur subito dopo aver impostato il numero
+        setTimeout(() => onActionBlur(index), 0);
+      }
+    }
+  }, [actions, handleActionChange, onActionBlur, totalParagraphs]);
+
   const baseInputClass = React.useMemo(() => `
     py-1 px-2 rounded text-sm transition-colors
     ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}
@@ -95,13 +114,12 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
     ${isDarkMode ? 'focus:ring-blue-500' : 'focus:ring-blue-400'}
   `, [isDarkMode]);
 
-  // Ensure there's always at least one empty action line
+  // Se non ci sono azioni, aggiungi una azione vuota
   React.useEffect(() => {
-    const hasEmptyAction = actions.some(a => a.text.trim() === '');
-    if (actions.length === 0 || (!hasEmptyAction && actions.every(a => a.text.trim() !== ''))) {
+    if (actions.length === 0) {
       onAddAction();
     }
-  }, [actions, onAddAction]);
+  }, []); // Solo all'mount del componente
 
   return (
     <div className={`rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
@@ -128,6 +146,8 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
               onBlur={() => handleActionBlur(index)}
               placeholder="Inserisci azione"
               className={`flex-1 ${baseInputClass}`}
+              index={index}
+              onKeyDown={handleKeyDown}
             />
             <div className="relative">
               <ActionInput
@@ -136,12 +156,12 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
                 placeholder="N.Par."
                 className={`w-16 ${baseInputClass}`}
                 type="number"
-                max={totalParagraphs}
-                title={`Inserisci un numero da 1 a ${totalParagraphs}`}
+                title="Inserisci il numero del paragrafo"
+                index={index}
               />
               <div 
                 className="absolute -right-6 top-1/2 -translate-y-1/2 cursor-help"
-                title={`Paragrafi disponibili: 1-${totalParagraphs}`}
+                title="Inserisci il numero del paragrafo a cui vuoi collegare l'azione"
               >
                 <Info size={14} className="text-gray-400" />
               </div>

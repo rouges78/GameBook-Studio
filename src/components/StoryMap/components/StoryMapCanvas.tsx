@@ -122,6 +122,7 @@ export const StoryMapCanvas: React.FC<StoryMapCanvasProps> = ({
     >
       {backgroundImage && (
         <image
+          key="background-image"
           href={backgroundImage}
           width={imageAdjustments.width}
           height={imageAdjustments.height}
@@ -139,9 +140,9 @@ export const StoryMapCanvas: React.FC<StoryMapCanvasProps> = ({
       )}
       
       {showGrid && (
-        <>
+        <g key="grid">
           <pattern
-            id="grid"
+            id="grid-pattern"
             width="50"
             height="50"
             patternUnits="userSpaceOnUse"
@@ -153,18 +154,19 @@ export const StoryMapCanvas: React.FC<StoryMapCanvasProps> = ({
               strokeWidth="0.5"
             />
           </pattern>
-          <rect width="100%" height="100%" fill="url(#grid)" className="pointer-events-none" />
-        </>
+          <rect width="100%" height="100%" fill="url(#grid-pattern)" className="pointer-events-none" />
+        </g>
       )}
 
       {/* Connection Lines */}
-      {links.map((link, index) => {
+      {links.map((link) => {
         const sourceNode = nodes.find(n => n.id === link.source);
         const targetNode = nodes.find(n => n.id === link.target);
         
         if (sourceNode && targetNode) {
+          const linkId = `link-${link.source}-${link.target}`;
           return (
-            <g key={`link-${index}`} className="pointer-events-none">
+            <g key={linkId} className="pointer-events-none">
               <motion.path
                 d={getConnectionPath(sourceNode, targetNode, useCurvedLines)}
                 stroke={link.isHighlighted ? "#FFE55C" : "#4A90E2"}
@@ -186,7 +188,7 @@ export const StoryMapCanvas: React.FC<StoryMapCanvasProps> = ({
       {/* Nodes */}
       {nodes.map(node => (
         <g
-          key={node.id}
+          key={`node-${node.id}`}
           transform={`translate(${node.x},${node.y})`}
           onMouseDown={(e) => {
             e.stopPropagation();
@@ -200,6 +202,7 @@ export const StoryMapCanvas: React.FC<StoryMapCanvasProps> = ({
         >
           {node.locked && (
             <circle
+              key={`lock-circle-${node.id}`}
               r="32"
               fill="none"
               stroke="white"
@@ -208,6 +211,7 @@ export const StoryMapCanvas: React.FC<StoryMapCanvasProps> = ({
             />
           )}
           <circle
+            key={`node-circle-${node.id}`}
             r="30"
             fill={getNodeColor(node.type, node.locked)}
             className={`filter transition-colors duration-200 ${
@@ -215,6 +219,7 @@ export const StoryMapCanvas: React.FC<StoryMapCanvasProps> = ({
             }`}
           />
           <text
+            key={`node-text-${node.id}`}
             textAnchor="middle"
             dy="5"
             fill="white"

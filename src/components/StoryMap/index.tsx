@@ -175,27 +175,31 @@ const StoryMap: React.FC<StoryMapProps> = ({
 
       {/* Header */}
       <div className="flex-none h-14 border-b border-gray-700 flex items-center justify-between px-4">
-        <StoryMapControls
-          selectedNode={state.selectedNode}
-          selectedAction={state.selectedAction}
-          nodes={state.nodes}
-          isDragMode={state.isDragMode}
-          useCurvedLines={state.useCurvedLines}
-          lastBackup={state.lastBackup}
-          t={t}
-          fileInputRef={state.fileInputRef}
-          onClose={handleClose}
-          onZoom={actions.handleZoom}
-          onToggleGrid={handleToggleGrid}
-          onToggleDragMode={handleToggleDragMode}
-          onToggleLines={() => actions.setUseCurvedLines(!state.useCurvedLines)}
-          onSave={handleSave}
-          onEditParagraph={onEditParagraph}
-          onDeleteParagraph={onDeleteParagraph}
-          onToggleNodeLock={handleNodeLock}
-          onActionSelect={actions.handleActionSelect}
-        />
-        <KeyboardShortcutsHelp />
+        <div className="flex-1">
+          <StoryMapControls
+            selectedNode={state.selectedNode}
+            selectedAction={state.selectedAction}
+            nodes={state.nodes}
+            isDragMode={state.isDragMode}
+            useCurvedLines={state.useCurvedLines}
+            lastBackup={state.lastBackup}
+            t={t}
+            fileInputRef={state.fileInputRef}
+            onClose={handleClose}
+            onZoom={actions.handleZoom}
+            onToggleGrid={handleToggleGrid}
+            onToggleDragMode={handleToggleDragMode}
+            onToggleLines={() => actions.setUseCurvedLines(!state.useCurvedLines)}
+            onSave={handleSave}
+            onEditParagraph={onEditParagraph}
+            onDeleteParagraph={onDeleteParagraph}
+            onToggleNodeLock={handleNodeLock}
+            onActionSelect={actions.handleActionSelect}
+          />
+        </div>
+        <div className="flex-none ml-4">
+          <KeyboardShortcutsHelp />
+        </div>
       </div>
 
       {/* Main Canvas Area */}
@@ -256,6 +260,7 @@ const StoryMap: React.FC<StoryMapProps> = ({
           </div>
           {state.selectedNode && (
             <ActionButtons
+              key={`action-buttons-${state.selectedNode}`}
               selectedNode={state.selectedNode}
               nodes={state.nodes}
               selectedAction={state.selectedAction}

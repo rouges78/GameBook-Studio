@@ -2,6 +2,7 @@ export const translations = {
   it: {
     backToHome: "Torna alla Home",
     backToDashboard: "Torna alla Dashboard",
+    backToEditor: "Gestione Mappa",
     editorTitle: "Editor Paragrafi",
     addParagraph: "Aggiungi Paragrafo",
     enterTitle: "Inserisci titolo...",
@@ -83,6 +84,7 @@ export const translations = {
   en: {
     backToHome: "Back to Home",
     backToDashboard: "Back to Dashboard",
+    backToEditor: "Map Management",
     editorTitle: "Paragraph Editor",
     addParagraph: "Add Paragraph",
     enterTitle: "Enter title...",

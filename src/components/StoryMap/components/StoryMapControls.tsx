@@ -52,6 +52,7 @@ export const StoryMapControls: React.FC<StoryMapControlsProps> = ({
   return (
     <div className="bg-[#0F2744] h-full flex flex-col">
       <div className="h-14 flex items-center px-4 justify-between border-b border-[#1E3A5F]">
+        {/* Left side - Close and general controls */}
         <div className="flex items-center gap-2">
           <button
             onClick={onClose}
@@ -60,20 +61,6 @@ export const StoryMapControls: React.FC<StoryMapControlsProps> = ({
             <X size={18} />
           </button>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => onZoom(0.1)}
-              className="p-1.5 rounded hover:bg-[#1E3A5F] text-gray-400 hover:text-white transition-colors"
-              title={t.zoomIn}
-            >
-              <ZoomIn size={18} />
-            </button>
-            <button
-              onClick={() => onZoom(-0.1)}
-              className="p-1.5 rounded hover:bg-[#1E3A5F] text-gray-400 hover:text-white transition-colors"
-              title={t.zoomOut}
-            >
-              <ZoomOut size={18} />
-            </button>
             <button
               onClick={onToggleGrid}
               className="p-1.5 rounded hover:bg-[#1E3A5F] text-gray-400 hover:text-white transition-colors"
@@ -109,16 +96,10 @@ export const StoryMapControls: React.FC<StoryMapControlsProps> = ({
             >
               <Save size={18} />
             </button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="p-1.5 rounded hover:bg-[#1E3A5F] text-gray-400 hover:text-white transition-colors"
-              title={t.uploadBackground}
-            >
-              <Upload size={18} />
-            </button>
           </div>
         </div>
 
+        {/* Center - Node controls */}
         {selectedNode && selectedNodeData && (
           <div className="flex items-center gap-1">
             <button
@@ -149,12 +130,42 @@ export const StoryMapControls: React.FC<StoryMapControlsProps> = ({
           </div>
         )}
 
-        <div className="text-sm text-gray-400">
-          {lastBackup ? (
-            <>{t.autoBackup} {formatBackupTime(lastBackup)}</>
-          ) : (
-            t.backup
-          )}
+        {/* Right side - Map controls */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 border-l border-[#1E3A5F] pl-4">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 rounded bg-amber-900 hover:bg-amber-800 text-white transition-colors flex items-center gap-2"
+              title={t.uploadBackground}
+            >
+              <Upload size={18} />
+              <span className="text-sm">{t.uploadBackground}</span>
+            </button>
+            <div className="h-8 w-px bg-[#1E3A5F] mx-2" />
+            <div className="flex items-center gap-1 bg-[#1E3A5F] rounded-md p-1">
+              <button
+                onClick={() => onZoom(0.1)}
+                className="p-1.5 rounded hover:bg-[#2E4A6F] text-gray-200 hover:text-white transition-colors"
+                title={t.zoomIn}
+              >
+                <ZoomIn size={18} />
+              </button>
+              <button
+                onClick={() => onZoom(-0.1)}
+                className="p-1.5 rounded hover:bg-[#2E4A6F] text-gray-200 hover:text-white transition-colors"
+                title={t.zoomOut}
+              >
+                <ZoomOut size={18} />
+              </button>
+            </div>
+          </div>
+          <div className="text-sm text-gray-400">
+            {lastBackup ? (
+              <>{t.autoBackup} {formatBackupTime(lastBackup)}</>
+            ) : (
+              t.backup
+            )}
+          </div>
         </div>
       </div>
 

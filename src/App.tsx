@@ -19,8 +19,9 @@ import { saveProject, getProjects, deleteProject, debugDatabase, migrateProjectD
 import { startAutoBackup, stopAutoBackup } from './utils/autoBackup';
 import { ThemeContext, defaultTheme, type Theme } from './contexts/ThemeContext';
 import packageJson from '../package.json';
-import type { Project, Paragraph as EditorParagraph } from './components/ParagraphEditor/types';
+import type { Paragraph as EditorParagraph } from './components/ParagraphEditor/types';
 import type { Paragraph as ExportParagraph } from './components/ExportPage/types';
+import { PageType, Project } from './types/pages';
 
 const isElectron = !!(window as any).electron;
 
@@ -31,9 +32,6 @@ interface NotificationType {
   message: string;
   type: 'success' | 'error' | 'info';
 }
-
-type PageType = 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 
-                'settings' | 'help' | 'export' | 'backupManager' | 'telemetryDashboard';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
@@ -115,15 +113,24 @@ const App: React.FC = () => {
 
   const handleCreateProject = useCallback(async (project: Project) => {
     try {
+      const now = new Date();
+      const completeProject: Project = {
+        ...project,
+        id: `project-${Date.now()}`,
+        name: project.bookTitle,
+        created: now,
+        modified: now,
+        lastEdited: now.toISOString()
+      };
+
       if (isElectron) {
-        await saveProject(project);
+        await saveProject(completeProject);
       } else {
-        // Browser storage
-        browserProjects.push(project);
+        browserProjects.push(completeProject);
         localStorage.setItem('projects', JSON.stringify(browserProjects));
       }
-      setProjects(prevProjects => [...prevProjects, project]);
-      setCurrentProject(project);
+      setProjects(prevProjects => [...prevProjects, completeProject]);
+      setCurrentProject(completeProject);
       showNotification('Progetto creato con successo', 'success');
     } catch (error) {
       console.error('Failed to create project:', error);
@@ -133,23 +140,29 @@ const App: React.FC = () => {
 
   const handleSaveProject = useCallback(async (project: Project) => {
     try {
+      const now = new Date();
+      const updatedProject: Project = {
+        ...project,
+        modified: now,
+        lastEdited: now.toISOString()
+      };
+
       if (isElectron) {
-        await saveProject(project);
+        await saveProject(updatedProject);
       } else {
-        // Browser storage
         const index = browserProjects.findIndex(p => p.bookTitle === project.bookTitle);
         if (index !== -1) {
-          browserProjects[index] = project;
+          browserProjects[index] = updatedProject;
         } else {
-          browserProjects.push(project);
+          browserProjects.push(updatedProject);
         }
         localStorage.setItem('projects', JSON.stringify(browserProjects));
       }
       setProjects(prevProjects =>
-        prevProjects.map((p) => (p.bookTitle === project.bookTitle ? project : p))
+        prevProjects.map((p) => (p.bookTitle === project.bookTitle ? updatedProject : p))
       );
       if (currentProject?.bookTitle === project.bookTitle) {
-        setCurrentProject(project);
+        setCurrentProject(updatedProject);
       }
       showNotification('Progetto salvato con successo', 'success');
       setLastBackup(new Date().toLocaleString());
@@ -164,7 +177,6 @@ const App: React.FC = () => {
       if (isElectron) {
         await deleteProject(bookTitle);
       } else {
-        // Browser storage
         browserProjects = browserProjects.filter(p => p.bookTitle !== bookTitle);
         localStorage.setItem('projects', JSON.stringify(browserProjects));
       }
@@ -186,37 +198,45 @@ const App: React.FC = () => {
     }
   }, []);
 
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      <div className={`h-screen flex flex-col overflow-hidden ${isDarkMode ? 'dark' : 'light'}`} style={{ backgroundColor: theme.backgroundColor, color: theme.textColor }}>
-        <Header 
-          isDarkMode={isDarkMode} 
-          version={packageJson.version}
-          onThemeToggle={() => setIsDarkMode(!isDarkMode)}
-        />
-        {currentPage === 'dashboard' && (
+  const handleSetPage = useCallback((page: PageType) => {
+    setCurrentPage(page);
+  }, []);
+
+  const handleSetCurrentProject = useCallback((project: Project | null) => {
+    setCurrentProject(project);
+  }, []);
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return (
           <Dashboard
+            key="dashboard"
             isDarkMode={isDarkMode}
-            setCurrentPage={setCurrentPage}
+            setCurrentPage={handleSetPage}
             setIsDarkMode={setIsDarkMode}
             language={language}
             setLanguage={setLanguage}
             projects={projects}
-            setCurrentProject={setCurrentProject}
+            setCurrentProject={handleSetCurrentProject}
             onLogout={handleLogout}
           />
-        )}
-        {currentPage === 'createProject' && (
+        );
+      case 'createProject':
+        return (
           <CreateNewProject
-            setCurrentPage={setCurrentPage}
+            key="create-project"
+            setCurrentPage={handleSetPage}
             onCreateProject={handleCreateProject}
             isDarkMode={isDarkMode}
             language={language}
           />
-        )}
-        {currentPage === 'paragraphEditor' && currentProject && (
+        );
+      case 'paragraphEditor':
+        return currentProject ? (
           <ParagraphEditor
-            setCurrentPage={setCurrentPage}
+            key={`editor-${currentProject.bookTitle}`}
+            setCurrentPage={handleSetPage}
             bookTitle={currentProject.bookTitle}
             author={currentProject.author}
             onSaveProject={handleSaveProject}
@@ -226,67 +246,97 @@ const App: React.FC = () => {
             initialMapSettings={currentProject.mapSettings}
             updateLastBackup={handleUpdateLastBackup}
           />
-        )}
-        {currentPage === 'library' && (
+        ) : null;
+      case 'library':
+        return (
           <Library
-            setCurrentPage={setCurrentPage}
+            key="library"
+            setCurrentPage={handleSetPage}
             books={projects}
             isDarkMode={isDarkMode}
             onEditBook={(bookTitle: string) => {
               const project = projects.find((p) => p.bookTitle === bookTitle);
               if (project) {
                 setCurrentProject(project);
-                setCurrentPage('paragraphEditor');
+                handleSetPage('paragraphEditor');
               }
             }}
             onDeleteBook={handleDeleteProject}
             onSaveBook={handleSaveProject}
             language={language}
           />
-        )}
-        {currentPage === 'themeEditor' && (
+        );
+      case 'themeEditor':
+        return (
           <ThemeEditor
-            setCurrentPage={setCurrentPage}
+            key="theme-editor"
+            setCurrentPage={handleSetPage}
             isDarkMode={isDarkMode}
             language={language}
             currentTheme={theme}
             onThemeChange={setTheme}
           />
-        )}
-        {currentPage === 'settings' && (
+        );
+      case 'settings':
+        return (
           <Settings
-            setCurrentPage={setCurrentPage}
+            key="settings"
+            setCurrentPage={handleSetPage}
             isDarkMode={isDarkMode}
             language={language}
           />
-        )}
-        {currentPage === 'help' && (
+        );
+      case 'help':
+        return (
           <Help
-            setCurrentPage={setCurrentPage}
+            key="help"
+            setCurrentPage={handleSetPage}
             isDarkMode={isDarkMode}
             language={language}
           />
-        )}
-        {currentPage === 'export' && currentProject && (
+        );
+      case 'export':
+        return currentProject ? (
           <ExportPage
-            setCurrentPage={setCurrentPage}
+            key={`export-${currentProject.bookTitle}`}
+            setCurrentPage={handleSetPage}
             bookTitle={currentProject.bookTitle}
             author={currentProject.author}
             paragraphs={transformParagraphsForExport(currentProject.paragraphs)}
             isDarkMode={isDarkMode}
             language={language}
           />
-        )}
-        {currentPage === 'backupManager' && (
+        ) : null;
+      case 'backupManager':
+        return (
           <BackupManager
-            setCurrentPage={setCurrentPage}
+            key="backup-manager"
+            setCurrentPage={handleSetPage}
             isDarkMode={isDarkMode}
             language={language}
           />
-        )}
-        {currentPage === 'telemetryDashboard' && (
-          <TelemetryDashboard isDarkMode={isDarkMode} />
-        )}
+        );
+      case 'telemetryDashboard':
+        return (
+          <TelemetryDashboard
+            key="telemetry-dashboard"
+            isDarkMode={isDarkMode}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      <div className={`h-screen flex flex-col overflow-hidden ${isDarkMode ? 'dark' : 'light'}`} style={{ backgroundColor: theme.backgroundColor, color: theme.textColor }}>
+        <Header 
+          isDarkMode={isDarkMode} 
+          version={packageJson.version}
+          onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+        />
+        {renderPage()}
         <Footer
           projectCount={projects.length}
           lastBackup={lastBackup}

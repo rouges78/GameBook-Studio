@@ -24,17 +24,18 @@
     /* Paths */
     "baseUrl": ".",
     "paths": {
-      "*": ["./src/*"],
+      "*": ["./src/*", "./electron/*"],
       "@components/*": ["./src/components/*"],
       "@contexts/*": ["./src/contexts/*"],
       "@hooks/*": ["./src/hooks/*"],
       "@utils/*": ["./src/utils/*"],
-      "@types/*": ["./src/types/*"],
+      "@types/*": ["./src/types/*", "./electron/types/*"],
       "@tests/*": ["./tests/*"]
     },
     "typeRoots": [
       "./node_modules/@types",
       "./src/types",
+      "./electron/types",
       "./tests/types"
     ]
   },
@@ -42,6 +43,8 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.d.ts",
+    "electron/**/*.ts",
+    "electron/**/*.d.ts",
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "tests/**/*.d.ts"

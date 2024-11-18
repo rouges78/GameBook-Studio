@@ -93,6 +93,11 @@ export const useParagraphEditor = ({
 
   const editorRef = useRef<HTMLTextAreaElement>(null);
 
+  const handleSetShowStoryMap = useCallback((show: boolean) => {
+    console.log('Setting showStoryMap to:', show);
+    setShowStoryMap(show);
+  }, []);
+
   useEffect(() => {
     if (paragraphs.length === 0) {
       const newParagraph: Paragraph = {
@@ -178,11 +183,16 @@ export const useParagraphEditor = ({
 
       setParagraphs(updatedParagraphs);
 
+      const now = new Date();
       const project: Project = {
+        id: 'current',
+        name: bookTitle,
         bookTitle,
         author,
         paragraphs: updatedParagraphs,
-        lastEdited: new Date().toISOString(),
+        created: now,
+        modified: now,
+        lastEdited: now.toISOString(),
         mapSettings
       };
 
@@ -235,7 +245,7 @@ export const useParagraphEditor = ({
       setActions,
       setNewParagraphTitle,
       setParagraphType,
-      setShowStoryMap,
+      setShowStoryMap: handleSetShowStoryMap,
       setNotification,
       setSearchTerm,
       setShowConnections,

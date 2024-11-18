@@ -11,21 +11,10 @@ GameBook Studio is an advanced desktop application designed for creating and man
   - Real-time preview
   - Keyboard shortcuts for efficient editing
 
-- **Story Map**
-  - Visual representation of story branches
-  - Drag-and-drop interface
-  - Connection management between story nodes
-  - Mini-map for easy navigation
-
 - **Backup System**
   - Automatic backup functionality
   - Backup history management
   - Recovery options for lost work
-
-- **Export Options**
-  - Multiple export formats support
-  - Customizable export templates
-  - Preview before export
 
 - **Performance Monitoring**
   - Telemetry dashboard
@@ -34,6 +23,10 @@ GameBook Studio is an advanced desktop application designed for creating and man
   - Performance optimization tools
 
 ### Planned Features
+- [ ] Visual representation of story branches
+- [ ] Drag-and-drop interface
+- [ ] Connection management between story nodes
+- [ ] Mini-map for easy navigation
 - [ ] Cloud synchronization
 - [ ] Collaborative editing
 - [ ] Version control for story branches
@@ -44,6 +37,9 @@ GameBook Studio is an advanced desktop application designed for creating and man
 - [ ] Analytics dashboard
 - [ ] Import from various formats
 - [ ] Plugin system
+- [ ] Multiple export formats support
+- [ ] Customizable export templates
+- [ ] Preview before export
 
 ## 🚀 Installation
 

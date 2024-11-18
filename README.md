@@ -38,7 +38,7 @@ GameBook Studio is an advanced desktop application designed for creating and man
 - [ ] Collaborative editing
 - [ ] Version control for story branches
 - [ ] Advanced asset management
-- [ ] Custom theme creator
+- [X] Custom theme creator
 - [ ] Mobile preview mode
 - [ ] Story testing simulator
 - [ ] Analytics dashboard

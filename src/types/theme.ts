@@ -1,15 +1,4 @@
-import { Theme } from '../contexts/ThemeContext';
+import { Theme, SavedTheme, ThemeStorage } from './theme-types';
 
-export interface SavedTheme {
-  id: string;
-  name: string;
-  description?: string;
-  theme: Theme;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ThemeStorage {
-  themes: SavedTheme[];
-  lastUsedTheme?: string; // ID of the last used theme
-}
+// Re-export the types
+export type { Theme, SavedTheme, ThemeStorage };

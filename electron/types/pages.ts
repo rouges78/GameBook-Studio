@@ -20,5 +20,5 @@ export interface ComponentProps {
   language: 'it' | 'en';
 }
 
-// Type alias for backward compatibility
+// Only include the interfaces needed by the electron build
 export type Book = Project;

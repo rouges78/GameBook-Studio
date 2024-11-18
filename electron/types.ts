@@ -1,7 +1,48 @@
-import type { UpdateInfo, BackupSettings, BackupMetadata, DialogResult, TelemetryEvent } from '../src/types/electron';
-import type { Project } from '../src/components/ParagraphEditor/types';
+import type { Project } from './types/pages';
 
-export { UpdateInfo, BackupSettings, BackupMetadata, DialogResult, TelemetryEvent };
+export interface UpdateInfo {
+  version: string;
+  releaseNotes: string;
+}
+
+export interface BackupSettings {
+  maxBackups: number;
+  retentionPeriod: {
+    daily: number;   // Number of daily backups to keep
+    weekly: number;  // Number of weekly backups to keep
+    monthly: number; // Number of monthly backups to keep
+  };
+  autoCleanup: boolean;
+  compression: boolean;
+}
+
+export interface BackupMetadata {
+  version: string;
+  timestamp: string;
+  checksum: string;
+  size: number;
+  compressedSize?: number;
+  compressed?: boolean;
+  retentionCategory?: 'daily' | 'weekly' | 'monthly';
+}
+
+export interface DialogResult {
+  canceled: boolean;
+  filePath?: string;
+  filePaths?: string[];
+}
+
+export interface TelemetryEvent {
+  category: string;
+  action: string;
+  label?: string;
+  value?: number;
+  metadata?: Record<string, any>;
+  timestamp: number;
+  appVersion: string;
+  platform: string;
+  arch: string;
+}
 
 export interface IpcApi {
     // Window operations

@@ -1,4 +1,4 @@
-import type { Project } from '../components/ParagraphEditor/types';
+import type { Project } from '../../electron/types/pages';
 
 interface UpdateInfo {
   version: string;

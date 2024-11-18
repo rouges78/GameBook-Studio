@@ -1,20 +1,8 @@
 import React, { createContext } from 'react';
+import { Theme } from '../types/theme-types';
 
-export interface Theme {
-  primaryColor: string;
-  secondaryColor: string;
-  textColor: string;
-  backgroundColor: string;
-  fontSize: number;
-  fontFamily: string;
-  borderRadius: number;
-  buttonStyle: 'rounded' | 'square' | 'pill';
-  spacing: number;
-  paragraphBackground: string;
-  animationSpeed: number;
-  iconSet: 'default' | 'minimal' | 'colorful';
-  layout: 'grid' | 'list';
-}
+// Re-export the Theme type for backward compatibility
+export type { Theme };
 
 export interface ThemeContextType {
   theme: Theme;

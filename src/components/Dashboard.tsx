@@ -2,10 +2,14 @@ import React, { useState, useCallback, useMemo, Suspense, lazy, useRef, useEffec
 import { Plus, FolderOpen, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getProjects, saveProject } from '../utils/storage';
+import { projectCache } from '../utils/projectCache';
+import ChangelogModal from './ChangelogModal';
+import '../styles/glow.css';
 
 const Sidebar = lazy(() => import('./Sidebar'));
 
 interface Project {
+  id: string;
   bookTitle: string;
   author: string;
   paragraphs: any[];
@@ -16,22 +20,34 @@ interface Project {
 // Mock data for browser testing
 const mockProjects: Project[] = [
   {
+    id: "mock-project-1",
     bookTitle: "Sample Project 1",
     author: "Author One",
     paragraphs: [],
     lastEdited: new Date().toISOString(),
+    created: new Date(),
+    modified: new Date(),
+    name: "Sample Project 1"
   },
   {
+    id: "mock-project-2",
     bookTitle: "Sample Project 2",
     author: "Author Two",
     paragraphs: [],
     lastEdited: new Date().toISOString(),
+    created: new Date(),
+    modified: new Date(),
+    name: "Sample Project 2"
   },
   {
+    id: "mock-project-3",
     bookTitle: "Sample Project 3",
     author: "Author Three",
     paragraphs: [],
     lastEdited: new Date().toISOString(),
+    created: new Date(),
+    modified: new Date(),
+    name: "Sample Project 3"
   }
 ];
 
@@ -64,7 +80,7 @@ const ProjectBox = React.memo<ProjectBoxProps>(({ project, isDarkMode, translati
     return (
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+7        animate={{ opacity: 1 }}
         transition={{ delay: index * 0.1 }}
         className="flex flex-col"
       >
@@ -79,13 +95,41 @@ const ProjectBox = React.memo<ProjectBoxProps>(({ project, isDarkMode, translati
     );
   }
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!project) return;
+
+    // Generate a new ID if missing
+    if (!project.id) {
+      console.log('Project missing ID, generating new one');
+      project.id = `project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      // Save the project with the new ID
+      saveProject(project).catch(error => {
+        console.error('Error saving project with new ID:', error);
+      });
+    }
+
+    onProjectSelect(project);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (project) {
+        handleClick(e as unknown as React.MouseEvent);
+      }
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: index * 0.1 }}
       className="flex flex-col cursor-pointer"
-      onClick={() => onProjectSelect(project)}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
     >
       {/* Cover container with glow effects */}
       <motion.div 
@@ -121,7 +165,11 @@ const ProjectBox = React.memo<ProjectBoxProps>(({ project, isDarkMode, translati
         
         {/* Card content */}
         <div
-          className={`${isDarkMode ? 'glass-card-dark' : 'glass-card'} rounded-lg overflow-hidden aspect-[3/4] relative backdrop-blur-sm bg-opacity-50 z-10 transition-all duration-300 group-hover:shadow-[0_0_25px_rgba(255,215,0,0.7),0_0_50px_rgba(255,215,0,0.5)]`}
+          className={`${isDarkMode ? 'glass-card-dark' : 'glass-card'} rounded-lg overflow-hidden aspect-[3/4] relative backdrop-blur-sm bg-opacity-50 z-10 transition-all duration-300 ${project ? 'animate-glow' : ''}`}
+          onClick={handleClick}
+          role="button"
+          tabIndex={0}
+          onKeyPress={handleKeyDown}
         >
           {project.coverImage ? (
             <div className="w-full h-full pointer-events-none">
@@ -198,9 +246,109 @@ const ActionBox: React.FC<{
 );
 
 const Dashboard: React.FC<DashboardProps> = ({ isDarkMode, setCurrentPage, setIsDarkMode, language, setLanguage, projects, setCurrentProject, onLogout }) => {
+  const [isChangelogOpen, setIsChangelogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [recentProjects, setRecentProjects] = useState<Project[]>(projects);
+  const [recentProjects, setRecentProjects] = useState<Project[]>(projects || []);
   const isElectron = !!(window as any).electron;
+
+  const handleProjectSelect = useCallback(async (project: Project) => {
+    if (!project?.id) {
+      console.error('Cannot select project without id:', project);
+      return;
+    }
+    
+    setCurrentProject(project);
+    setCurrentPage('paragraphEditor');
+    
+    // Prefetch progetti correlati in background
+    await projectCache.prefetchProjects(project.id);
+  }, [setCurrentProject, setCurrentPage]);
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      if (isElectron) {
+        try {
+          // Load projects from database
+          const loadedProjects = await getProjects();
+          if (loadedProjects && loadedProjects.length > 0) {
+            // Ensure all projects have required fields
+            const validProjects = loadedProjects.map(project => {
+              if (!project.id) {
+                project.id = `project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+              }
+              if (!project.created) {
+                project.created = new Date();
+              }
+              if (!project.modified) {
+                project.modified = new Date();
+              }
+              if (!project.lastEdited) {
+                project.lastEdited = new Date().toISOString();
+              }
+              if (!project.name) {
+                project.name = project.bookTitle;
+              }
+              if (!project.paragraphs) {
+                project.paragraphs = [];
+              }
+              return project;
+            });
+
+            // Save any projects that were updated with missing fields
+            await Promise.all(
+              validProjects.map(project => 
+                saveProject(project).catch(error => 
+                  console.error('Error saving project:', error)
+                )
+              )
+            );
+
+            setRecentProjects(validProjects);
+            
+            // Update cache with the valid projects
+            await Promise.all(
+              validProjects.map(project => 
+                projectCache.cacheProject(project.id, project)
+              )
+            );
+          }
+        } catch (error) {
+          console.error('Failed to load projects:', error);
+        }
+      }
+    };
+
+    loadProjects();
+  }, [isElectron]);
+
+  // Update recentProjects when projects change
+  useEffect(() => {
+    if (projects && projects.length > 0) {
+      // Ensure all projects have required fields
+      const validProjects = projects.map(project => {
+        if (!project.id) {
+          project.id = `project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        }
+        if (!project.created) {
+          project.created = new Date();
+        }
+        if (!project.modified) {
+          project.modified = new Date();
+        }
+        if (!project.lastEdited) {
+          project.lastEdited = new Date().toISOString();
+        }
+        if (!project.name) {
+          project.name = project.bookTitle;
+        }
+        if (!project.paragraphs) {
+          project.paragraphs = [];
+        }
+        return project;
+      });
+      setRecentProjects(validProjects);
+    }
+  }, [projects]);
 
   const translations = {
     it: {
@@ -244,26 +392,6 @@ const Dashboard: React.FC<DashboardProps> = ({ isDarkMode, setCurrentPage, setIs
     };
   }, []);
 
-  useEffect(() => {
-    const loadProjects = async () => {
-      if (isElectron) {
-        const loadedProjects = await getProjects();
-        if (loadedProjects && loadedProjects.length > 0) {
-          setRecentProjects(loadedProjects);
-        }
-      } else {
-        // Use mock data in browser context
-        setRecentProjects(mockProjects);
-      }
-    };
-    loadProjects();
-  }, [isElectron]);
-
-  const handleProjectSelect = useCallback((project: Project) => {
-    setCurrentProject(project);
-    setCurrentPage('paragraphEditor');
-  }, [setCurrentProject, setCurrentPage]);
-
   const handleCreateNewProject = useCallback(() => {
     setCurrentPage('createProject');
   }, [setCurrentPage]);
@@ -281,7 +409,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isDarkMode, setCurrentPage, setIs
         const content = await file.text();
         const project = JSON.parse(content);
         
-        if (project.bookTitle && project.author && Array.isArray(project.paragraphs)) {
+        if (project.id && project.bookTitle && project.author && Array.isArray(project.paragraphs)) {
           const updatedProject = {
             ...project,
             lastEdited: new Date().toISOString()
@@ -318,6 +446,32 @@ const Dashboard: React.FC<DashboardProps> = ({ isDarkMode, setCurrentPage, setIs
       </Suspense>
 
       <div className="flex-1 bg-background">
+        {/* Version Button */}
+        <div className="absolute top-4 right-4">
+          <button
+            onClick={() => setIsChangelogOpen(true)}
+            className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${
+              isDarkMode 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+          >
+            v0.1.1
+          </button>
+        </div>
+
+        {/* Changelog Modal */}
+        <AnimatePresence>
+          {isChangelogOpen && (
+            <ChangelogModal
+              isOpen={isChangelogOpen}
+              onClose={() => setIsChangelogOpen(false)}
+              isDarkMode={isDarkMode}
+              language={language}
+            />
+          )}
+        </AnimatePresence>
+
         <div className="h-full p-8 flex items-center">
           {/* Left Side - Logo */}
           <div className="flex-none w-[600px] flex items-center justify-center pl-32">
@@ -381,7 +535,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isDarkMode, setCurrentPage, setIs
                 <AnimatePresence>
                   {[0, 1, 2].map((index) => (
                     <ProjectBox
-                      key={recentProjects[index]?.bookTitle || `empty-${index}`}
+                      key={recentProjects[index]?.id || `empty-${index}`}
                       project={recentProjects[index]}
                       isDarkMode={isDarkMode}
                       translations={t}
@@ -403,6 +557,13 @@ const Dashboard: React.FC<DashboardProps> = ({ isDarkMode, setCurrentPage, setIs
           />
         </div>
       </div>
+
+      {/* <ChangelogModal
+        isOpen={isChangelogOpen}
+        onClose={() => setIsChangelogOpen(false)}
+        isDarkMode={isDarkMode}
+        language={language}
+      /> */}
     </div>
   );
 };

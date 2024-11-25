@@ -335,6 +335,7 @@ const App: React.FC = () => {
           isDarkMode={isDarkMode} 
           version={packageJson.version}
           onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+          language={language}
         />
         {renderPage()}
         <Footer

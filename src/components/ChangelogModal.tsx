@@ -22,7 +22,7 @@ const changelog: Record<string, ChangelogEntry[]> = {
   it: [
     {
       version: '0.9.7',
-      date: '25-11-2024',
+      date: '24-11-2024',
       changes: [
         {
           type: 'added',

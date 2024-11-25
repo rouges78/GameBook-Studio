@@ -26,46 +26,40 @@ type SettingsTab = 'general' | 'notifications' | 'database' | 'ai';
 
 const PROVIDER_MODELS = {
   anthropic: [
-    'claude-3-opus-20240229',
-    'claude-3-sonnet-20240229',
-    'claude-3-haiku-20240229',
-    'claude-2.1',
-    'claude-2.0',
-    'claude-instant-1.2'
+    'claude-3.5-opus',      // Ultima versione, massima potenza
+    'claude-3.5-sonnet',    // Bilanciato per uso generale
+    'claude-3.5-haiku',     // Veloce e economico
+    'claude-3-opus-20240229',    // Legacy
+    'claude-3-sonnet-20240229',  // Legacy
+    'claude-3-haiku-20240229',   // Legacy
+    'claude-2.1',                // Per compatibilità
   ] as const,
   openai: [
-    'gpt-4-turbo-preview',  // Latest GPT-4 Turbo
-    'gpt-4-0125-preview',   // Updated base model
-    'gpt-4-vision-preview', // Vision capabilities
-    'gpt-4',               // Standard GPT-4
-    'gpt-3.5-turbo-0125',  // Latest GPT-3.5
-    'gpt-3.5-turbo',       // Standard GPT-3.5
-    'gpt-3.5-turbo-16k'    // Extended context
+    'gpt-4.5-turbo',           // Ultima versione
+    'gpt-4.5-turbo-preview',   // Preview
+    'gpt-4-0125-preview',      // Legacy
+    'gpt-4-turbo-preview',     // Legacy
+    'gpt-4',                   // Stabile
+    'gpt-3.5-turbo-0125',      // GPT-3.5 aggiornato
+    'gpt-3.5-turbo',           // GPT-3.5 stabile
   ] as const,
   openrouter: [
     // Anthropic Models
-    'anthropic/claude-3-opus-20240229',
-    'anthropic/claude-3-sonnet-20240229',
-    'anthropic/claude-3-haiku-20240229',
+    'anthropic/claude-3.5-opus',
+    'anthropic/claude-3.5-sonnet',
+    'anthropic/claude-3.5-haiku',
     // OpenAI Models
-    'openai/gpt-4-turbo-preview',
-    'openai/gpt-4-0125-preview',
-    'openai/gpt-4-vision-preview',
+    'openai/gpt-4.5-turbo',
+    'openai/gpt-4.5-turbo-preview',
     // Google Models
     'google/gemini-pro',
     'google/gemini-pro-vision',
-    // Meta Models
-    'meta/llama-2-70b-chat',
-    'meta/llama-2-13b-chat',
     // Mistral Models
     'mistral/mistral-large-latest',
     'mistral/mixtral-8x7b-instruct',
-    'mistral/mistral-medium',
-    'mistral/mistral-small',
-    // Other Notable Models
-    'perplexity/pplx-70b-online',
-    'anthropic/claude-2.1',
-    'google/palm-2-chat-bison'
+    // Meta Models
+    'meta/llama-3-70b-chat',
+    'meta/llama-2-70b-chat',
   ] as const
 } as const;
 

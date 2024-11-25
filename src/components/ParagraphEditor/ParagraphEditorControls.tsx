@@ -1,9 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bold, Italic, Underline, Link, Code, Quote, AlignLeft, AlignCenter, AlignRight, ChevronDown, Type, Book, Wand2, Brain } from 'lucide-react';
 import { ParagraphEditorControlsProps } from './types';
 import { translations } from './translations';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useAIProviders } from '../../hooks/useAIProviders';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const dropdownVariants = {
+  hidden: { opacity: 0, y: -10, scale: 0.95 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 25
+    }
+  },
+  exit: { 
+    opacity: 0, 
+    y: -10, 
+    scale: 0.95,
+    transition: { duration: 0.2 }
+  }
+};
+
+const fonts = [
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Times New Roman', label: 'Times New Roman' },
+  { value: 'Roboto', label: 'Roboto' },
+  { value: 'Open Sans', label: 'Open Sans' },
+  { value: 'Lato', label: 'Lato' },
+  { value: 'Montserrat', label: 'Montserrat' }
+];
+
+type FormatButtonType = {
+  icon?: React.ReactNode;
+  text?: string;
+  format: string;
+  title: keyof typeof translations['it']['formatButtons'];
+};
+
+const formatButtons: FormatButtonType[] = [
+  { icon: <Bold size={18} />, format: 'bold', title: 'bold' },
+  { icon: <Italic size={18} />, format: 'italic', title: 'italic' },
+  { icon: <Underline size={18} />, format: 'underline', title: 'underline' },
+  { text: 'H1', format: 'heading1', title: 'heading1' },
+  { text: 'H2', format: 'heading2', title: 'heading2' },
+  { text: 'H3', format: 'heading3', title: 'heading3' },
+  { icon: <Quote size={18} />, format: 'quote', title: 'quote' },
+  { icon: <Code size={18} />, format: 'code', title: 'code' },
+  { icon: <Link size={18} />, format: 'link', title: 'link' },
+];
 
 const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
   selectedParagraph,
@@ -17,14 +66,27 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAIChecking, setIsAIChecking] = useState(false);
+  const [isAICreating, setIsAICreating] = useState(false);
   const t = translations[language];
+  const { validateApiKey, generateText, analyzeText, setConfig } = useAIProviders();
 
-  useKeyboardShortcuts({
-    selectedParagraph,
-    onUpdate,
-    onSave,
-    onShowStoryMap,
-  });
+  useEffect(() => {
+    const loadAIConfig = () => {
+      const settings = localStorage.getItem('gamebookSettings');
+      if (settings) {
+        const { aiEnabled, aiProvider, aiModel, apiKey } = JSON.parse(settings);
+        if (aiEnabled && apiKey) {
+          setConfig({
+            provider: aiProvider,
+            model: aiModel,
+            apiKey
+          });
+        }
+      }
+    };
+
+    loadAIConfig();
+  }, []);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate({
@@ -53,78 +115,6 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
       alignment
     });
   };
-
-  const handleAICheck = async () => {
-    setIsAIChecking(true);
-    try {
-      // Verifica la presenza di errori grammaticali
-      const content = selectedParagraph.content || '';
-      
-      // Qui implementeremo la logica di controllo AI
-      // Per ora mostriamo solo un alert di esempio
-      setTimeout(() => {
-        alert('AI Check completato: Nessun errore trovato nel testo.');
-        setIsAIChecking(false);
-      }, 1000);
-      
-    } catch (error) {
-      console.error('Errore durante il controllo AI:', error);
-      alert('Si è verificato un errore durante il controllo AI.');
-      setIsAIChecking(false);
-    }
-  };
-
-  const dropdownVariants = {
-    hidden: { opacity: 0, y: -10, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 25
-      }
-    },
-    exit: { 
-      opacity: 0, 
-      y: -10, 
-      scale: 0.95,
-      transition: { duration: 0.2 }
-    }
-  };
-
-  const getLedColor = (type: string) => {
-    switch (type) {
-      case 'nodo':
-        return 'bg-orange-500';
-      case 'finale':
-        return 'bg-red-500';
-      default:
-        return 'bg-green-500';
-    }
-  };
-
-  const fonts = [
-    { value: 'Arial', label: 'Arial' },
-    { value: 'Times New Roman', label: 'Times New Roman' },
-    { value: 'Roboto', label: 'Roboto' },
-    { value: 'Open Sans', label: 'Open Sans' },
-    { value: 'Lato', label: 'Lato' },
-    { value: 'Montserrat', label: 'Montserrat' }
-  ];
-
-  const formatButtons = [
-    { icon: <Bold size={18} />, format: 'bold', title: t.formatButtons.bold },
-    { icon: <Italic size={18} />, format: 'italic', title: t.formatButtons.italic },
-    { icon: <Underline size={18} />, format: 'underline', title: t.formatButtons.underline },
-    { text: 'H1', format: 'heading1', title: t.formatButtons.heading1 },
-    { text: 'H2', format: 'heading2', title: t.formatButtons.heading2 },
-    { text: 'H3', format: 'heading3', title: t.formatButtons.heading3 },
-    { icon: <Quote size={18} />, format: 'quote', title: t.formatButtons.quote },
-    { icon: <Code size={18} />, format: 'code', title: t.formatButtons.code },
-    { icon: <Link size={18} />, format: 'link', title: t.formatButtons.link },
-  ];
 
   const handleFormat = (format: string) => {
     const textarea = document.querySelector('textarea');
@@ -178,6 +168,88 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
         textarea.selectionEnd = start + formattedText.length;
         textarea.focus();
       }, 0);
+    }
+  };
+
+  const getLedColor = (type: string) => {
+    switch (type) {
+      case 'nodo':
+        return 'bg-orange-500';
+      case 'finale':
+        return 'bg-red-500';
+      default:
+        return 'bg-green-500';
+    }
+  };
+
+  const handleAICheck = async () => {
+    if (!selectedParagraph.content) {
+      alert(language === 'it' ? 'Inserisci del testo da analizzare' : 'Please enter text to analyze');
+      return;
+    }
+
+    setIsAIChecking(true);
+    try {
+      const result = await analyzeText(selectedParagraph.content);
+      
+      const shouldApply = window.confirm(
+        language === 'it' 
+          ? `Analisi AI completata. Suggerimenti:\n\n${result.text}\n\nVuoi applicare i miglioramenti suggeriti?`
+          : `AI analysis completed. Suggestions:\n\n${result.text}\n\nDo you want to apply the suggested improvements?`
+      );
+
+      if (shouldApply) {
+        const improvedText = await generateText(
+          `Improve this text while maintaining its original meaning and style:\n\n${selectedParagraph.content}`
+        );
+        
+        onUpdate({
+          ...selectedParagraph,
+          content: improvedText.text
+        });
+      }
+    } catch (error) {
+      console.error('Errore durante il controllo AI:', error);
+      alert(language === 'it' 
+        ? 'Si è verificato un errore durante l\'analisi AI. Verifica la tua chiave API nelle impostazioni.'
+        : 'An error occurred during AI analysis. Please check your API key in settings.'
+      );
+    } finally {
+      setIsAIChecking(false);
+    }
+  };
+
+  const handleAICreate = async () => {
+    setIsAICreating(true);
+    try {
+      const prompt = `Create a new paragraph for a gamebook/interactive fiction. Context:\n
+Title: ${selectedParagraph.title || 'Untitled'}\n
+Current paragraph type: ${selectedParagraph.type}\n
+Current content: ${selectedParagraph.content || 'Empty'}\n\n
+Please generate a creative and engaging alternative version of this paragraph that maintains the story's tone and key plot points.`;
+
+      const result = await generateText(prompt);
+      
+      const shouldApply = window.confirm(
+        language === 'it'
+          ? `Contenuto generato dall'AI:\n\n${result.text}\n\nVuoi sostituire il contenuto attuale con questa versione?`
+          : `AI generated content:\n\n${result.text}\n\nDo you want to replace the current content with this version?`
+      );
+
+      if (shouldApply) {
+        onUpdate({
+          ...selectedParagraph,
+          content: result.text
+        });
+      }
+    } catch (error) {
+      console.error('Errore durante la generazione AI:', error);
+      alert(language === 'it'
+        ? 'Si è verificato un errore durante la generazione AI. Verifica la tua chiave API nelle impostazioni.'
+        : 'An error occurred during AI generation. Please check your API key in settings.'
+      );
+    } finally {
+      setIsAICreating(false);
     }
   };
 
@@ -260,25 +332,32 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
             }`}
             onClick={handleAICheck}
             disabled={isAIChecking}
+            title={t.aiCheck.tooltip}
             style={{
               boxShadow: '0 0 10px rgba(255, 255, 255, 0.1)',
             }}
           >
             <Wand2 size={18} className={`text-white ${isAIChecking ? 'animate-spin' : 'group-hover:animate-pulse'}`} />
             <span className={`text-white ${isAIChecking ? '' : 'group-hover:animate-pulse'}`}>
-              {isAIChecking ? 'Checking...' : 'AICheck'}
+              {isAIChecking ? (language === 'it' ? 'Analisi...' : 'Checking...') : t.aiCheck.title}
             </span>
             <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
           </button>
           <button
-            className="flex items-center gap-2 px-4 py-2 bg-transparent text-white rounded-lg transition-all duration-200 border border-white/20 hover:border-white/40 relative group"
-            onClick={() => {/* TODO: Implement AICreate */}}
+            className={`flex items-center gap-2 px-4 py-2 bg-transparent text-white rounded-lg transition-all duration-200 border border-white/20 hover:border-white/40 relative group ${
+              isAICreating ? 'animate-pulse' : ''
+            }`}
+            onClick={handleAICreate}
+            disabled={isAICreating}
+            title={t.aiCreate.tooltip}
             style={{
               boxShadow: '0 0 10px rgba(255, 255, 255, 0.1)',
             }}
           >
-            <Brain size={18} className="text-white group-hover:animate-pulse" />
-            <span className="text-white group-hover:animate-pulse">AICreate</span>
+            <Brain size={18} className={`text-white ${isAICreating ? 'animate-spin' : 'group-hover:animate-pulse'}`} />
+            <span className={`text-white ${isAICreating ? '' : 'group-hover:animate-pulse'}`}>
+              {isAICreating ? (language === 'it' ? 'Generazione...' : 'Creating...') : t.aiCreate.title}
+            </span>
             <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
           </button>
         </div>
@@ -380,7 +459,7 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => handleFormat(button.format)}
-            title={button.title}
+            title={t.formatButtons[button.title]}
             className="w-10 h-8 flex items-center justify-center rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white"
           >
             {button.icon || <span className="text-sm font-medium">{button.text}</span>}

@@ -59,7 +59,7 @@ const Header: React.FC<HeaderProps> = ({
         variants={headerVariants}
         initial="initial"
         animate="animate"
-        className={`${isDarkMode ? 'bg-gray-800/90 backdrop-blur-md border-b border-white/20' : 'glass'} z-50 sticky top-0`}
+        className={`${isDarkMode ? 'bg-gray-800/90 backdrop-blur-md border-b border-white/20' : 'bg-[#F3E5D8]/90 backdrop-blur-md border-b border-[#6F4E37]/20'} z-50 sticky top-0`}
       >
         <div className="w-full py-3 px-4">
           <div className="flex items-center">
@@ -76,7 +76,7 @@ const Header: React.FC<HeaderProps> = ({
               <motion.span 
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-xl font-bold tracking-tight"
+                className="text-xl font-bold tracking-tight text-foreground"
               >
                 GameBook Studio
               </motion.span>
@@ -97,7 +97,7 @@ const Header: React.FC<HeaderProps> = ({
                 )}
                 <button
                   onClick={() => setIsChangelogOpen(true)}
-                  className="badge badge-primary hover:bg-blue-600 transition-colors duration-200"
+                  className={`badge ${isDarkMode ? 'badge-primary hover:bg-blue-600' : 'bg-[#886F68] hover:bg-[#6F4E37] text-[#F3E5D8]'} transition-colors duration-200`}
                 >
                   v{version}
                 </button>

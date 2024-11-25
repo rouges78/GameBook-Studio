@@ -80,7 +80,7 @@ const ProjectBox = React.memo<ProjectBoxProps>(({ project, isDarkMode, translati
     return (
       <motion.div
         initial={{ opacity: 0 }}
-7        animate={{ opacity: 1 }}
+        animate={{ opacity: 1 }}
         transition={{ delay: index * 0.1 }}
         className="flex flex-col"
       >
@@ -227,7 +227,7 @@ const ActionBox: React.FC<{
     }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className={`${isDarkMode ? 'bg-gray-800/90' : 'bg-white/90'} p-8 rounded-2xl cursor-pointer flex flex-col items-center gap-4 backdrop-blur-sm hover:bg-opacity-100 transition-all duration-200 shadow-xl hover:shadow-2xl w-72 h-72 border border-blue-500/30 hover:border-blue-500/50`}
+    className={`${isDarkMode ? 'bg-gray-800/90' : 'bg-white/90'} p-8 rounded-2xl cursor-pointer flex flex-col items-center gap-4 backdrop-blur-sm hover:bg-opacity-100 transition-all duration-200 shadow-xl hover:shadow-2xl w-72 h-72 border ${isDarkMode ? 'border-blue-500/30 hover:border-blue-500/50' : 'border-[#6F4E37]/30 hover:border-[#6F4E37]/50'}`}
   >
     <motion.div 
       className="text-white w-32 h-32 flex items-center justify-center bg-blue-500 rounded-full shadow-lg"
@@ -453,10 +453,10 @@ const Dashboard: React.FC<DashboardProps> = ({ isDarkMode, setCurrentPage, setIs
             className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${
               isDarkMode 
                 ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
+                : 'bg-[#6F4E37] hover:bg-[#5D4037] text-[#F3E5D8]'
             }`}
           >
-            v0.1.1
+            v0.9.7
           </button>
         </div>
 

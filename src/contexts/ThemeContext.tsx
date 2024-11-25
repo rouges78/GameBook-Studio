@@ -25,6 +25,22 @@ export const defaultTheme: Theme = {
   layout: 'grid',
 };
 
+export const mochaTheme: Theme = {
+  primaryColor: '#886F68',
+  secondaryColor: '#6F4E37',
+  textColor: '#3B2C26',
+  backgroundColor: '#F3E5D8',
+  fontSize: 16,
+  fontFamily: 'Roboto',
+  borderRadius: 4,
+  buttonStyle: 'rounded',
+  spacing: 16,
+  paragraphBackground: '#DBC1AC',
+  animationSpeed: 300,
+  iconSet: 'default',
+  layout: 'grid',
+};
+
 export const ThemeContext = createContext<ThemeContextType>({
   theme: defaultTheme,
   setTheme: () => {},

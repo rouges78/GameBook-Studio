@@ -17,7 +17,7 @@ import { TelemetryDashboard } from './components/TelemetryDashboard';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
 import { saveProject, getProjects, deleteProject, debugDatabase, migrateProjectData } from './utils/storage';
 import { startAutoBackup, stopAutoBackup } from './utils/autoBackup';
-import { ThemeContext, defaultTheme, type Theme } from './contexts/ThemeContext';
+import { ThemeContext, defaultTheme, mochaTheme, type Theme } from './contexts/ThemeContext';
 import packageJson from '../package.json';
 import type { Paragraph as EditorParagraph } from './components/ParagraphEditor/types';
 import type { Paragraph as ExportParagraph } from './components/ExportPage/types';
@@ -42,6 +42,10 @@ const App: React.FC = () => {
   const [lastBackup, setLastBackup] = useState<string>('');
   const [notification, setNotification] = useState<NotificationType | null>(null);
   const [theme, setTheme] = useState<Theme>(defaultTheme);
+
+  useEffect(() => {
+    setTheme(isDarkMode ? defaultTheme : mochaTheme);
+  }, [isDarkMode]);
 
   const {
     updateAvailable,

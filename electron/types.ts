@@ -32,18 +32,6 @@ export interface DialogResult {
   filePaths?: string[];
 }
 
-export interface TelemetryEvent {
-  category: string;
-  action: string;
-  label?: string;
-  value?: number;
-  metadata?: Record<string, any>;
-  timestamp: number;
-  appVersion: string;
-  platform: string;
-  arch: string;
-}
-
 export interface IpcApi {
     // Window operations
     'window:close': () => void;
@@ -75,12 +63,6 @@ export interface IpcApi {
     'db:saveProject': (project: Project) => Promise<void>;
     'db:deleteProject': (bookTitle: string) => Promise<void>;
     'db:debugDatabase': () => Promise<Project[]>;
-
-    // Telemetry handlers
-    'telemetry:getData': () => Promise<TelemetryEvent[]>;
-    'telemetry-events': (events: TelemetryEvent[]) => Promise<void>;
-    'telemetry-status': () => Promise<boolean>;
-    'telemetry-toggle': (enabled: boolean) => Promise<boolean>;
 }
 
 export interface IpcEventMap {
@@ -88,7 +70,6 @@ export interface IpcEventMap {
     'update-download-progress': number;
     'update-downloaded': void;
     'update-error': { message: string; code: string };
-    'telemetry-status-changed': boolean;
 }
 
 export type IpcEvents = {

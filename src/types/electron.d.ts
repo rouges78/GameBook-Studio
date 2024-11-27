@@ -32,18 +32,6 @@ interface DialogResult {
   filePaths?: string[];
 }
 
-interface TelemetryEvent {
-  category: string;
-  action: string;
-  label?: string;
-  value?: number;
-  metadata?: Record<string, any>;
-  timestamp: number;
-  appVersion: string;
-  platform: string;
-  arch: string;
-}
-
 type UpdateEventCallback = (info: UpdateInfo) => void;
 type ProgressEventCallback = (progress: number) => void;
 type ErrorEventCallback = (error: { message: string; code: string }) => void;
@@ -81,12 +69,6 @@ interface ElectronAPI {
   'db:deleteProject': (bookTitle: string) => Promise<void>;
   'db:debugDatabase': () => Promise<Project[]>;
 
-  // Telemetry handlers
-  'telemetry:getData': () => Promise<TelemetryEvent[]>;
-  'telemetry-events': (events: TelemetryEvent[]) => Promise<void>;
-  'telemetry-status': () => Promise<boolean>;
-  'telemetry-toggle': (enabled: boolean) => Promise<boolean>;
-
   // Dialog handlers
   dialog: {
     showOpenDialog: (options: any) => Promise<DialogResult>;
@@ -113,4 +95,4 @@ declare global {
   }
 }
 
-export { UpdateInfo, BackupMetadata, BackupSettings, DialogResult, TelemetryEvent, ElectronAPI };
+export { UpdateInfo, BackupMetadata, BackupSettings, DialogResult, ElectronAPI };

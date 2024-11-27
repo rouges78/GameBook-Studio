@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, Bell, Database, Clock, ToggleLeft, ToggleRight, 
-  Brain, BarChart2, Archive, Settings as SettingsIcon
+  Brain, Archive, Settings as SettingsIcon
 } from 'lucide-react';
 import { saveProject, getProjects } from '../utils/storage';
 import { 
@@ -14,7 +14,7 @@ import {
 import Notification from './Notification';
 
 interface SettingsProps {
-  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 'settings' | 'help' | 'export' | 'backupManager' | 'telemetryDashboard') => void;
+  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 'settings' | 'help' | 'export' | 'backupManager') => void;
   isDarkMode: boolean;
   language: 'it' | 'en';
 }
@@ -121,9 +121,7 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       apiKey: "Chiave API",
       anthropic: "Anthropic",
       openai: "OpenAI",
-      openrouter: "OpenRouter",
-      telemetryDashboard: "Dashboard Telemetria",
-      openTelemetryDashboard: "Apri Dashboard Telemetria"
+      openrouter: "OpenRouter"
     },
     en: {
       backToDashboard: "Back to Dashboard",
@@ -161,9 +159,7 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       apiKey: "API Key",
       anthropic: "Anthropic",
       openai: "OpenAI",
-      openrouter: "OpenRouter",
-      telemetryDashboard: "Telemetry Dashboard",
-      openTelemetryDashboard: "Open Telemetry Dashboard"
+      openrouter: "OpenRouter"
     }
   };
 
@@ -318,20 +314,6 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       case 'general':
         return (
           <div className="space-y-6">
-            {/* Telemetry Dashboard */}
-            <section>
-              <h2 className="text-lg font-semibold mb-3 flex items-center">
-                <BarChart2 size={20} className="mr-2" />
-                {t.telemetryDashboard}
-              </h2>
-              <button
-                onClick={() => setCurrentPage('telemetryDashboard')}
-                className={`${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white font-medium py-1.5 px-3 rounded text-sm`}
-              >
-                {t.openTelemetryDashboard}
-              </button>
-            </section>
-
             {/* Auto Save Settings */}
             <section>
               <h2 className="text-lg font-semibold mb-3 flex items-center justify-between">

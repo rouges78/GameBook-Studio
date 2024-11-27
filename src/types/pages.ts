@@ -1,5 +1,5 @@
 export type PageType = 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 
-                'settings' | 'help' | 'export' | 'backupManager' | 'telemetryDashboard';
+                'settings' | 'help' | 'export' | 'backupManager';
 
 export interface Project {
   id: string;

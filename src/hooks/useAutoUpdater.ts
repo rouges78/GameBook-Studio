@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { UpdateInfo, UpdateError } from '../components/UpdateNotification/types';
-import { telemetry } from '../utils/telemetry';
 
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 2000;
@@ -26,42 +25,18 @@ export function useAutoUpdater() {
       setUpdateAvailable(true);
       setUpdateInfo(info);
       setError(undefined);
-      telemetry.trackEvent({
-        category: 'auto-update',
-        action: 'update-available',
-        label: info.version,
-        metadata: {
-          version: info.version,
-          releaseNotes: info.releaseNotes
-        },
-        timestamp: Date.now()
-      });
     };
 
     const handleDownloadProgress = (progress: number) => {
       setDownloadProgress(progress);
       setIsDownloading(true);
       setError(undefined);
-      if (progress === 100) {
-        telemetry.trackEvent({
-          category: 'auto-update',
-          action: 'download-complete',
-          value: progress,
-          timestamp: Date.now()
-        });
-      }
     };
 
     const handleUpdateDownloaded = () => {
       setUpdateDownloaded(true);
       setIsDownloading(false);
       setError(undefined);
-      telemetry.trackEvent({
-        category: 'auto-update',
-        action: 'update-downloaded',
-        metadata: { version: updateInfo?.version },
-        timestamp: Date.now()
-      });
     };
 
     const handleError = (errorInfo: { message: string; code: string }) => {
@@ -71,12 +46,6 @@ export function useAutoUpdater() {
       };
       setError(updatedError);
       setIsDownloading(false);
-      telemetry.trackUpdateError(
-        new Error(errorInfo.message),
-        retryCount,
-        MAX_RETRY_ATTEMPTS,
-        RETRY_DELAY_MS
-      );
     };
 
     // Register listeners
@@ -100,12 +69,6 @@ export function useAutoUpdater() {
     try {
       setIsDownloading(true);
       setError(undefined);
-      telemetry.trackEvent({
-        category: 'auto-update',
-        action: 'download-started',
-        metadata: { version: updateInfo?.version },
-        timestamp: Date.now()
-      });
       await window.electron['update:start-download']();
     } catch (error) {
       console.error('Failed to start update download:', error);
@@ -116,14 +79,8 @@ export function useAutoUpdater() {
         retryCount,
       };
       setError(updateError);
-      telemetry.trackUpdateError(
-        error instanceof Error ? error : new Error('Download failed'),
-        retryCount,
-        MAX_RETRY_ATTEMPTS,
-        RETRY_DELAY_MS
-      );
     }
-  }, [retryCount, updateInfo]);
+  }, [retryCount]);
 
   const retryOperation = useCallback(async () => {
     if (!isElectron) return;
@@ -135,33 +92,11 @@ export function useAutoUpdater() {
         retryCount,
       };
       setError(maxRetryError);
-      telemetry.trackEvent({
-        category: 'auto-update',
-        action: 'max-retries-exceeded',
-        metadata: {
-          totalAttempts: retryCount,
-          maxAttempts: MAX_RETRY_ATTEMPTS,
-          operation: isDownloading ? 'download' : 'check'
-        },
-        timestamp: Date.now()
-      });
       return;
     }
 
     setIsRetrying(true);
     setRetryCount(prev => prev + 1);
-
-    telemetry.trackEvent({
-      category: 'auto-update',
-      action: 'retry-attempt',
-      metadata: {
-        attemptNumber: retryCount + 1,
-        maxAttempts: MAX_RETRY_ATTEMPTS,
-        operation: isDownloading ? 'download' : 'check',
-        delay: RETRY_DELAY_MS
-      },
-      timestamp: Date.now()
-    });
 
     try {
       await delay(RETRY_DELAY_MS);
@@ -178,26 +113,14 @@ export function useAutoUpdater() {
 
   const installUpdate = useCallback(() => {
     if (!isElectron) return;
-
-    telemetry.trackEvent({
-      category: 'auto-update',
-      action: 'install-started',
-      metadata: { version: updateInfo?.version },
-      timestamp: Date.now()
-    });
     window.electron['update:install']();
-  }, [updateInfo]);
+  }, []);
 
   const checkForUpdates = useCallback(async () => {
     if (!isElectron) return;
 
     try {
       setError(undefined);
-      telemetry.trackEvent({
-        category: 'auto-update',
-        action: 'check-started',
-        timestamp: Date.now()
-      });
       await window.electron['update:check']();
     } catch (error) {
       console.error('Failed to check for updates:', error);
@@ -207,27 +130,10 @@ export function useAutoUpdater() {
         retryCount,
       };
       setError(updateError);
-      telemetry.trackUpdateError(
-        error instanceof Error ? error : new Error('Check failed'),
-        retryCount,
-        MAX_RETRY_ATTEMPTS,
-        RETRY_DELAY_MS
-      );
     }
   }, [retryCount]);
 
   const dismissUpdate = useCallback(() => {
-    telemetry.trackEvent({
-      category: 'auto-update',
-      action: 'update-dismissed',
-      metadata: {
-        version: updateInfo?.version,
-        wasDownloading: isDownloading,
-        wasDownloaded: updateDownloaded,
-        hadError: !!error
-      },
-      timestamp: Date.now()
-    });
     setUpdateAvailable(false);
     setUpdateInfo(undefined);
     setDownloadProgress(0);
@@ -236,7 +142,7 @@ export function useAutoUpdater() {
     setError(undefined);
     setRetryCount(0);
     setIsRetrying(false);
-  }, [updateInfo, isDownloading, updateDownloaded, error]);
+  }, []);
 
   return {
     updateAvailable,

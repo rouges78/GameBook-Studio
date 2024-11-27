@@ -4,7 +4,6 @@ const { autoUpdater } = require('electron-updater');
 const log = require('electron-log');
 const { BackupManager } = require('./backup');
 const { DatabaseManager } = require('./database');
-const { telemetryService } = require('./telemetry');
 
 let mainWindow;
 let backupManager;

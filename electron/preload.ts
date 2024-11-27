@@ -38,14 +38,6 @@ contextBridge.exposeInMainWorld('electron', {
     'db:deleteProject': (bookTitle: string) => ipcRenderer.invoke('db:deleteProject', bookTitle),
     'db:debugDatabase': () => ipcRenderer.invoke('db:debugDatabase'),
 
-    // Telemetry handlers
-    'telemetry-events': (events: Parameters<IpcApi['telemetry-events']>[0]) => 
-        ipcRenderer.invoke('telemetry-events', events),
-    'telemetry-status': () => ipcRenderer.invoke('telemetry-status'),
-    'telemetry-toggle': (enabled: Parameters<IpcApi['telemetry-toggle']>[0]) => 
-        ipcRenderer.invoke('telemetry-toggle', enabled),
-    'telemetry:getData': () => ipcRenderer.invoke('telemetry:getData'),
-
     // Dialog handlers
     dialog: {
         showOpenDialog: (options: any) => ipcRenderer.invoke('dialog:showOpenDialog', options),

@@ -28,11 +28,6 @@ electron_1.contextBridge.exposeInMainWorld('electron', {
     'db:saveProject': (project) => electron_1.ipcRenderer.invoke('db:saveProject', project),
     'db:deleteProject': (bookTitle) => electron_1.ipcRenderer.invoke('db:deleteProject', bookTitle),
     'db:debugDatabase': () => electron_1.ipcRenderer.invoke('db:debugDatabase'),
-    // Telemetry handlers
-    'telemetry-events': (events) => electron_1.ipcRenderer.invoke('telemetry-events', events),
-    'telemetry-status': () => electron_1.ipcRenderer.invoke('telemetry-status'),
-    'telemetry-toggle': (enabled) => electron_1.ipcRenderer.invoke('telemetry-toggle', enabled),
-    'telemetry:getData': () => electron_1.ipcRenderer.invoke('telemetry:getData'),
     // Dialog handlers
     dialog: {
         showOpenDialog: (options) => electron_1.ipcRenderer.invoke('dialog:showOpenDialog', options),

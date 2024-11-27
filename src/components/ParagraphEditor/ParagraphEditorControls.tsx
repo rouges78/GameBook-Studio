@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Bold, Italic, Underline, Link, Code, Quote, AlignLeft, AlignCenter, AlignRight, ChevronDown, Type, Book, Wand2, Brain } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bold, Italic, Underline, Link, Code, Quote, AlignLeft, AlignCenter, AlignRight, ChevronDown, Type, Book } from 'lucide-react';
 import { ParagraphEditorControlsProps } from './types';
 import { translations } from './translations';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { useAIProviders } from '../../hooks/useAIProviders';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const dropdownVariants = {
@@ -65,28 +64,7 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
   onShowStoryMap,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isAIChecking, setIsAIChecking] = useState(false);
-  const [isAICreating, setIsAICreating] = useState(false);
   const t = translations[language];
-  const { validateApiKey, generateText, analyzeText, setConfig } = useAIProviders();
-
-  useEffect(() => {
-    const loadAIConfig = () => {
-      const settings = localStorage.getItem('gamebookSettings');
-      if (settings) {
-        const { aiEnabled, aiProvider, aiModel, apiKey } = JSON.parse(settings);
-        if (aiEnabled && apiKey) {
-          setConfig({
-            provider: aiProvider,
-            model: aiModel,
-            apiKey
-          });
-        }
-      }
-    };
-
-    loadAIConfig();
-  }, []);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate({
@@ -182,77 +160,6 @@ const ParagraphEditorControls: React.FC<ParagraphEditorControlsProps> = ({
     }
   };
 
-  const handleAICheck = async () => {
-    if (!selectedParagraph.content) {
-      alert(language === 'it' ? 'Inserisci del testo da analizzare' : 'Please enter text to analyze');
-      return;
-    }
-
-    setIsAIChecking(true);
-    try {
-      const result = await analyzeText(selectedParagraph.content);
-      
-      const shouldApply = window.confirm(
-        language === 'it' 
-          ? `Analisi AI completata. Suggerimenti:\n\n${result.text}\n\nVuoi applicare i miglioramenti suggeriti?`
-          : `AI analysis completed. Suggestions:\n\n${result.text}\n\nDo you want to apply the suggested improvements?`
-      );
-
-      if (shouldApply) {
-        const improvedText = await generateText(
-          `Improve this text while maintaining its original meaning and style:\n\n${selectedParagraph.content}`
-        );
-        
-        onUpdate({
-          ...selectedParagraph,
-          content: improvedText.text
-        });
-      }
-    } catch (error) {
-      console.error('Errore durante il controllo AI:', error);
-      alert(language === 'it' 
-        ? 'Si è verificato un errore durante l\'analisi AI. Verifica la tua chiave API nelle impostazioni.'
-        : 'An error occurred during AI analysis. Please check your API key in settings.'
-      );
-    } finally {
-      setIsAIChecking(false);
-    }
-  };
-
-  const handleAICreate = async () => {
-    setIsAICreating(true);
-    try {
-      const prompt = `Create a new paragraph for a gamebook/interactive fiction. Context:\n
-Title: ${selectedParagraph.title || 'Untitled'}\n
-Current paragraph type: ${selectedParagraph.type}\n
-Current content: ${selectedParagraph.content || 'Empty'}\n\n
-Please generate a creative and engaging alternative version of this paragraph that maintains the story's tone and key plot points.`;
-
-      const result = await generateText(prompt);
-      
-      const shouldApply = window.confirm(
-        language === 'it'
-          ? `Contenuto generato dall'AI:\n\n${result.text}\n\nVuoi sostituire il contenuto attuale con questa versione?`
-          : `AI generated content:\n\n${result.text}\n\nDo you want to replace the current content with this version?`
-      );
-
-      if (shouldApply) {
-        onUpdate({
-          ...selectedParagraph,
-          content: result.text
-        });
-      }
-    } catch (error) {
-      console.error('Errore durante la generazione AI:', error);
-      alert(language === 'it'
-        ? 'Si è verificato un errore durante la generazione AI. Verifica la tua chiave API nelle impostazioni.'
-        : 'An error occurred during AI generation. Please check your API key in settings.'
-      );
-    } finally {
-      setIsAICreating(false);
-    }
-  };
-
   return (
     <div className="flex-none bg-gray-800">
       {/* Title Input and Node Type */}
@@ -324,42 +231,6 @@ Please generate a creative and engaging alternative version of this paragraph th
             placeholder={t.enterTitle}
             className="w-[600px] px-4 py-2 bg-gray-600 text-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200"
           />
-
-          {/* AI Buttons with glowing effect */}
-          <button
-            className={`flex items-center gap-2 px-4 py-2 bg-transparent text-white rounded-lg transition-all duration-200 border border-white/20 hover:border-white/40 relative group ${
-              isAIChecking ? 'animate-pulse' : ''
-            }`}
-            onClick={handleAICheck}
-            disabled={isAIChecking}
-            title={t.aiCheck.tooltip}
-            style={{
-              boxShadow: '0 0 10px rgba(255, 255, 255, 0.1)',
-            }}
-          >
-            <Wand2 size={18} className={`text-white ${isAIChecking ? 'animate-spin' : 'group-hover:animate-pulse'}`} />
-            <span className={`text-white ${isAIChecking ? '' : 'group-hover:animate-pulse'}`}>
-              {isAIChecking ? (language === 'it' ? 'Analisi...' : 'Checking...') : t.aiCheck.title}
-            </span>
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-          </button>
-          <button
-            className={`flex items-center gap-2 px-4 py-2 bg-transparent text-white rounded-lg transition-all duration-200 border border-white/20 hover:border-white/40 relative group ${
-              isAICreating ? 'animate-pulse' : ''
-            }`}
-            onClick={handleAICreate}
-            disabled={isAICreating}
-            title={t.aiCreate.tooltip}
-            style={{
-              boxShadow: '0 0 10px rgba(255, 255, 255, 0.1)',
-            }}
-          >
-            <Brain size={18} className={`text-white ${isAICreating ? 'animate-spin' : 'group-hover:animate-pulse'}`} />
-            <span className={`text-white ${isAICreating ? '' : 'group-hover:animate-pulse'}`}>
-              {isAICreating ? (language === 'it' ? 'Generazione...' : 'Creating...') : t.aiCreate.title}
-            </span>
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-          </button>
         </div>
 
         <div className="flex items-center">

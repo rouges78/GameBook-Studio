@@ -13,7 +13,6 @@ import Notification from './components/Notification';
 import UpdateNotification from './components/UpdateNotification';
 import UpdateErrorBoundary from './components/UpdateNotification/ErrorBoundary';
 import BackupManager from './components/BackupManager';
-import { TelemetryDashboard } from './components/TelemetryDashboard';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
 import { saveProject, getProjects, deleteProject, debugDatabase, migrateProjectData } from './utils/storage';
 import { startAutoBackup, stopAutoBackup } from './utils/autoBackup';
@@ -318,13 +317,6 @@ const App: React.FC = () => {
             setCurrentPage={handleSetPage}
             isDarkMode={isDarkMode}
             language={language}
-          />
-        );
-      case 'telemetryDashboard':
-        return (
-          <TelemetryDashboard
-            key="telemetry-dashboard"
-            isDarkMode={isDarkMode}
           />
         );
       default:

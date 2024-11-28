@@ -4,13 +4,6 @@ import {
   Brain, Archive, Settings as SettingsIcon
 } from 'lucide-react';
 import { saveProject, getProjects } from '../utils/storage';
-import { 
-  requestNotificationPermission, 
-  initializeNotifications, 
-  showBrowserNotification,
-  getNotificationPermissionState,
-  NOTIFICATION_PERMISSION
-} from '../utils/notifications';
 import Notification from './Notification';
 
 interface SettingsProps {

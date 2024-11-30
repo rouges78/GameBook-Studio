@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Paragraph, Action, NotificationType, Project } from '../types';
 import { MapSettings } from '../../StoryMap/types';
+import debounce from 'lodash/debounce';
 
 interface UseParagraphEditorProps {
   initialParagraphs?: Paragraph[];
@@ -147,22 +148,6 @@ export const useParagraphEditor = ({
     );
   }, []);
 
-  const handleContentChange = useCallback((newContent: string) => {
-    setContent(newContent);
-    if (selectedParagraph !== null) {
-      const currentParagraph = paragraphs.find(p => p.id === selectedParagraph);
-      if (currentParagraph) {
-        updateParagraphConnections({
-          ...currentParagraph,
-          content: newContent,
-          title: newParagraphTitle,
-          actions,
-          type: paragraphType
-        });
-      }
-    }
-  }, [selectedParagraph, paragraphs, newParagraphTitle, actions, paragraphType, updateParagraphConnections]);
-
   const handleSave = useCallback((showNotification = true) => {
     if (selectedParagraph !== null) {
       const updatedParagraphs = paragraphs.map((p) =>
@@ -219,6 +204,38 @@ export const useParagraphEditor = ({
     paragraphs,
     mapSettings,
   ]);
+
+  // Debounced save function
+  const debouncedSave = useCallback(
+    debounce((content: string) => {
+      if (selectedParagraph !== null) {
+        const currentParagraph = paragraphs.find(p => p.id === selectedParagraph);
+        if (currentParagraph) {
+          updateParagraphConnections({
+            ...currentParagraph,
+            content,
+            title: newParagraphTitle,
+            actions,
+            type: paragraphType
+          });
+          handleSave(false);
+        }
+      }
+    }, 1000),
+    [selectedParagraph, paragraphs, newParagraphTitle, actions, paragraphType, updateParagraphConnections, handleSave]
+  );
+
+  const handleContentChange = useCallback((newContent: string) => {
+    setContent(newContent);
+    debouncedSave(newContent);
+  }, [debouncedSave]);
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, [debouncedSave]);
 
   return {
     state: {

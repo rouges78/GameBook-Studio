@@ -25,6 +25,7 @@ export const translations = {
     searchPlaceholder: "Cerca...",
     completeLastAction: "Completa l'ultima azione prima di aggiungerne una nuova",
     newParagraphCreated: "Nuovo paragrafo creato con successo",
+    fontSize: "Dimensione testo",
     nodeTypes: {
       title: "Tipo:",
       normal: "Normale",
@@ -99,6 +100,7 @@ export const translations = {
     searchPlaceholder: "Search...",
     completeLastAction: "Complete the last action before adding a new one",
     newParagraphCreated: "New paragraph created successfully",
+    fontSize: "Font size",
     nodeTypes: {
       title: "Type:",
       normal: "Normal",

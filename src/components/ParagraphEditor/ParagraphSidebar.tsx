@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { Search, Plus, Image, Link2, Hash } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ParagraphSidebarProps } from './types';
+import { ParagraphSidebarProps, Paragraph } from './types';
 import { translations } from './translations';
 
 const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
@@ -27,10 +27,10 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
   const filteredParagraphs = useMemo(() => {
     if (!searchTerm) return paragraphs;
 
-    return paragraphs.filter((p) => {
+    return paragraphs.filter((p: Paragraph) => {
       const matchesTitle = p.title.toLowerCase().includes(searchValue);
       const matchesContent = (p.content || '').toLowerCase().includes(searchValue);
-      const matchesTags = p.tags?.some(tag => tag.toLowerCase().includes(searchValue)) || false;
+      const matchesTags = p.tags?.some((tag: string) => tag.toLowerCase().includes(searchValue)) || false;
       
       if (isHashtagSearch) {
         return matchesTags;
@@ -40,19 +40,68 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
     });
   }, [paragraphs, searchTerm, isHashtagSearch, searchValue]);
 
-  const hasValidConnections = useCallback((p: typeof paragraphs[0]) => {
+  const hasValidConnections = useCallback((p: Paragraph) => {
     const hasValidActions = p.actions.some((a) => a.text.trim() !== '' && a['N.Par.'] !== '') || false;
     const hasIncomingConnections = (p.incomingConnections?.length || 0) > 0;
     return hasValidActions || hasIncomingConnections;
   }, []);
 
-  const matchesTagSearch = useCallback((p: typeof paragraphs[0]) => {
+  const matchesTagSearch = useCallback((p: Paragraph) => {
     if (!isHashtagSearch) return false;
-    return p.tags?.some(tag => tag.toLowerCase().includes(searchValue)) || false;
+    return p.tags?.some((tag: string) => tag.toLowerCase().includes(searchValue)) || false;
   }, [isHashtagSearch, searchValue]);
 
   const handleSelectParagraph = (id: number) => {
     onSelectParagraph(id);
+  };
+
+  const scrollVariants = {
+    initial: {
+      opacity: 0,
+      height: 0,
+      scaleY: 0,
+      transformOrigin: "top"
+    },
+    animate: {
+      opacity: 1,
+      height: "auto",
+      scaleY: 1,
+      transition: {
+        height: {
+          type: "spring",
+          stiffness: 100,
+          damping: 15
+        },
+        opacity: {
+          duration: 0.2
+        },
+        scaleY: {
+          type: "spring",
+          stiffness: 120,
+          damping: 20
+        }
+      }
+    },
+    exit: {
+      opacity: 0,
+      height: 0,
+      scaleY: 0,
+      transition: {
+        height: {
+          type: "spring",
+          stiffness: 100,
+          damping: 15
+        },
+        opacity: {
+          duration: 0.2
+        },
+        scaleY: {
+          type: "spring",
+          stiffness: 120,
+          damping: 20
+        }
+      }
+    }
   };
 
   return (
@@ -92,7 +141,7 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
 
         <div className="flex-1 overflow-y-auto p-2 space-y-2">
           <AnimatePresence>
-            {filteredParagraphs.map((p) => (
+            {filteredParagraphs.map((p: Paragraph) => (
               <motion.div
                 key={p.id}
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -154,18 +203,23 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
                   <AnimatePresence>
                     {showConnections === p.id && (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-2 text-xs text-white bg-black bg-opacity-10 rounded-lg p-2"
+                        variants={scrollVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        className="mt-2 text-xs text-white bg-black bg-opacity-10 rounded-lg p-2 overflow-hidden"
+                        style={{
+                          backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)',
+                          backgroundSize: '100% 8px'
+                        }}
                       >
                         {p.incomingConnections && p.incomingConnections.length > 0 && (
                           <div className="mb-2">
                             <span className="opacity-90 font-medium">{t.connections.incoming}: {p.incomingConnections.length}</span>
                             <div className="pl-2 mt-1 space-y-1">
-                              {p.incomingConnections.map((id) => (
+                              {p.incomingConnections.map((id: number) => (
                                 <div key={id} className="opacity-75 truncate hover:opacity-100 transition-opacity">
-                                  {paragraphs.find((para) => para.id === id)?.title || `${t.connections.paragraph} ${id}`}
+                                  {paragraphs.find((para: Paragraph) => para.id === id)?.title || `${t.connections.paragraph} ${id}`}
                                 </div>
                               ))}
                             </div>
@@ -177,7 +231,7 @@ const ParagraphSidebar: React.FC<ParagraphSidebarProps> = ({
                             <div className="pl-2 mt-1 space-y-1">
                               {p.actions.filter(a => a.text.trim() !== '' && a['N.Par.'] !== '').map((action, idx) => (
                                 <div key={idx} className="opacity-75 truncate hover:opacity-100 transition-opacity">
-                                  {paragraphs.find((para) => para.id === Number(action['N.Par.']))?.title || `${t.connections.paragraph} ${action['N.Par.']}`}
+                                  {paragraphs.find((para: Paragraph) => para.id === Number(action['N.Par.']))?.title || `${t.connections.paragraph} ${action['N.Par.']}`}
                                 </div>
                               ))}
                             </div>

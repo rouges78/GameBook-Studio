@@ -2,6 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import { ParagraphContentProps } from './types';
 import { translations } from './translations';
 import { useHistory } from './hooks/useHistory';
+import FormattingToolbar from './components/FormattingToolbar';
 
 const ParagraphContent: React.FC<ParagraphContentProps> = ({
   selectedParagraph,
@@ -44,6 +45,13 @@ const ParagraphContent: React.FC<ParagraphContentProps> = ({
 
   return (
     <div className="h-full flex flex-col bg-gray-800 relative">
+      <FormattingToolbar
+        selectedParagraph={selectedParagraph}
+        onUpdate={onUpdate}
+        isDarkMode={isDarkMode}
+        language={language}
+      />
+      
       <div className="flex-1 flex flex-col">
         <textarea
           value={content}
@@ -61,14 +69,15 @@ const ParagraphContent: React.FC<ParagraphContentProps> = ({
             hover:scrollbar-thumb-gray-500
             p-4
           `}
-          placeholder={t.enterContent}
-          spellCheck={true}
           style={{
             boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.2)',
             scrollbarWidth: 'thin',
             scrollbarColor: '#4B5563 #1F2937',
             textAlign: selectedParagraph.alignment || 'left',
+            fontSize: `${selectedParagraph.fontSize || 16}px`
           }}
+          placeholder={t.enterContent}
+          spellCheck={true}
         />
 
         <div className="flex-none flex justify-between items-center px-8 py-4 text-sm text-gray-400 border-t border-gray-700 bg-gray-900">

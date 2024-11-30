@@ -23,6 +23,7 @@ export interface Paragraph {
   type: 'normale' | 'nodo' | 'finale';
   tags: string[];
   font?: string;
+  fontSize?: number;
   alignment?: 'left' | 'center' | 'right';
   image?: { 
     data: string;
@@ -37,6 +38,22 @@ export interface Paragraph {
 export interface Action {
   text: string;
   'N.Par.': string;
+}
+
+export interface ParagraphSidebarProps {
+  paragraphs: Paragraph[];
+  selectedParagraph: number | null;
+  isDarkMode: boolean;
+  showSearch: boolean;
+  searchTerm: string;
+  showConnections: number | null;
+  language: 'it' | 'en';
+  onAddParagraph: () => void;
+  onSelectParagraph: (id: number) => void;
+  onToggleSearch: () => void;
+  onSearchChange: (term: string) => void;
+  onToggleConnections: (id: number | null) => void;
+  onImageEdit: (id: number) => void;
 }
 
 export interface ParagraphEditorProps {
@@ -69,6 +86,13 @@ export interface ParagraphEditorControlsProps {
   language: 'it' | 'en';
   onSave: () => void;
   onShowStoryMap: () => void;
+}
+
+export interface FormattingToolbarProps {
+  selectedParagraph: Paragraph;
+  onUpdate: (updatedParagraph: Paragraph) => void;
+  isDarkMode: boolean;
+  language: 'it' | 'en';
 }
 
 export interface NotificationType {

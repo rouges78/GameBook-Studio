@@ -9,12 +9,6 @@ GameBook Studio is an advanced desktop application designed for creating and man
   - Rich text editing capabilities
   - Tag system for organizing content
 
-- **Story Map**
-  - Visual representation of story branches
-  - Drag-and-drop interface
-  - Connection management between story nodes
-  - Mini-map for easy navigation
-
 - **Backup System**
   - Automatic backup functionality
   - Backup history management
@@ -25,17 +19,30 @@ GameBook Studio is an advanced desktop application designed for creating and man
   - Customizable export templates
   - Preview before export
 
+- **Performance Monitoring**
+  - Telemetry dashboard
+  - System resource usage tracking
+  - Error logging and analysis
+  - Performance optimization tools
+
 ### Planned Features
+- [ ] Visual representation of story branches
+- [ ] Drag-and-drop interface
+- [ ] Connection management between story nodes
+- [ ] Mini-map for easy navigation
 - [ ] Cloud synchronization
 - [ ] Collaborative editing
 - [ ] Version control for story branches
 - [ ] Advanced asset management
-- [ ] Custom theme creator
+- [X] Custom theme creator
 - [ ] Mobile preview mode
 - [ ] Story testing simulator
 - [ ] Analytics dashboard
 - [ ] Import from various formats
 - [ ] Plugin system
+- [ ] Multiple export formats support
+- [ ] Customizable export templates
+- [ ] Preview before export
 
 
 ## 🚀 Installation
@@ -120,9 +127,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For common issues and solutions, please check our [FAQ](docs/faq.md) or open an issue on GitHub.
 
 ## 📊 Project Status
-- **Current Version**: 0.1.0
-- **Development Stage**: Alpha
-- **Last Updated**: November 2024
+- **Current Version**: 0.9.13
+- **Development Stage**: Beta
+- **Last Updated**: December 2024
 
 ## 🎯 Roadmap
 ### Phase 1 (Current)

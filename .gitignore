@@ -9,32 +9,36 @@
 # Production
 /build
 /dist
+/dist-electron
+/release
 
 # Development
-.DS_Store
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.clinerules
 
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Editor directories and files
-.idea
+# Editor
 .vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+.idea
+*.swp
+*.swo
 
-# Electron
-/out
+# OS
+.DS_Store
+Thumbs.db
 
-# TypeScript
-*.tsbuildinfo
-release/
-.code-split-metadata_p1.part
+# Temporary files
+temp_*.js
+*.tmp
+
+# Database
+*.db
+*.db-journal

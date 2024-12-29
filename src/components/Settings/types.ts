@@ -1,7 +1,8 @@
-import { PageType } from '../../types/pages';
+import { Notification } from '../../types';
 
-export interface SettingsProps {
-  setCurrentPage: (page: PageType) => void;
+export interface TabProps {
   isDarkMode: boolean;
   language: 'it' | 'en';
+  notification: Notification | null;
+  setNotification: (notification: Notification | null) => void;
 }

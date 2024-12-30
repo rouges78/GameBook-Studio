@@ -156,12 +156,10 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
                 placeholder="N.Par."
                 className={`w-16 ${baseInputClass}`}
                 type="number"
-                title="Inserisci il numero del paragrafo"
                 index={index}
               />
               <div 
                 className="absolute -right-6 top-1/2 -translate-y-1/2 cursor-help"
-                title="Inserisci il numero del paragrafo a cui vuoi collegare l'azione"
               >
                 <Info size={14} className="text-gray-400" />
               </div>
@@ -173,7 +171,6 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
                 text-red-500 hover:bg-red-600 hover:text-white
                 focus:outline-none focus:ring-1 focus:ring-red-500
               `}
-              title="Rimuovi azione"
             >
               <Trash2 size={16} />
             </button>

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Removed tooltips from ParagraphEditor and Multiple Actions components
+
 ### Added
 - Cloud synchronization planning
 - Collaborative editing framework

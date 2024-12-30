@@ -1,23 +1,43 @@
-# Update 2024-12-29
+# ParagraphEditor Component Analysis - 2024-01-01
 
-## Security Enhancements
-- Implemented Content Security Policy (CSP) in Electron main process
-- Added secure headers configuration for renderer process
-- Enabled explicit webSecurity in BrowserWindow preferences
-- Updated application version to 0.9.12
+## Overview
+The ParagraphEditor component provides a comprehensive interface for managing story paragraphs, including content editing, connections between paragraphs, and visual story mapping.
 
-## Bug Fixes
-- Fixed exit button functionality in dashboard
-- Fixed project loading after CSP implementation
-- Added required CSP rules for IPC communication
+## Key Features
+- Paragraph CRUD operations
+- Story map visualization and editing
+- Image editing capabilities
+- Multi-language support
+- Dark mode support
+- Auto-save functionality
+- Tag management
+- Export functionality
 
-# Update 2024-01-01
+## Component Structure
+1. **Main Components**
+   - ParagraphEditor (index.tsx)
+   - EditorMain.tsx
+   - ParagraphSidebar.tsx
 
-## Database Access Fixes
-- Removed direct PrismaClient usage from frontend
-- Added electronAPI interface for database access
-- Updated Settings component to use electronAPI for project fetching
-- Added type declarations for electronAPI in electron/types.d.ts
+2. **Subcomponents**
+   - ParagraphEditorControls.tsx
+   - ParagraphContent.tsx
+   - ParagraphActions.tsx
+   - TagInput.tsx
 
-## Version Update
-- Updated package.json version to 1.0.1
+3. **Hooks**
+   - useParagraphEditor.ts
+   - useActions.ts
+
+## Technical Details
+- Uses React with TypeScript
+- Implements debounced auto-save
+- Maintains complex state management
+- Integrates with StoryMap component
+- Supports multi-language through translations.ts
+
+## Recommendations
+- Consider adding unit tests for core functionality
+- Implement additional validation for paragraph connections
+- Add keyboard shortcut documentation
+- Consider adding a version history feature

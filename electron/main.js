@@ -29,6 +29,27 @@ app.whenReady().then(async () => {
   app.quit();
 });
 
+// Register IPC handlers for dialog operations
+const { dialog } = require('electron');
+
+ipcMain.handle('dialog:showSaveDialog', async (_, options) => {
+  try {
+    return await dialog.showSaveDialog(mainWindow, options);
+  } catch (error) {
+    log.error('Error in dialog:showSaveDialog handler:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('dialog:showOpenDialog', async (_, options) => {
+  try {
+    return await dialog.showOpenDialog(mainWindow, options);
+  } catch (error) {
+    log.error('Error in dialog:showOpenDialog handler:', error);
+    throw error;
+  }
+});
+
 // Register IPC handlers for window operations
 ipcMain.handle('window:close', () => {
   if (mainWindow) {
@@ -86,9 +107,9 @@ ipcMain.handle('db:debugDatabase', async () => {
 ipcMain.handle('backup:create', async (_, projects) => {
   try {
     log.info('Creating backup...');
-    const version = await backupManager.createBackup(projects);
-    log.info('Backup created successfully:', version);
-    return version;
+    const metadata = await backupManager.createBackup(projects);
+    log.info('Backup created successfully:', metadata);
+    return metadata;
   } catch (error) {
     log.error('Error in backup:create handler:', error);
     throw error;
@@ -138,6 +159,18 @@ ipcMain.handle('backup:updateSettings', async (_, settings) => {
     log.info('Backup settings updated successfully');
   } catch (error) {
     log.error('Error in backup:updateSettings handler:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('backup:import', async (_, filePath) => {
+  try {
+    log.info('Importing backup from:', filePath);
+    const metadata = await backupManager.importBackup(filePath);
+    log.info('Backup imported successfully');
+    return metadata;
+  } catch (error) {
+    log.error('Error in backup:import handler:', error);
     throw error;
   }
 });

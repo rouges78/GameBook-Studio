@@ -10,6 +10,7 @@ import { ImageControls } from './components/ImageControls';
 import { ActionButtons } from './components/ActionButtons';
 import { MiniMap } from './components/MiniMap';
 import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp';
+import { SidePanel } from './components/SidePanel';
 
 const ZOOM_STEP = 0.1;
 
@@ -163,7 +164,7 @@ const StoryMap: React.FC<StoryMapProps> = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#0A1929] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex bg-[#0A1929] overflow-hidden">
       {/* Hidden file input for background image */}
       <input
         type="file"
@@ -173,103 +174,126 @@ const StoryMap: React.FC<StoryMapProps> = ({
         onChange={handleBackgroundUpload}
       />
 
-      {/* Header */}
-      <div className="flex-none h-14 border-b border-gray-700 flex items-center justify-between px-4">
-        <div className="flex-1">
-          <StoryMapControls
-            selectedNode={state.selectedNode}
-            selectedAction={state.selectedAction}
-            nodes={state.nodes}
-            isDragMode={state.isDragMode}
-            useCurvedLines={state.useCurvedLines}
-            lastBackup={state.lastBackup}
-            t={t}
-            fileInputRef={state.fileInputRef}
-            onClose={handleClose}
-            onZoom={actions.handleZoom}
-            onToggleGrid={handleToggleGrid}
-            onToggleDragMode={handleToggleDragMode}
-            onToggleLines={() => actions.setUseCurvedLines(!state.useCurvedLines)}
-            onSave={handleSave}
-            onEditParagraph={onEditParagraph}
-            onDeleteParagraph={onDeleteParagraph}
-            onToggleNodeLock={handleNodeLock}
-            onActionSelect={actions.handleActionSelect}
-          />
-        </div>
-        <div className="flex-none ml-4">
-          <KeyboardShortcutsHelp />
-        </div>
-      </div>
+      {/* Side Panel */}
+      <SidePanel
+        onBack={handleClose}
+        onUploadImage={() => state.fileInputRef.current?.click()}
+        onImageAdjustment={actions.handleImageAdjustment}
+        imageAdjustments={state.imageAdjustments}
+        backgroundImage={state.backgroundImage}
+        showGrid={state.showGrid}
+        useCurvedLines={state.useCurvedLines}
+        onToggleGrid={handleToggleGrid}
+        onToggleLines={() => actions.setUseCurvedLines(!state.useCurvedLines)}
+        onAddNode={() => actions.handleAddNode()}
+        onDeleteNode={() => state.selectedNode && actions.handleDeleteNode(state.selectedNode)}
+        onConnectNodes={() => actions.handleConnectNodes()}
+        onDisconnectNodes={() => actions.handleDisconnectNodes()}
+        onLockNode={(id) => actions.toggleNodeLock(id)}
+        selectedNode={state.selectedNode}
+        nodes={state.nodes}
+        language={language}
+      />
 
-      {/* Main Canvas Area */}
-      <div className="flex-1 min-h-0 relative overflow-hidden">
-        <StoryMapCanvas
-          svgRef={state.svgRef}
-          nodes={state.nodes}
-          links={state.links}
-          viewBox={state.viewBox}
-          showGrid={state.showGrid}
-          backgroundImage={state.backgroundImage}
-          imageAdjustments={state.imageAdjustments}
-          useCurvedLines={state.useCurvedLines}
-          selectedNode={state.selectedNode}
-          isDragMode={state.isDragMode}
-          onNodeClick={(id) => actions.setSelectedNode(id === state.selectedNode ? null : id)}
-          onNodeDragStart={actions.handleNodeDragStart}
-          onMapPanStart={actions.handleMapPanStart}
-          onMapPan={actions.handleMapPan}
-          onMapPanEnd={actions.handleMapPanEnd}
-          onNodeDrag={actions.handleNodeDrag}
-          onNodeDragEnd={actions.handleNodeDragEnd}
-          onZoom={actions.handleZoom}
-        />
-
-        {/* MiniMap */}
-        <MiniMap
-          nodes={state.nodes}
-          links={state.links}
-          viewBox={state.viewBox}
-          mapWidth={state.imageAdjustments.width}
-          mapHeight={state.imageAdjustments.height}
-          onViewBoxChange={handleViewBoxChange}
-        />
-
-        {state.backgroundImage && (
-          <div className="absolute bottom-4 right-4 z-10">
-            <ImageControls
-              imageAdjustments={state.imageAdjustments}
-              onAdjustment={actions.handleImageAdjustment}
-              t={t}
-            />
-          </div>
-        )}
-
-        {/* Toast Messages */}
-        <ToastManager
-          messages={messages}
-          onMessageComplete={removeMessage}
-        />
-      </div>
-
-      {/* Footer */}
-      <div className="flex-none h-14 border-t border-gray-700 flex items-center justify-between px-6">
-        <div className="flex items-center gap-4">
-          <div className="text-gray-400 text-sm">
-            {state.selectedNode ? `Selected Node: ${state.selectedNode}` : 'No node selected'}
-          </div>
-          {state.selectedNode && (
-            <ActionButtons
-              key={`action-buttons-${state.selectedNode}`}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex-none h-14 border-b border-gray-700 flex items-center justify-between px-4">
+          <div className="flex-1">
+            <StoryMapControls
               selectedNode={state.selectedNode}
-              nodes={state.nodes}
               selectedAction={state.selectedAction}
+              nodes={state.nodes}
+              isDragMode={state.isDragMode}
+              useCurvedLines={state.useCurvedLines}
+              lastBackup={state.lastBackup}
+              t={t}
+              fileInputRef={state.fileInputRef}
+              onClose={handleClose}
+              onZoom={actions.handleZoom}
+              onToggleGrid={handleToggleGrid}
+              onToggleDragMode={handleToggleDragMode}
+              onToggleLines={() => actions.setUseCurvedLines(!state.useCurvedLines)}
+              onSave={handleSave}
+              onEditParagraph={onEditParagraph}
+              onDeleteParagraph={onDeleteParagraph}
+              onToggleNodeLock={handleNodeLock}
               onActionSelect={actions.handleActionSelect}
             />
-          )}
+          </div>
+          <div className="flex-none ml-4">
+            <KeyboardShortcutsHelp />
+          </div>
         </div>
-        <div className="text-gray-400 text-sm">
-          {state.lastBackup ? `Last saved: ${new Date(state.lastBackup).toLocaleTimeString()}` : 'Not saved yet'}
+
+        {/* Main Canvas Area */}
+        <div className="flex-1 min-h-0 relative overflow-hidden">
+          <StoryMapCanvas
+            svgRef={state.svgRef}
+            nodes={state.nodes}
+            links={state.links}
+            viewBox={state.viewBox}
+            showGrid={state.showGrid}
+            backgroundImage={state.backgroundImage}
+            imageAdjustments={state.imageAdjustments}
+            useCurvedLines={state.useCurvedLines}
+            selectedNode={state.selectedNode}
+            isDragMode={state.isDragMode}
+            onNodeClick={(id) => actions.setSelectedNode(id === state.selectedNode ? null : id)}
+            onNodeDragStart={actions.handleNodeDragStart}
+            onMapPanStart={actions.handleMapPanStart}
+            onMapPan={actions.handleMapPan}
+            onMapPanEnd={actions.handleMapPanEnd}
+            onNodeDrag={actions.handleNodeDrag}
+            onNodeDragEnd={actions.handleNodeDragEnd}
+            onZoom={actions.handleZoom}
+          />
+
+          {/* MiniMap */}
+          <MiniMap
+            nodes={state.nodes}
+            links={state.links}
+            viewBox={state.viewBox}
+            mapWidth={state.imageAdjustments.width}
+            mapHeight={state.imageAdjustments.height}
+            onViewBoxChange={handleViewBoxChange}
+          />
+
+          {state.backgroundImage && (
+            <div className="absolute bottom-4 right-4 z-10">
+              <ImageControls
+                imageAdjustments={state.imageAdjustments}
+                onAdjustment={actions.handleImageAdjustment}
+                t={t}
+              />
+            </div>
+          )}
+
+          {/* Toast Messages */}
+          <ToastManager
+            messages={messages}
+            onMessageComplete={removeMessage}
+          />
+        </div>
+
+        {/* Footer */}
+        <div className="flex-none h-14 border-t border-gray-700 flex items-center justify-between px-6">
+          <div className="flex items-center gap-4">
+            <div className="text-gray-400 text-sm">
+              {state.selectedNode ? `Selected Node: ${state.selectedNode}` : 'No node selected'}
+            </div>
+            {state.selectedNode && (
+              <ActionButtons
+                key={`action-buttons-${state.selectedNode}`}
+                selectedNode={state.selectedNode}
+                nodes={state.nodes}
+                selectedAction={state.selectedAction}
+                onActionSelect={actions.handleActionSelect}
+              />
+            )}
+          </div>
+          <div className="text-gray-400 text-sm">
+            {state.lastBackup ? `Last saved: ${new Date(state.lastBackup).toLocaleTimeString()}` : 'Not saved yet'}
+          </div>
         </div>
       </div>
     </div>

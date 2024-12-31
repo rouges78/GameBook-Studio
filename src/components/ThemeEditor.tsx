@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { buttonClasses } from '../utils/buttonStyles';
 import { ArrowLeft, Save, Upload, Download, Trash2, Check } from 'lucide-react';
 import { Theme } from '../contexts/ThemeContext';
 import { SavedTheme } from '../types/theme';
@@ -18,6 +19,7 @@ interface ThemeEditorProps {
 const translations = {
   it: {
     backToDashboard: "Torna alla Dashboard",
+    backToHome: "Torna alla Home",
     themeEditor: "Editor Tema",
     colors: "Colori",
     primaryColor: "Colore Primario",
@@ -59,6 +61,7 @@ const translations = {
   },
   en: {
     backToDashboard: "Back to Dashboard",
+    backToHome: "Back to Home",
     themeEditor: "Theme Editor",
     colors: "Colors",
     primaryColor: "Primary Color",
@@ -173,13 +176,13 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({
   return (
     <div className={`min-h-screen p-4 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
       <div className="max-w-6xl mx-auto">
-        <button
-          onClick={() => setCurrentPage('dashboard')}
-          className={`mb-4 ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} flex items-center`}
-        >
-          <ArrowLeft size={20} className="mr-2" />
-          {t.backToDashboard}
-        </button>
+          <button
+            onClick={() => setCurrentPage('dashboard')}
+            className={`mb-4 ${buttonClasses('blue')}`}
+          >
+            <ArrowLeft size={20} className="h-5 w-5" />
+            <span>Torna alla Home</span>
+          </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Theme Editor */}

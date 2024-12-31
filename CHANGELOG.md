@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Updated "Torna alla Dashboard" button styling in multiple components (BackupManager, Settings, Help) to use consistent button classes and icons
 - Removed tooltips from ParagraphEditor and Multiple Actions components
 
 ### Added
@@ -20,7 +21,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced backup system reliability
 - Updated UI/UX design
 
-## [0.1.0] - 2024-11-06
+## [0.9.11] - 2024-12-30
+
+### Added
+- Side panel in Story Map page for settings and info
+- "Torna all'editor paragrafi" button in Story Map page
+
+## [0.9.10] - 2024-12-30
+
+### Changed
+- Updated version number in ChangelogModal.tsx to match package.json
+- Added "Torna alla Home" button in multiple pages
+- Added left column in Story Map page for future settings and info
+- Added "Torna all'editor paragrafi" button in Story Map page
+
+## [0.8.0] - 2024-11-06
 
 ### Added
 - Initial release of GameBook Studio

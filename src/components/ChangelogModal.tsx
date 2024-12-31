@@ -18,8 +18,51 @@ interface ChangelogModalProps {
   language: 'it' | 'en';
 }
 
-const changelog: Record<string, ChangelogEntry[]> = {
+const changelog = {
   it: [
+    {
+      version: '0.9.12',
+      date: '31-12-2024',
+      changes: [
+        {
+          type: 'changed',
+          items: [
+            'Migliorato il layout dell\'header nel Backup Manager',
+            'Aggiornato lo stile del pulsante "Torna alla Home" per uniformarlo al componente Impostazioni'
+          ]
+        }
+      ]
+    },
+    {
+      version: '0.9.11',
+      date: '30-12-2024',
+      changes: [
+        {
+          type: 'changed',
+          items: [
+            'Aggiornato il numero di versione in ChangelogModal.tsx',
+            'Aggiunto il pulsante "Torna alla Home" in più pagine',
+            'Aggiunta colonna sinistra nella pagina Mappa per impostazioni future e informazioni',
+            'Aggiunto il pulsante "Torna all\'editor paragrafi" nella pagina Mappa'
+          ]
+        }
+      ]
+    },
+    {
+      version: '0.9.10',
+      date: '30-12-2024',
+      changes: [
+        {
+          type: 'changed',
+          items: [
+            'Aggiornato il numero di versione in ChangelogModal.tsx',
+            'Aggiunto il pulsante "Torna alla Home" in più pagine',
+            'Aggiunta colonna sinistra nella pagina Mappa per impostazioni future e informazioni',
+            'Aggiunto il pulsante "Torna all\'editor paragrafi" nella pagina Mappa'
+          ]
+        }
+      ]
+    },
     {
       version: '0.9.7',
       date: '24-11-2024',
@@ -67,6 +110,34 @@ const changelog: Record<string, ChangelogEntry[]> = {
     }
   ],
   en: [
+    {
+      version: '0.9.12',
+      date: '31-12-2024',
+      changes: [
+        {
+          type: 'changed',
+          items: [
+            'Improved header layout in Backup Manager',
+            'Updated "Return to Home" button styling to match Settings component'
+          ]
+        }
+      ]
+    },
+    {
+      version: '0.9.11',
+      date: '30-12-2024',
+      changes: [
+        {
+          type: 'changed',
+          items: [
+            'Updated version number in ChangelogModal.tsx',
+            'Added "Return to Home" button in multiple pages',
+            'Added left column in Story Map page for future settings and info',
+            'Added "Return to Paragraph Editor" button in Story Map page'
+          ]
+        }
+      ]
+    },
     {
       version: '0.9.7',
       date: '25-11-2024',

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { buttonClasses } from '../utils/buttonStyles';
 import { 
   ArrowLeft, Bell, Database, Clock, ToggleLeft, ToggleRight, 
   Brain, Archive, Settings as SettingsIcon
@@ -79,7 +80,7 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
 
   const translations = {
     it: {
-      backToDashboard: "Torna alla Dashboard",
+      backToDashboard: "Torna alla Home",
       settings: "Impostazioni",
       general: "Generale",
       notificationSettings: "Notifiche",
@@ -559,12 +560,10 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
       <div className="flex-none px-6 py-4">
         <button
           onClick={() => setCurrentPage('dashboard')}
-          className={`${
-            isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-brown-600 hover:text-brown-700'
-          } flex items-center`}
+          className={buttonClasses('blue')}
         >
-          <ArrowLeft size={20} className="mr-2" />
-          {t.backToDashboard}
+          <ArrowLeft size={20} className="h-5 w-5" />
+          <span>Torna alla Home</span>
         </button>
         <h1 className="text-2xl font-bold text-center mt-2">{t.settings}</h1>
       </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { BackupMetadata, BackupSettings } from '../types/electron';
 
 interface BackupManagerProps {
@@ -10,6 +11,7 @@ interface BackupManagerProps {
 const translations = {
   it: {
     title: "Gestione Backup",
+    backToHome: "Torna alla Home",
     settings: {
       title: "Impostazioni Backup",
       maxBackups: "Numero massimo di backup",
@@ -44,7 +46,8 @@ const translations = {
       export: "Esporta",
       import: "Importa",
       delete: "Elimina",
-      back: "Indietro"
+      back: "Indietro",
+      backToHome: "Torna alla Home"
     },
     messages: {
       confirmRestore: "Sei sicuro di voler ripristinare questo backup? I dati attuali verranno sovrascritti.",
@@ -52,7 +55,9 @@ const translations = {
       backupCreated: "Backup creato con successo",
       backupRestored: "Backup ripristinato con successo",
       backupDeleted: "Backup eliminato con successo",
-      settingsSaved: "Impostazioni salvate con successo"
+      settingsSaved: "Impostazioni salvate con successo",
+      backupExported: "Backup esportato con successo",
+      exportError: "Errore durante l'esportazione del backup"
     }
   },
   en: {
@@ -99,7 +104,9 @@ const translations = {
       backupCreated: "Backup created successfully",
       backupRestored: "Backup restored successfully",
       backupDeleted: "Backup deleted successfully",
-      settingsSaved: "Settings saved successfully"
+      settingsSaved: "Settings saved successfully",
+      backupExported: "Backup exported successfully",
+      exportError: "Error exporting backup"
     }
   }
 };
@@ -142,14 +149,32 @@ const BackupManager: React.FC<BackupManagerProps> = ({ setCurrentPage, isDarkMod
     }
   };
 
+  const [isCreatingBackup, setIsCreatingBackup] = useState(false);
+
   const handleCreateBackup = async () => {
+    setIsCreatingBackup(true);
     try {
+      console.log('Fetching projects for backup...');
       const projects = await window.electron['db:getProjects']();
-      await window.electron['backup:create'](projects);
-      await loadBackups();
+      if (!projects || projects.length === 0) {
+        throw new Error('No projects found to backup');
+      }
+      
+      console.log('Creating backup...');
+      const backupResult = await window.electron['backup:create'](projects);
+      if (typeof backupResult === 'string') {
+        throw new Error('Backup creation returned unexpected string');
+      }
+      const newBackup = backupResult as BackupMetadata;
+      setBackups(prev => [newBackup, ...prev]);
+      
       alert(t.messages.backupCreated);
-    } catch (error) {
-      console.error('Error creating backup:', error);
+    } catch (error: unknown) {
+      console.error('Backup creation failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Backup failed: ${errorMessage}`);
+    } finally {
+      setIsCreatingBackup(false);
     }
   };
 
@@ -158,38 +183,86 @@ const BackupManager: React.FC<BackupManagerProps> = ({ setCurrentPage, isDarkMod
       try {
         await window.electron['backup:restore'](version);
         alert(t.messages.backupRestored);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error restoring backup:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        alert(`${t.messages.backupRestored}: ${errorMessage}`);
       }
     }
   };
 
+  const [isExportingBackup, setIsExportingBackup] = useState(false);
+
   const handleExportBackup = async (version: string) => {
+    setIsExportingBackup(true);
     try {
+      console.log('Showing save dialog...');
       const result = await window.electron.dialog.showSaveDialog({
-        filters: [{ name: 'JSON', extensions: ['json'] }]
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+        title: t.actions.export,
+        defaultPath: `backup_${version}.json`
       });
       
       if (!result.canceled && result.filePath) {
+        console.log('Exporting backup to:', result.filePath);
+        
+        // Validate backup version exists
+        const backupExists = backups.some(b => b.version === version);
+        if (!backupExists) {
+          throw new Error(`Backup version ${version} not found`);
+        }
+
+        // Export the backup
         await window.electron['backup:export'](version, result.filePath);
+        
+        console.log('Backup exported successfully');
+        alert(t.messages.backupExported);
       }
-    } catch (error) {
-      console.error('Error exporting backup:', error);
+    } catch (error: unknown) {
+      console.error('Backup export failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Export failed: ${errorMessage}`);
+    } finally {
+      setIsExportingBackup(false);
     }
   };
 
+  const [isImportingBackup, setIsImportingBackup] = useState(false);
+
   const handleImportBackup = async () => {
+    setIsImportingBackup(true);
     try {
+      console.log('Showing open dialog...');
       const result = await window.electron.dialog.showOpenDialog({
-        filters: [{ name: 'JSON', extensions: ['json'] }]
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+        properties: ['openFile']
       });
       
       if (!result.canceled && result.filePaths?.[0]) {
-        await window.electron['backup:import'](result.filePaths[0]);
-        await loadBackups();
+        const filePath = result.filePaths[0];
+        
+        // Validate file extension
+        if (!filePath.toLowerCase().endsWith('.json')) {
+          throw new Error('Invalid file type. Please select a JSON file');
+        }
+
+        console.log('Importing backup from:', filePath);
+        const importResult = await window.electron['backup:import'](filePath);
+        if (typeof importResult === 'string') {
+          throw new Error('Backup import returned unexpected string');
+        }
+        const newBackup = importResult as BackupMetadata;
+        setBackups(prev => [newBackup, ...prev]);
+        
+        console.log('Backup imported successfully');
+        alert('Backup imported successfully');
       }
-    } catch (error) {
-      console.error('Error importing backup:', error);
+    } catch (error: unknown) {
+      console.error('Backup import failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Import failed: ${errorMessage}`);
+    } finally {
+      setIsImportingBackup(false);
     }
   };
 
@@ -221,20 +294,36 @@ const BackupManager: React.FC<BackupManagerProps> = ({ setCurrentPage, isDarkMod
 
   const containerClasses = `h-screen flex flex-col ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`;
   const cardClasses = `rounded-lg shadow p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`;
-  const buttonClasses = (color: string) => 
-    `${color} text-white px-4 py-2 rounded hover:${color.replace('bg-', 'bg-')}`;
+  const buttonClasses = (color: string, size: 'normal' | 'small' = 'normal') => {
+    const baseClasses = `flex items-center gap-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl border ${
+      size === 'normal' ? 'px-4 py-2' : 'p-2'
+    }`;
+  
+    const colorClasses = {
+      blue: `bg-blue-500 hover:bg-blue-600 text-white border-blue-500/20 hover:border-blue-600/40`,
+      purple: `bg-purple-500 hover:bg-purple-600 text-white border-purple-500/20 hover:border-purple-600/40`,
+      green: `bg-green-500 hover:bg-green-600 text-white border-green-500/20 hover:border-green-600/40`,
+      yellow: `bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-500/20 hover:border-yellow-600/40`,
+      red: `bg-red-500 hover:bg-red-600 text-white border-red-500/20 hover:border-red-600/40`
+    }[color];
+  
+    return `${baseClasses} ${colorClasses}`;
+  };
 
   return (
     <div className={containerClasses}>
       {/* Header */}
-      <div className="flex justify-between items-center p-6">
-        <h1 className="text-2xl font-bold">{t.title}</h1>
-        <button
-          onClick={() => setCurrentPage('dashboard')}
-          className={buttonClasses('bg-gray-500')}
-        >
-          {t.actions.back}
-        </button>
+      <div className="p-6">
+        <div className="flex justify-center items-center mb-4 relative">
+          <button
+            onClick={() => setCurrentPage('dashboard')}
+            className={`bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 hover:text-blue-400 border-blue-500/20 hover:border-blue-500/40 hover:ring-2 hover:ring-blue-500/20 flex items-center gap-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl border px-4 py-2 absolute left-6`}
+          >
+            <ArrowLeft size={20} className="mr-2" />
+            <span>Torna alla Home</span>
+          </button>
+          <h1 className="text-2xl font-bold">{t.title}</h1>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -318,7 +407,7 @@ const BackupManager: React.FC<BackupManagerProps> = ({ setCurrentPage, isDarkMod
 
             <button
               onClick={handleSaveSettings}
-              className={buttonClasses('bg-blue-500')}
+              className={buttonClasses('blue')}
             >
               {t.settings.save}
             </button>
@@ -329,16 +418,16 @@ const BackupManager: React.FC<BackupManagerProps> = ({ setCurrentPage, isDarkMod
         <div className={`${cardClasses} flex flex-col min-h-0`}>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">{t.backupList.title}</h2>
-            <div className="space-x-2">
+            <div className="flex space-x-2">
               <button
                 onClick={handleCreateBackup}
-                className={buttonClasses('bg-green-500')}
+                className={buttonClasses('green')}
               >
                 {t.actions.create}
               </button>
               <button
                 onClick={handleImportBackup}
-                className={buttonClasses('bg-purple-500')}
+                className={buttonClasses('purple')}
               >
                 {t.actions.import}
               </button>
@@ -373,18 +462,20 @@ const BackupManager: React.FC<BackupManagerProps> = ({ setCurrentPage, isDarkMod
                         </td>
                         <td className="px-4 py-2">
                           <div className="space-x-2">
-                            <button
-                              onClick={() => handleRestoreBackup(backup.version)}
-                              className={buttonClasses('bg-yellow-500')}
-                            >
-                              {t.actions.restore}
-                            </button>
-                            <button
-                              onClick={() => handleExportBackup(backup.version)}
-                              className={buttonClasses('bg-blue-500')}
-                            >
-                              {t.actions.export}
-                            </button>
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleRestoreBackup(backup.version)}
+                                className={buttonClasses('yellow')}
+                              >
+                                {t.actions.restore}
+                              </button>
+                              <button
+                                onClick={() => handleExportBackup(backup.version)}
+                                className={buttonClasses('blue')}
+                              >
+                                {t.actions.export}
+                              </button>
+                            </div>
                           </div>
                         </td>
                       </tr>

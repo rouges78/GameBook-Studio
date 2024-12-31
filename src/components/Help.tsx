@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { buttonClasses } from '../utils/buttonStyles';
 import { ArrowLeft, Book, Video, MessageCircle, Mail, X } from 'lucide-react';
 
 interface HelpProps {
@@ -218,10 +219,10 @@ const Help: React.FC<HelpProps> = ({ setCurrentPage, isDarkMode, language }) => 
       <div className="max-w-3xl mx-auto">
         <button
           onClick={() => setCurrentPage('dashboard')}
-          className={`mb-4 ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-brown-600 hover:text-brown-700'} flex items-center`}
+          className={`mb-4 ${buttonClasses('blue')}`}
         >
-          <ArrowLeft size={20} className="mr-2" />
-          {t.backToDashboard}
+          <ArrowLeft size={20} className="h-5 w-5" />
+          <span>Torna alla Home</span>
         </button>
         <h1 className={`text-3xl font-bold text-center mb-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} py-4 rounded-lg`}>{t.help}</h1>
         <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-8 shadow-lg`}>

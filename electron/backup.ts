@@ -169,7 +169,7 @@ export class BackupManager {
         this.currentDate = new Date(date.getTime());
     }
 
-    async createBackup(projects: any[]): Promise<string> {
+    async createBackup(projects: any[]): Promise<BackupMetadata> {
         await this.ensureBackupDir();
 
         const timestamp = this.currentDate.toISOString();
@@ -225,7 +225,7 @@ export class BackupManager {
             await this.runCleanup();
         }
 
-        return version;
+        return backupData.metadata;
     }
 
     async runCleanup(): Promise<void> {
@@ -436,7 +436,7 @@ export class BackupManager {
         await fs.writeFile(exportPath, JSON.stringify(backupData, null, 2));
     }
 
-    async importBackup(importPath: string): Promise<string> {
+    async importBackup(importPath: string): Promise<BackupMetadata> {
         const content = await fs.readFile(importPath, 'utf-8');
         const backupData: BackupData = JSON.parse(content);
 

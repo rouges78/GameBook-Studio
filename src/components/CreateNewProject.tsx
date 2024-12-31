@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { buttonClasses } from '../utils/buttonStyles';
 import { Upload, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -239,10 +240,10 @@ const CreateNewProject: React.FC<CreateNewProjectProps> = ({
             damping: 25
           }}
           onClick={() => setCurrentPage('dashboard')}
-          className="mb-6 text-primary hover:text-primary/80 flex items-center transition-colors"
+          className={`mb-6 ${buttonClasses('blue')}`}
         >
-          <ArrowLeft size={18} className="mr-2" strokeWidth={2} />
-          {t.backToDashboard}
+          <ArrowLeft size={18} className="h-5 w-5" strokeWidth={2} />
+          <span>Torna alla Dashboard</span>
         </motion.button>
 
         <motion.h1

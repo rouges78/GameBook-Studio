@@ -74,15 +74,14 @@ export interface IpcApi {
     'dialog:saveFile': (content: string) => Promise<string | null>;
     
     // Backup handlers
-    'backup:create': () => Promise<string>;
-    'backup:restore': (version: string) => Promise<any[]>;
     'backup:list': () => Promise<BackupMetadata[]>;
-    'backup:export': (version: string, exportPath: string) => Promise<void>;
-    'backup:import': (importPath: string) => Promise<string>;
-    
-    // Backup settings handlers
+    'backup:create': (projects: Project[]) => Promise<void>;
+    'backup:restore': (version: string) => Promise<void>;
+    'backup:export': (version: string, filePath: string) => Promise<void>;
+    'backup:import': (filePath: string) => Promise<void>;
     'backup:getSettings': () => Promise<BackupSettings>;
     'backup:updateSettings': (settings: BackupSettings) => Promise<void>;
+    'backup:get': (version: string) => Promise<BackupMetadata>;
     'backup:runCleanup': () => Promise<void>;
 
     // Database handlers

@@ -91,10 +91,14 @@ export const SidePanel: React.FC<SidePanelProps> = ({
   onDeleteNode,
   onConnectNodes,
   onDisconnectNodes,
+  onLockNode,
+  onUnlockNode,
+  selectedNode,
+  nodes,
   language = 'it'
 }) => {
   const t = translations[language];
-  const [expanded, setExpanded] = React.useState(true);
+  const [expanded, setExpanded] = React.useState(false);
 
   return (
     <div 
@@ -176,7 +180,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
                   onClick={() => {
                     const node = nodes.find(n => n.id === selectedNode);
                     if (node) {
-                      node.locked ? onUnlockNode?.() : onLockNode?.();
+                      node.locked ? onUnlockNode?.() : onLockNode?.(node.id);
                     }
                   }}
                   className="w-full px-4 py-2 text-left rounded flex items-center gap-2 transition-colors text-gray-200 hover:bg-gray-700"

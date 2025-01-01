@@ -174,27 +174,30 @@ const StoryMap: React.FC<StoryMapProps> = ({
         onChange={handleBackgroundUpload}
       />
 
-      {/* Side Panel */}
-      <SidePanel
-        onBack={handleClose}
-        onUploadImage={() => state.fileInputRef.current?.click()}
-        onImageAdjustment={actions.handleImageAdjustment}
-        imageAdjustments={state.imageAdjustments}
-        backgroundImage={state.backgroundImage}
-        showGrid={state.showGrid}
-        useCurvedLines={state.useCurvedLines}
-        onToggleGrid={handleToggleGrid}
-        onToggleLines={() => actions.setUseCurvedLines(!state.useCurvedLines)}
-        onAddNode={() => actions.handleAddNode()}
-        onDeleteNode={() => state.selectedNode && actions.handleDeleteNode(state.selectedNode)}
-        onConnectNodes={() => actions.handleConnectNodes()}
-        onDisconnectNodes={() => actions.handleDisconnectNodes()}
-        onLockNode={(id) => actions.toggleNodeLock(id)}
-        selectedNode={state.selectedNode}
-        nodes={state.nodes}
-        language={language}
-      />
+      {/* Left Column */}
+      <div className="w-80 bg-[#1A2B3B] border-r border-gray-700">
+        <SidePanel
+          onBack={handleClose}
+          onUploadImage={() => state.fileInputRef.current?.click()}
+          onImageAdjustment={actions.handleImageAdjustment}
+          imageAdjustments={state.imageAdjustments}
+          backgroundImage={state.backgroundImage}
+          showGrid={state.showGrid}
+          useCurvedLines={state.useCurvedLines}
+          onToggleGrid={handleToggleGrid}
+          onToggleLines={() => actions.setUseCurvedLines(!state.useCurvedLines)}
+          onAddNode={() => actions.handleAddNode()}
+          onDeleteNode={() => state.selectedNode && actions.handleDeleteNode(state.selectedNode)}
+          onConnectNodes={() => actions.handleConnectNodes()}
+          onDisconnectNodes={() => actions.handleDisconnectNodes()}
+          onLockNode={(id) => actions.toggleNodeLock(id)}
+          selectedNode={state.selectedNode}
+          nodes={state.nodes}
+          language={language}
+        />
+      </div>
 
+      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="flex-none h-14 border-b border-gray-700 flex items-center justify-between px-4">

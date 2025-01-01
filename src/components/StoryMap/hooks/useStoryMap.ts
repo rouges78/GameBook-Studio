@@ -405,6 +405,76 @@ export const useStoryMap = (
     );
   }, [selectedNode, nodes, selectedAction]);
 
+  const handleAddNode = useCallback(() => {
+    const newNodeId = Math.max(...nodes.map(n => n.id), 0) + 1;
+    const newNode: Node = {
+      id: newNodeId,
+      x: viewBox.x + viewBox.width / 2 - 100,
+      y: viewBox.y + viewBox.height / 2 - 100,
+      type: 'normale',
+      title: `New Node ${newNodeId}`,
+      locked: false,
+      actions: [],
+      outgoingConnections: []
+    };
+    setNodes(prev => [...prev, newNode]);
+    setSelectedNode(newNodeId);
+  }, [nodes, viewBox]);
+
+  const handleDeleteNode = useCallback((nodeId: number) => {
+    setNodes(prev => prev.filter(n => n.id !== nodeId));
+    setLinks(prev => prev.filter(l => l.source !== nodeId && l.target !== nodeId));
+    setSelectedNode(null);
+  }, []);
+
+  const handleConnectNodes = useCallback(() => {
+    if (!selectedNode || !selectedAction) return;
+
+    const selectedNodeData = nodes.find(n => n.id === selectedNode);
+    if (!selectedNodeData) return;
+
+    const action = selectedNodeData.actions[selectedAction];
+    if (!action || !action['N.Par.']) return;
+
+    const targetNodeId = parseInt(action['N.Par.']);
+    const targetNode = nodes.find(n => n.id === targetNodeId);
+    if (!targetNode) return;
+
+    // Check if link already exists
+    const existingLink = links.find(l => 
+      l.source === selectedNode && l.target === targetNodeId
+    );
+    if (existingLink) return;
+
+    setLinks(prev => [
+      ...prev,
+      {
+        source: selectedNode,
+        target: targetNodeId,
+        isPaused: false,
+        isHighlighted: false
+      }
+    ]);
+  }, [selectedNode, selectedAction, nodes, links]);
+
+  const handleDisconnectNodes = useCallback(() => {
+    if (!selectedNode || !selectedAction) return;
+
+    const selectedNodeData = nodes.find(n => n.id === selectedNode);
+    if (!selectedNodeData) return;
+
+    const action = selectedNodeData.actions[selectedAction];
+    if (!action || !action['N.Par.']) return;
+
+    const targetNodeId = parseInt(action['N.Par.']);
+    
+    setLinks(prev => 
+      prev.filter(l => 
+        !(l.source === selectedNode && l.target === targetNodeId)
+      )
+    );
+  }, [selectedNode, selectedAction, nodes]);
+
   return {
     state: {
       zoom,

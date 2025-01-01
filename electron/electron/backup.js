@@ -207,7 +207,7 @@ class BackupManager {
         if (this.settings.autoCleanup) {
             await this.runCleanup();
         }
-        return version;
+        return backupData.metadata;
     }
     async runCleanup() {
         console.log('Running cleanup with settings:', this.settings);

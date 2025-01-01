@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Plus, Info } from 'lucide-react';
+import { Trash2, Plus } from 'lucide-react';
 import { Action } from './types';
 
 interface ParagraphActionsProps {
@@ -149,21 +149,14 @@ const ParagraphActions: React.FC<ParagraphActionsProps> = ({
               index={index}
               onKeyDown={handleKeyDown}
             />
-            <div className="relative">
-              <ActionInput
-                value={action['N.Par.']}
-                onChange={(value) => handleActionChange(index, 'N.Par.', value)}
-                placeholder="N.Par."
-                className={`w-16 ${baseInputClass}`}
-                type="number"
-                index={index}
-              />
-              <div 
-                className="absolute -right-6 top-1/2 -translate-y-1/2 cursor-help"
-              >
-                <Info size={14} className="text-gray-400" />
-              </div>
-            </div>
+            <ActionInput
+              value={action['N.Par.']}
+              onChange={(value) => handleActionChange(index, 'N.Par.', value)}
+              placeholder="N.Par."
+              className={`w-16 ${baseInputClass}`}
+              type="number"
+              index={index}
+            />
             <button
               onClick={() => onRemoveAction(index)}
               className={`

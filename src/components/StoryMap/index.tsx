@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { StoryMapProps, Node } from './types';
+import { buttonClasses } from '../../utils/buttonStyles';
 import { translations } from './translations';
 import { useStoryMap } from './hooks/useStoryMap';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useToast, ToastManager } from './components/Toast';
 import { StoryMapControls } from './components/StoryMapControls';
 import { StoryMapCanvas } from './components/StoryMapCanvas';
-import { ImageControls } from './components/ImageControls';
 import { ActionButtons } from './components/ActionButtons';
 import { MiniMap } from './components/MiniMap';
 import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp';
@@ -172,16 +173,13 @@ const StoryMap: React.FC<StoryMapProps> = ({
         className="hidden"
         accept="image/*"
         onChange={handleBackgroundUpload}
+        aria-label="Upload background image"
       />
 
       {/* Left Column */}
       <div className="w-80 bg-[#1A2B3B] border-r border-gray-700">
         <SidePanel
-          onBack={handleClose}
           onUploadImage={() => state.fileInputRef.current?.click()}
-          onImageAdjustment={actions.handleImageAdjustment}
-          imageAdjustments={state.imageAdjustments}
-          backgroundImage={state.backgroundImage}
           showGrid={state.showGrid}
           useCurvedLines={state.useCurvedLines}
           onToggleGrid={handleToggleGrid}
@@ -259,17 +257,9 @@ const StoryMap: React.FC<StoryMapProps> = ({
             mapWidth={state.imageAdjustments.width}
             mapHeight={state.imageAdjustments.height}
             onViewBoxChange={handleViewBoxChange}
+            backgroundImage={state.backgroundImage}
           />
 
-          {state.backgroundImage && (
-            <div className="absolute bottom-4 right-4 z-10">
-              <ImageControls
-                imageAdjustments={state.imageAdjustments}
-                onAdjustment={actions.handleImageAdjustment}
-                t={t}
-              />
-            </div>
-          )}
 
           {/* Toast Messages */}
           <ToastManager

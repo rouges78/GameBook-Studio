@@ -1,0 +1,20 @@
+.story-map-canvas {
+  background-color: #0A1929;
+  touch-action: none;
+}
+
+.story-map-canvas-image {
+  filter: 
+    contrast(1) 
+    brightness(1) 
+    grayscale(0) 
+    opacity(1);
+}
+
+.story-map-canvas-node {
+  cursor: pointer;
+}
+
+.story-map-canvas-node-draggable {
+  cursor: move;
+}

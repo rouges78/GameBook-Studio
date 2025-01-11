@@ -21,7 +21,31 @@ interface ChangelogModalProps {
 const changelog = {
   it: [
     {
-      version: '0.9.12',
+      version: '1.3.0',
+      date: '07-01-2025',
+      changes: [
+        {
+          type: 'added',
+          items: [
+            'Miglioramenti di accessibilità: aggiunto aria-label per input file'
+          ]
+        },
+        {
+          type: 'removed',
+          items: [
+            'Rimossa funzionalità deprecata di regolazione immagine'
+          ]
+        },
+        {
+          type: 'fixed',
+          items: [
+            'Pulizia problemi di codifica nei componenti UI'
+          ]
+        }
+      ]
+    },
+    {
+      version: '1.2.3',
       date: '31-12-2024',
       changes: [
         {
@@ -111,7 +135,31 @@ const changelog = {
   ],
   en: [
     {
-      version: '0.9.12',
+      version: '1.3.0',
+      date: '07-01-2025',
+      changes: [
+        {
+          type: 'added',
+          items: [
+            'Accessibility improvements: added aria-label to file input'
+          ]
+        },
+        {
+          type: 'removed',
+          items: [
+            'Removed deprecated image adjustment functionality'
+          ]
+        },
+        {
+          type: 'fixed',
+          items: [
+            'Cleaned up encoding issues in UI components'
+          ]
+        }
+      ]
+    },
+    {
+      version: '1.2.3',
       date: '31-12-2024',
       changes: [
         {
@@ -245,6 +293,7 @@ const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose, isDark
               className={`p-1 rounded-full hover:bg-opacity-10 ${
                 isDarkMode ? 'hover:bg-white' : 'hover:bg-black'
               }`}
+              title={language === 'it' ? 'Chiudi' : 'Close'}
             >
               <X size={20} />
             </button>

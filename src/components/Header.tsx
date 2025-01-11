@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Book, Sun, Moon } from 'lucide-react';
+import { Book, Sun, Moon, ArrowLeftCircle } from 'lucide-react';
 import ChangelogModal from './ChangelogModal';
 
 interface HeaderProps {
@@ -10,6 +10,7 @@ interface HeaderProps {
   update?: string;
   revision?: string;
   onThemeToggle: () => void;
+  onNavigateToParagraphEditor: () => void;
   language: 'it' | 'en';
 }
 
@@ -20,7 +21,8 @@ const Header: React.FC<HeaderProps> = ({
   update, 
   revision,
   language,
-  onThemeToggle 
+  onThemeToggle,
+  onNavigateToParagraphEditor 
 }) => {
   const [isChangelogOpen, setIsChangelogOpen] = useState(false);
 
@@ -73,13 +75,14 @@ const Header: React.FC<HeaderProps> = ({
               >
                 <Book size={28} strokeWidth={1.5} />
               </motion.div>
-              <motion.span 
+              <motion.button
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-xl font-bold tracking-tight text-foreground"
+                className="flex items-center gap-2 text-xl font-bold tracking-tight text-foreground hover:text-foreground/80 transition-colors"
               >
-                GameBook Studio
-              </motion.span>
+                <ArrowLeftCircle size={24} strokeWidth={1.5} />
+                <span>torna all'editor paragrafi</span>
+              </motion.button>
             </div>
             
             {/* Right side - Version and Theme Toggle */}

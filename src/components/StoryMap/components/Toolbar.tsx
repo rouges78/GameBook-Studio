@@ -1,6 +1,7 @@
 import React from 'react';
 
 interface ToolbarProps {
+  onBack?: () => void;
   onAddNode?: () => void;
   onToggleGrid?: () => void;
   onToggleLines?: () => void;
@@ -38,6 +39,7 @@ const translations = {
 };
 
 export const Toolbar: React.FC<ToolbarProps> = ({
+  onBack,
   onAddNode,
   onToggleGrid,
   onToggleLines,
@@ -53,7 +55,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const t = translations[language];
 
   return (
-    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-[#1A2B3B] rounded-lg border border-gray-700 p-2 shadow-lg">
+    <div className="absolute top-0 left-0 right-0 h-12 bg-[#1A2B3B] border-b border-gray-700 px-4 flex items-center justify-between">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span className="font-medium">Torna all'editor paragrafi</span>
+        </button>
+      )}
+
+      <div className="flex items-center gap-2">
       {onAddNode && (
         <button
           onClick={onAddNode}
@@ -151,6 +166,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           </svg>
         </button>
       )}
+      </div>
     </div>
   );
 };

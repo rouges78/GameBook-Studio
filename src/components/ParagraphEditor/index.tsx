@@ -149,9 +149,14 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
     );
   }, [actions]);
 
-  const toggleMap = useCallback(() => {
-    console.log('Toggling map visibility');
-    setIsMapVisible(prev => !prev);
+  const openMap = useCallback(() => {
+    console.log('Opening map');
+    setIsMapVisible(true);
+  }, []);
+
+  const closeMap = useCallback(() => {
+    console.log('Closing map');
+    setIsMapVisible(false);
   }, []);
 
   return (
@@ -207,13 +212,13 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
               language={language}
               onUpdate={handleParagraphUpdate}
               onShowImageEditor={() => actions.setShowImageEditor(true)}
-              onShowStoryMap={toggleMap}
+              onShowStoryMap={openMap}
               onDelete={handleDelete}
               onExport={handleExport}
               onSave={handleSave}
               onNotification={actions.setNotification}
               translations={t}
-              onReturnToEditor={toggleMap}
+              onReturnToEditor={closeMap}
             />
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-500">
@@ -230,7 +235,7 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
             <StoryMap
               paragraphs={state.paragraphs}
               mapSettings={mapSettings}
-              onClose={toggleMap}
+              onClose={closeMap}
               isDarkMode={isDarkMode}
               language={language}
               onEditParagraph={actions.setSelectedParagraph}

@@ -1,7 +1,7 @@
 {
   "name": "gamebook-studio",
   "private": true,
-  "version": "0.9.12",
+  "version": "1.3.1",
   "type": "commonjs",
   "description": "Desktop application for creating interactive gamebooks and branching narratives",
   "author": "",

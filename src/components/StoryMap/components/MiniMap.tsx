@@ -8,6 +8,7 @@ interface MiniMapProps {
   mapWidth: number;
   mapHeight: number;
   onViewBoxChange: (x: number, y: number) => void;
+  backgroundImage: string | null;
 }
 
 const MINIMAP_WIDTH = 200;
@@ -20,7 +21,8 @@ export const MiniMap: React.FC<MiniMapProps> = ({
   viewBox,
   mapWidth,
   mapHeight,
-  onViewBoxChange
+  onViewBoxChange,
+  backgroundImage
 }) => {
   // Calculate scale to fit the entire map in the minimap
   const scale = Math.min(MINIMAP_WIDTH / mapWidth, MINIMAP_HEIGHT / mapHeight);
@@ -64,13 +66,25 @@ export const MiniMap: React.FC<MiniMapProps> = ({
         className="cursor-pointer"
       >
         {/* Background */}
-        <rect
-          x={0}
-          y={0}
-          width={MINIMAP_WIDTH}
-          height={MINIMAP_HEIGHT}
-          fill="#1a1a1a"
-        />
+        {backgroundImage ? (
+          <image
+            href={backgroundImage}
+            x={offsetX}
+            y={offsetY}
+            width={scaledWidth}
+            height={scaledHeight}
+            preserveAspectRatio="xMidYMid meet"
+            opacity={0.7}
+          />
+        ) : (
+          <rect
+            x={0}
+            y={0}
+            width={MINIMAP_WIDTH}
+            height={MINIMAP_HEIGHT}
+            fill="#1a1a1a"
+          />
+        )}
 
         {/* Links */}
         <g transform={`translate(${offsetX},${offsetY})`}>

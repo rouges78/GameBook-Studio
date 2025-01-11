@@ -527,7 +527,11 @@ export const useStoryMap = (
       handleImageAdjustment,
       handleBackgroundUpload,
       handleActionSelect,
-      handleManualSave
+      handleManualSave,
+      handleAddNode,
+      handleDeleteNode,
+      handleConnectNodes,
+      handleDisconnectNodes
     }
   };
 };

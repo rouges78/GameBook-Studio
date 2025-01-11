@@ -1,7 +1,7 @@
 import React from 'react';
-import { 
-  ZoomIn, ZoomOut, Grid, Upload, X, Edit3, Trash2, 
-  Lock, Unlock, Hand, Save, ArrowRightToLine 
+import {
+  ZoomIn, ZoomOut, Grid, Upload, X, Edit3, Trash2,
+  Lock, Unlock, Hand, Save, ArrowRightToLine, ArrowLeft
 } from 'lucide-react';
 import { Node, Translations } from '../types';
 import { formatBackupTime } from '../utils';
@@ -56,9 +56,10 @@ export const StoryMapControls: React.FC<StoryMapControlsProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={onClose}
-            className="p-1.5 rounded hover:bg-[#1E3A5F] text-gray-400 hover:text-white transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
           >
-            <X size={18} />
+            <ArrowLeft size={20} className="h-5 w-5" />
+            <span className="font-medium">Torna all'editor paragrafi</span>
           </button>
           <div className="flex items-center gap-1">
             <button

@@ -1,14 +1,11 @@
 {
-  "extends": "./electron/tsconfig.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
+    "outDir": "./electron/dist",
+    "rootDir": ".",
+    "baseUrl": ".",
     "noEmit": false,
-    "outDir": "dist-electron"
+    "allowImportingTsExtensions": false
   },
-  "include": [
-    "electron/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "src"
-  ]
+  "include": ["electron/**/*", "src/types/pages.ts"]
 }

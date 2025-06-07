@@ -1,4 +1,19 @@
-export type PageType = 
+export interface Paragraph {
+  id: number;
+  title: string;
+  content: string;
+  actions: any[];
+  incomingConnections?: number[];
+  outgoingConnections?: string[];
+  type: string;
+  tags?: string[];
+  x?: number;
+  y?: number;
+  locked?: boolean;
+  note?: string;
+}
+
+export type PageType =
   | 'dashboard'
   | 'createProject'
   | 'paragraphEditor'
@@ -10,40 +25,35 @@ export type PageType =
   | 'backupManager'
   | 'telemetryDashboard';
 
+export interface Project {
+  id: string;
+  name: string;
+  title: string;
+  bookTitle?: string;
+  author?: string;
+  description?: string;
+  paragraphs: Paragraph[];
+  created: string;
+  modified: string;
+  createdAt: string;
+  updatedAt: string;
+  lastEdited?: string;
+  language: 'it' | 'en';
+  content: string;
+  mapSettings?: {
+    backgroundImage?: string;
+    zoomLevel: number;
+    panOffset: { x: number; y: number };
+  };
+  coverImage?: string;
+  isArchived?: boolean;
+  lastSync?: string;
+  metadata?: Record<string, any>;
+}
+
 export interface Notification {
   message: string;
   type: 'success' | 'error' | 'warning' | 'info';
-}
-
-export interface Project {
-  id: string;
-  title: string;
-  description: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  language: string;
-  isArchived: boolean;
-  lastSync: Date | null;
-  paragraphs: Paragraph[];
-  assets: Asset[];
-  settings: Settings | null;
-}
-
-export interface Paragraph {
-  id: string;
-  number: number;
-  title: string;
-  content: string;
-  tags: string | null;
-  type: string;
-  actions: string;
-  incomingConnections: string;
-  outgoingConnections: string;
-  createdAt: Date;
-  updatedAt: Date;
-  projectId: string;
-  x: number | null;
-  y: number | null;
 }
 
 export interface Asset {
@@ -52,8 +62,8 @@ export interface Asset {
   type: string;
   path: string;
   projectId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  created: string;
+  modified: string;
 }
 
 export interface Settings {

@@ -41,6 +41,9 @@ export default defineConfig({
     port: parseInt(process.env.VITE_PORT) || 5173,
     strictPort: false,
     open: false,
+    headers: {
+      "Content-Security-Policy": "default-src 'self'; connect-src 'self' ws://localhost:*; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'"
+    },
     hmr: {
       protocol: 'ws',
       host: 'localhost',

@@ -4,12 +4,12 @@ export type PageType = 'dashboard' | 'createProject' | 'paragraphEditor' | 'libr
 export interface Project {
   id: string;
   name: string;
-  bookTitle: string;
-  author: string;
+  bookTitle?: string; // Reso opzionale per allineamento con src/types.Project
+  author?: string; // Reso opzionale per allineamento con src/types.Project
   description?: string;
-  created: Date;
-  modified: Date;
-  lastEdited: string;
+  created: Date | string; // Temporaneamente string | Date
+  modified: Date | string; // Temporaneamente string | Date
+  lastEdited?: string; // Reso opzionale per allineamento
   paragraphs: any[];
   mapSettings?: any;
 }

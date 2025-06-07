@@ -67,22 +67,22 @@ const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center">
             {/* Left side - Logo and Title */}
             <div className="flex items-center space-x-3 pl-4">
-              <motion.div
-                variants={logoVariants}
-                initial="initial"
-                animate="animate"
-                className="text-primary"
-              >
-                <Book size={28} strokeWidth={1.5} />
-              </motion.div>
-              <motion.button
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-2 text-xl font-bold tracking-tight text-foreground hover:text-foreground/80 transition-colors"
-              >
-                <ArrowLeftCircle size={24} strokeWidth={1.5} />
-                <span>torna all'editor paragrafi</span>
-              </motion.button>
+              <div className="flex items-center">
+                <Book size={24} className="text-blue-800" strokeWidth={1.5} />
+                <span className="ml-3 text-[16px] font-semibold text-[#2A4365]">
+                  Gamebook Studio
+                </span>
+              </div>
+              {location.pathname.startsWith('/story-map') && (
+                <motion.button
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-2 text-xl font-bold tracking-tight text-foreground hover:text-foreground/80 transition-colors"
+                >
+                  <ArrowLeftCircle size={24} strokeWidth={1.5} />
+                  <span>torna all'editor paragrafi</span>
+                </motion.button>
+              )}
             </div>
             
             {/* Right side - Version and Theme Toggle */}

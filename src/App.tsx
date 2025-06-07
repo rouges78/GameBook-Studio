@@ -18,9 +18,8 @@ import { saveProject, getProjects, deleteProject, debugDatabase, migrateProjectD
 import { startAutoBackup, stopAutoBackup } from './utils/autoBackup';
 import { ThemeContext, defaultTheme, mochaTheme, type Theme } from './contexts/ThemeContext';
 import packageJson from '../package.json';
-import type { Paragraph as EditorParagraph } from './components/ParagraphEditor/types';
-import type { Paragraph as ExportParagraph } from './components/ExportPage/types';
-import { PageType, Project } from './types/pages';
+import { PageType, Project, Paragraph } from './types'; // Importa i tipi globali
+import type { Paragraph as ExportParagraph } from './components/ExportPage/types'; // Re-importato per transformParagraphsForExport
 
 const isElectron = !!(window as any).electron;
 
@@ -32,12 +31,16 @@ interface NotificationType {
   type: 'success' | 'error' | 'info';
 }
 
+// Rimuoviamo la classe ErrorBoundary locale dato che è segnalata come non utilizzata e c'è UpdateErrorBoundary
+// class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
+
+
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [language, setLanguage] = useState<'it' | 'en'>('it');
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]); // Userà Project da ./types
+  const [currentProject, setCurrentProject] = useState<Project | null>(null); // Userà Project da ./types
   const [lastBackup, setLastBackup] = useState<string>('');
   const [notification, setNotification] = useState<NotificationType | null>(null);
   const [theme, setTheme] = useState<Theme>(defaultTheme);
@@ -51,7 +54,7 @@ const App: React.FC = () => {
     updateInfo,
     downloadProgress,
     isDownloading,
-    updateDownloaded,
+    // updateDownloaded, // Rimosso perché segnalato come non letto
     error,
     isRetrying,
     startDownload,
@@ -60,13 +63,17 @@ const App: React.FC = () => {
     retryOperation
   } = useAutoUpdater();
 
-  const transformParagraphsForExport = (paragraphs: EditorParagraph[]): ExportParagraph[] => {
-    return paragraphs.map((p, index) => ({
-      id: Number(p.id),
-      title: `Paragraph ${index + 1}`,
+  const transformParagraphsForExport = (paragraphs: Paragraph[]): ExportParagraph[] => {
+    return paragraphs.map(p => ({
+      id: p.id, // Assumendo che Paragraph globale abbia 'id: number'
+      title: p.title,
       content: p.content,
-      actions: p.actions,
-      type: 'normale'
+      actions: p.actions, // Assumendo che Paragraph globale abbia 'actions: any[]'
+      type: 'normale', // Imposta un tipo valido per ExportParagraph
+      // Assicurati che ExportParagraph non abbia altri campi obbligatori non coperti da Paragraph globale
+      // o aggiungili qui.
+      // Per esempio, se ExportParagraph avesse campi specifici come 'customExportField',
+      // dovrebbero essere aggiunti: customExportField: p.someCompatibleField || defaultValue
     }));
   };
 
@@ -77,19 +84,20 @@ const App: React.FC = () => {
           await migrateProjectData();
           console.log('Project migration completed');
 
-          const savedProjects = await getProjects();
+          const savedProjects = await getProjects() as Project[]; // Cast a Project[] globale
           setProjects(savedProjects || []);
           
           const dbContent = await debugDatabase();
           console.log('Database content:', dbContent);
           
-          startAutoBackup(5);
+          startAutoBackup(0.166); // Intervallo di ~10 secondi per test
           console.log('Auto backup initialized in App component');
         } else {
           // Use browser storage
-          const savedProjects = localStorage.getItem('projects');
-          if (savedProjects) {
-            browserProjects = JSON.parse(savedProjects);
+          const savedProjectsString = localStorage.getItem('projects');
+          if (savedProjectsString) {
+            const parsedProjects = JSON.parse(savedProjectsString) as Project[]; // Cast a Project[] globale
+            browserProjects = parsedProjects;
             setProjects(browserProjects);
           }
         }
@@ -114,16 +122,23 @@ const App: React.FC = () => {
     setTimeout(() => setNotification(null), 3000);
   }, []);
 
-  const handleCreateProject = useCallback(async (project: Project) => {
+  const handleCreateProject = useCallback(async (projectData: Omit<Project, 'id' | 'created' | 'modified' | 'lastEdited' | 'createdAt' | 'updatedAt' | 'content' | 'language' | 'title' | 'name' | 'mapSettings'> & { bookTitle: string, author: string, description?: string, paragraphs: Paragraph[], mapSettings?: Project['mapSettings'] }) => {
     try {
-      const now = new Date();
+      const now = new Date().toISOString();
       const completeProject: Project = {
-        ...project,
+        ...projectData,
         id: `project-${Date.now()}`,
-        name: project.bookTitle,
+        name: projectData.bookTitle, // Assicurati che name e title siano gestiti
+        title: projectData.bookTitle, // Aggiunto title per coerenza con Project globale
         created: now,
         modified: now,
-        lastEdited: now.toISOString()
+        createdAt: now, // Aggiunto createdAt
+        updatedAt: now, // Aggiunto updatedAt
+        lastEdited: now,
+        language: language, // Aggiunto language, o prendilo da projectData se disponibile
+        content: '', // Aggiunto content, o prendilo da projectData se disponibile
+        paragraphs: projectData.paragraphs || [], // Assicura che paragraphs sia definito
+        mapSettings: projectData.mapSettings || { zoomLevel: 1, panOffset: { x: 0, y: 0} } // Fornisce un default per mapSettings
       };
 
       if (isElectron) {
@@ -141,19 +156,40 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const handleSaveProject = useCallback(async (project: Project) => {
+  const handleDeleteProject = useCallback(async (bookTitleToDelete: string) => {
     try {
-      const now = new Date();
+      if (isElectron) {
+        // Assumendo che deleteProject si aspetti bookTitle o un ID. Se si aspetta bookTitle:
+        await deleteProject(bookTitleToDelete);
+      } else {
+        browserProjects = browserProjects.filter(p => p.bookTitle !== bookTitleToDelete);
+        localStorage.setItem('projects', JSON.stringify(browserProjects));
+      }
+      setProjects(prevProjects => prevProjects.filter(p => p.bookTitle !== bookTitleToDelete));
+      if (currentProject?.bookTitle === bookTitleToDelete) {
+        setCurrentProject(null);
+      }
+      showNotification('Progetto eliminato con successo', 'success');
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      showNotification('Errore nell\'eliminazione del progetto', 'error');
+    }
+  }, []);
+
+  const handleSaveProject = useCallback(async (project: Project) => { // project è Project globale
+    try {
+      const now = new Date().toISOString();
       const updatedProject: Project = {
         ...project,
         modified: now,
-        lastEdited: now.toISOString()
+        updatedAt: now, // Aggiorna anche updatedAt
+        lastEdited: now
       };
 
       if (isElectron) {
         await saveProject(updatedProject);
       } else {
-        const index = browserProjects.findIndex(p => p.bookTitle === project.bookTitle);
+        const index = browserProjects.findIndex(p => p.id === project.id);
         if (index !== -1) {
           browserProjects[index] = updatedProject;
         } else {
@@ -162,9 +198,9 @@ const App: React.FC = () => {
         localStorage.setItem('projects', JSON.stringify(browserProjects));
       }
       setProjects(prevProjects =>
-        prevProjects.map((p) => (p.bookTitle === project.bookTitle ? updatedProject : p))
+        prevProjects.map((p) => (p.id === project.id ? updatedProject : p)) // Confronta per id
       );
-      if (currentProject?.bookTitle === project.bookTitle) {
+      if (currentProject?.id === project.id) { // Confronta per id
         setCurrentProject(updatedProject);
       }
       showNotification('Progetto salvato con successo', 'success');
@@ -174,22 +210,6 @@ const App: React.FC = () => {
       showNotification('Errore nel salvataggio del progetto', 'error');
     }
   }, [currentProject]);
-
-  const handleDeleteProject = useCallback(async (bookTitle: string) => {
-    try {
-      if (isElectron) {
-        await deleteProject(bookTitle);
-      } else {
-        browserProjects = browserProjects.filter(p => p.bookTitle !== bookTitle);
-        localStorage.setItem('projects', JSON.stringify(browserProjects));
-      }
-      setProjects((prevProjects) => prevProjects.filter((p) => p.bookTitle !== bookTitle));
-      showNotification('Progetto eliminato con successo', 'success');
-    } catch (error) {
-      console.error('Failed to delete project:', error);
-      showNotification('Errore nell\'eliminazione del progetto', 'error');
-    }
-  }, []);
 
   const handleUpdateLastBackup = useCallback((date: string) => {
     setLastBackup(date);
@@ -201,7 +221,7 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const handleSetPage = useCallback((page: PageType) => {
+  const handleNavigateToPage = useCallback((page: PageType) => {
     setCurrentPage(page);
   }, []);
 
@@ -216,12 +236,12 @@ const App: React.FC = () => {
           <Dashboard
             key="dashboard"
             isDarkMode={isDarkMode}
-            setCurrentPage={handleSetPage}
+            setCurrentPage={handleNavigateToPage}
             setIsDarkMode={setIsDarkMode}
             language={language}
             setLanguage={setLanguage}
-            projects={projects}
-            setCurrentProject={handleSetCurrentProject}
+            projects={projects} // projects è Project[] globale
+            setCurrentProject={handleSetCurrentProject} // setCurrentProject accetta Project | null globale
             onLogout={handleLogout}
           />
         );
@@ -229,8 +249,8 @@ const App: React.FC = () => {
         return (
           <CreateNewProject
             key="create-project"
-            setCurrentPage={handleSetPage}
-            onCreateProject={handleCreateProject}
+            setCurrentPage={handleNavigateToPage}
+            onCreateProject={(projectData) => handleCreateProject(projectData as any)} // Adatta il tipo se necessario, o modifica handleCreateProject per accettare il tipo da CreateNewProject
             isDarkMode={isDarkMode}
             language={language}
           />
@@ -238,10 +258,10 @@ const App: React.FC = () => {
       case 'paragraphEditor':
         return currentProject ? (
           <ParagraphEditor
-            key={`editor-${currentProject.bookTitle}`}
-            setCurrentPage={handleSetPage}
-            bookTitle={currentProject.bookTitle}
-            author={currentProject.author}
+            key={`editor-${currentProject.id}`}
+            setCurrentPage={handleNavigateToPage}
+            bookTitle={currentProject.bookTitle || ''}
+            author={currentProject.author || ''}
             onSaveProject={handleSaveProject}
             isDarkMode={isDarkMode}
             language={language}
@@ -254,14 +274,14 @@ const App: React.FC = () => {
         return (
           <Library
             key="library"
-            setCurrentPage={handleSetPage}
+            setCurrentPage={handleNavigateToPage}
             books={projects}
             isDarkMode={isDarkMode}
             onEditBook={(bookTitle: string) => {
-              const project = projects.find((p) => p.bookTitle === bookTitle);
-              if (project) {
-                setCurrentProject(project);
-                handleSetPage('paragraphEditor');
+              const projectToEdit = projects.find(p => p.bookTitle === bookTitle);
+              if (projectToEdit) {
+                setCurrentProject(projectToEdit);
+                handleNavigateToPage('paragraphEditor');
               }
             }}
             onDeleteBook={handleDeleteProject}
@@ -273,7 +293,7 @@ const App: React.FC = () => {
         return (
           <ThemeEditor
             key="theme-editor"
-            setCurrentPage={handleSetPage}
+            setCurrentPage={handleNavigateToPage}
             isDarkMode={isDarkMode}
             language={language}
             currentTheme={theme}
@@ -284,7 +304,7 @@ const App: React.FC = () => {
         return (
           <Settings
             key="settings"
-            setCurrentPage={handleSetPage}
+            setCurrentPage={handleNavigateToPage}
             isDarkMode={isDarkMode}
             language={language}
           />
@@ -293,7 +313,7 @@ const App: React.FC = () => {
         return (
           <Help
             key="help"
-            setCurrentPage={handleSetPage}
+            setCurrentPage={handleNavigateToPage}
             isDarkMode={isDarkMode}
             language={language}
           />
@@ -301,11 +321,11 @@ const App: React.FC = () => {
       case 'export':
         return currentProject ? (
           <ExportPage
-            key={`export-${currentProject.bookTitle}`}
-            setCurrentPage={handleSetPage}
-            bookTitle={currentProject.bookTitle}
-            author={currentProject.author}
-            paragraphs={transformParagraphsForExport(currentProject.paragraphs)}
+            key={`export-${currentProject.id}`}
+            setCurrentPage={handleNavigateToPage}
+            bookTitle={currentProject.bookTitle || ''} // Fornisce fallback
+            author={currentProject.author || ''} // Fornisce fallback
+            paragraphs={transformParagraphsForExport(currentProject.paragraphs)} // Usa Paragraph globale
             isDarkMode={isDarkMode}
             language={language}
           />
@@ -314,7 +334,7 @@ const App: React.FC = () => {
         return (
           <BackupManager
             key="backup-manager"
-            setCurrentPage={handleSetPage}
+            setCurrentPage={handleNavigateToPage}
             isDarkMode={isDarkMode}
             language={language}
           />
@@ -332,6 +352,7 @@ const App: React.FC = () => {
           version={packageJson.version}
           onThemeToggle={() => setIsDarkMode(!isDarkMode)}
           language={language}
+          onNavigateToParagraphEditor={() => handleNavigateToPage('paragraphEditor')} // Aggiunta prop mancante
         />
         {renderPage()}
         <Footer

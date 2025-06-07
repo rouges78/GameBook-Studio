@@ -1,32 +1,25 @@
 import React, { useState, useCallback, useMemo, Suspense, lazy, useRef, useEffect } from 'react';
-import { Plus, FolderOpen, FileText } from 'lucide-react';
+import { Plus, FolderOpen, FileText, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getProjects, saveProject } from '../utils/storage';
+import { useTranslation } from 'react-i18next';
 import { projectCache } from '../utils/projectCache';
 import ChangelogModal from './ChangelogModal';
 import '../styles/glow.css';
+import type { Project } from '../types';
 
 const Sidebar = lazy(() => import('./Sidebar'));
 
-interface Project {
-  id: string;
-  bookTitle: string;
-  author: string;
-  paragraphs: any[];
-  lastEdited: string;
-  coverImage?: string;
-}
-
 // Mock data for browser testing
-const mockProjects: Project[] = [
+const mockProjects: DashboardProject[] = [
   {
     id: "mock-project-1",
     bookTitle: "Sample Project 1",
     author: "Author One",
     paragraphs: [],
     lastEdited: new Date().toISOString(),
-    created: new Date(),
-    modified: new Date(),
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
     name: "Sample Project 1"
   },
   {
@@ -35,8 +28,8 @@ const mockProjects: Project[] = [
     author: "Author Two",
     paragraphs: [],
     lastEdited: new Date().toISOString(),
-    created: new Date(),
-    modified: new Date(),
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
     name: "Sample Project 2"
   },
   {
@@ -45,8 +38,8 @@ const mockProjects: Project[] = [
     author: "Author Three",
     paragraphs: [],
     lastEdited: new Date().toISOString(),
-    created: new Date(),
-    modified: new Date(),
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
     name: "Sample Project 3"
   }
 ];
@@ -63,7 +56,7 @@ interface DashboardProps {
 }
 
 interface ProjectBoxProps {
-  project?: Project;
+  project?: DashboardProject;
   isDarkMode: boolean;
   translations: {
     noProject: string;
@@ -329,11 +322,11 @@ const Dashboard: React.FC<DashboardProps> = ({ isDarkMode, setCurrentPage, setIs
         if (!project.id) {
           project.id = `project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         }
-        if (!project.created) {
-          project.created = new Date();
+        if (!project.createdAt) {
+          project.createdAt = new Date().toISOString();
         }
-        if (!project.modified) {
-          project.modified = new Date();
+        if (!project.updatedAt) {
+          project.updatedAt = new Date().toISOString();
         }
         if (!project.lastEdited) {
           project.lastEdited = new Date().toISOString();
@@ -354,6 +347,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isDarkMode, setCurrentPage, setIs
     it: {
       createNewProject: "Crea nuovo progetto",
       loadProject: "Carica progetto esistente",
+      saveProject: "Salva progetto corrente",
       recentProjects: "PROGETTI RECENTI",
       noProject: "Nessun progetto",
       lastEdit: "Ultima modifica",
@@ -511,6 +505,12 @@ const Dashboard: React.FC<DashboardProps> = ({ isDarkMode, setCurrentPage, setIs
                 icon={<FolderOpen size={64} className="text-white" />}
                 title={t.loadProject}
                 onClick={handleLoadProject}
+                isDarkMode={isDarkMode}
+              />
+              <ActionBox
+                icon={<Save size={64} className="text-white" />}
+                title={t.saveProject}
+                onClick={() => document.getElementById('save-project')?.click()}
                 isDarkMode={isDarkMode}
               />
             </div>

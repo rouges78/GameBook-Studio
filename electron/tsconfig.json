@@ -1,36 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": ".",
-    "rootDir": "..",
-    "moduleResolution": "node",
+    "baseUrl": ".",
+    "outDir": "./dist",
+    "types": [
+      "node"
+    ],
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": false,
-    "types": ["node"],
-    "baseUrl": "..",
-    "paths": {
-      "*": ["./*"],
-      "@src/*": ["./src/*"],
-      "@electron/*": ["./electron/*"]
-    },
-    "jsx": "react-jsx"
+    "noEmit": false
   },
   "include": [
-    "*.ts",
-    "types/**/*.ts",
-    "../src/types/electron.d.ts",
-    "../src/types/pages.ts",
-    "../src/components/ParagraphEditor/types.ts"
+    "main.mts"
   ],
   "exclude": [
     "node_modules",
-    "../src/types/theme.ts",
-    "../src/types/theme-types.ts"
+    "dist"
   ]
 }

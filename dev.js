@@ -1,19 +1,26 @@
-const { spawn } = require('child_process');
-const { platform } = require('os');
+import { spawn } from 'child_process';
+import { platform } from 'os';
+import getPort from 'get-port';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 (async () => {
   try {
-    // Import get-port dynamically
-    const getPort = (await import('get-port')).default;
-    
     // Find an available port starting from 5173
     const port = await getPort({ port: [5173, 5174, 5175, 5176, 5177, 5178] });
     console.log(`Found available port: ${port}`);
 
-    // Start Vite dev server
+    // Start Vite dev server - Correzione definitiva per Windows
     console.log('Starting Vite dev server...');
-    const vite = spawn(platform() === 'win32' ? 'npm.cmd' : 'npm', ['run', 'dev:vite', '--', `--port=${port}`], {
+    const viteCommand = platform() === 'win32' 
+      ? `"${path.join(__dirname, 'node_modules/.bin/vite.cmd')}" --port ${port} --strictPort`
+      : `vite --port ${port} --strictPort`;
+
+    const vite = spawn(viteCommand, {
       stdio: 'inherit',
+      shell: true,
       env: {
         ...process.env,
         VITE_PORT: port.toString()
@@ -29,8 +36,13 @@ const { platform } = require('os');
     // Start Electron after a delay to ensure Vite is ready
     setTimeout(() => {
       console.log('Starting Electron...');
-      const electron = spawn(platform() === 'win32' ? 'npm.cmd' : 'npm', ['run', 'dev:electron'], {
+      const electronCommand = platform() === 'win32'
+        ? `electron.cmd "${path.join(__dirname, 'electron/dist/main.mjs')}" --port=${port}`
+        : `electron "${path.join(__dirname, 'electron/dist/main.mjs')}" --port=${port}`;
+
+      const electron = spawn(electronCommand, {
         stdio: 'inherit',
+        shell: true,
         env: {
           ...process.env,
           NODE_ENV: 'development',
@@ -45,23 +57,18 @@ const { platform } = require('os');
         process.exit(1);
       });
 
-      // Handle Electron process exit
-      electron.on('close', (code) => {
-        console.log(`Electron process exited with code ${code}`);
+      // Handle process termination
+      const cleanup = () => {
         vite.kill();
-        process.exit(code || 0);
-      });
+        electron.kill();
+        process.exit();
+      };
+
+      process.on('SIGINT', cleanup);
+      process.on('SIGTERM', cleanup);
+      process.on('exit', cleanup);
+
     }, 3000);
-
-    // Handle process termination
-    const cleanup = () => {
-      vite.kill();
-      process.exit();
-    };
-
-    process.on('SIGINT', cleanup);
-    process.on('SIGTERM', cleanup);
-    process.on('exit', cleanup);
 
   } catch (error) {
     console.error('Error in dev script:', error);

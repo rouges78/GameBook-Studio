@@ -1,25 +1,59 @@
+## [Unreleased]
+
+## [1.3.5] - 2025-01-22
+### Fixed
+- Fixed Electron security warnings by resolving path conflicts
+- Addressed CSP violations and unsafe eval warnings  
+- Resolved preload script loading issues
+- Streamlined build configuration
+- Removed duplicate path imports in Electron main process
+- Corrected preload script path configuration
+- Version consistency across package.json and changelog components
+
+### Security
+- Enabled Electron sandboxing and context isolation
+- Implemented IPC channel validation in preload script
+- Updated Electron security settings in main process
+
+## [1.3.3] - 2025-01-22
+### Fixed
+- Electron build configuration errors
+- Source/output directory structure conflicts
+
+### Added
+- Quick save button on home page
+- Advanced error logging for backups
+
+### Changed
+- Improved error handling with Electron Log
+
+## [1.3.2] - 2025-01-22
+### Fixed
+- Electron main process initialization errors
+- Module system conflicts in main.js
+- Missing core IPC handlers
+- Improved logging and error handling
+
 ## [1.3.1] - 2025-01-09
 ### Fixed
-- Risolto problema del pulsante di ritorno all'editor paragrafi
-- Corretta visualizzazione dell'immagine di sfondo nella minimappa
-- Ripristinato pulsante di carica immagine nella sidebar
-- Resa la sidebar sempre visibile e fissa
+- Return to paragraph editor button functionality
+- Minimap background image display
+- Image load button in sidebar restoration
+- Sidebar persistent visibility and positioning
 
 ## [1.3.0] - 2025-01-07
-### Accessibility Improvements
-- Added aria-label to file input for better screen reader support
+### Accessibility
+- Added aria-label to file inputs for screen readers
 
-### Removed Features
-- Removed deprecated image adjustment functionality
-- Cleaned up encoding issues in UI components
+### Removed
+- Deprecated image adjustment functionality
 
-## [1.2.3] - 2025-01-06
-### UI Improvements
-- Risolto problema aree bianche in StoryMap
-- Uniformato tema scuro in tutta l'interfaccia
-- Aggiornati colori di top bar e sidebar
-
-## [1.2.3] - 2024-01-01
 ### Fixed
-- Sidebar positioning to align properly with topbar
-- Sidebar content layout to start below toolbar
+- UI component encoding issues
+
+## [1.2.4] - 2025-01-06
+### UI Improvements
+- Fixed white areas in StoryMap
+- Unified dark theme across interface
+- Updated top bar and sidebar colors
+- Removed duplicate changelog entries

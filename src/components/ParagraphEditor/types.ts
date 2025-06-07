@@ -1,40 +1,15 @@
-import { PageType } from '../../types/pages';
+import { PageType, Project as GlobalProject, Paragraph as GlobalParagraph } from '../../types';
 
-export interface Project {
-  id: string;
-  name: string;
-  bookTitle: string;
-  author: string;
-  description?: string;
-  created: Date;
-  modified: Date;
-  lastEdited: string;
-  paragraphs: Paragraph[];
-  mapSettings?: any;
-}
+// La definizione locale di Project è stata rimossa, si usa GlobalProject importato.
+// La definizione locale di Paragraph è stata rimossa, si usa GlobalParagraph importato.
+// Se GlobalParagraph non è sufficientemente specifico (es. per 'type'),
+// si potrebbe estendere o creare un tipo specifico locale basato su GlobalParagraph.
+// Per ora, si assume che GlobalParagraph sia adeguato.
 
-export interface Paragraph {
-  id: number;
-  title: string;
-  content: string;
-  actions: Action[];
-  incomingConnections: number[];
-  outgoingConnections: string[];
-  type: 'normale' | 'nodo' | 'finale';
-  tags: string[];
-  font?: string;
-  fontSize?: number;
-  alignment?: 'left' | 'center' | 'right';
-  image?: { 
-    data: string;
-    position: 'before' | 'after';
-  };
-  note?: string;
-  x?: number;
-  y?: number;
-  locked?: boolean;
-}
+export type Project = GlobalProject;
+export type Paragraph = GlobalParagraph;
 
+// La definizione di Action rimane locale se non presente in types.ts globale
 export interface Action {
   text: string;
   'N.Par.': string;
@@ -60,7 +35,7 @@ export interface ParagraphEditorProps {
   setCurrentPage: (page: PageType) => void;
   bookTitle: string;
   author: string;
-  onSaveProject: (project: Project) => void;
+  onSaveProject: (project: GlobalProject) => void;
   isDarkMode: boolean;
   language: 'it' | 'en';
   initialParagraphs?: Paragraph[];
@@ -69,8 +44,8 @@ export interface ParagraphEditorProps {
 }
 
 export interface ParagraphContentProps {
-  selectedParagraph: Paragraph;
-  paragraphs: Paragraph[];
+  selectedParagraph: GlobalParagraph;
+  paragraphs: GlobalParagraph[];
   onUpdate: (updatedParagraph: Paragraph) => void;
   isDarkMode: boolean;
   language: 'it' | 'en';
@@ -78,8 +53,8 @@ export interface ParagraphContentProps {
 }
 
 export interface ParagraphEditorControlsProps {
-  selectedParagraph: Paragraph;
-  paragraphs: Paragraph[];
+  selectedParagraph: GlobalParagraph;
+  paragraphs: GlobalParagraph[];
   onUpdate: (updatedParagraph: Paragraph) => void;
   onSelectParagraph: (id: number) => void;
   isDarkMode: boolean;
@@ -89,8 +64,8 @@ export interface ParagraphEditorControlsProps {
 }
 
 export interface FormattingToolbarProps {
-  selectedParagraph: Paragraph;
-  onUpdate: (updatedParagraph: Paragraph) => void;
+  selectedParagraph: GlobalParagraph;
+  onUpdate: (updatedParagraph: GlobalParagraph) => void;
   isDarkMode: boolean;
   language: 'it' | 'en';
 }

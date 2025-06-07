@@ -38,8 +38,20 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
   const selectedParagraph = state.paragraphs.find(p => p.id === state.selectedParagraph);
 
   const handleParagraphUpdate = useCallback((updatedParagraph: Paragraph) => {
+    const validationErrors = validateParagraphContent(updatedParagraph);
+    if (validationErrors.length > 0) {
+      actions.setNotification({
+        message: `Errori di validazione: ${validationErrors.join(', ')}`,
+        type: 'error'
+      });
+      return;
+    }
+
+    const sanitizedContent = sanitizeHTML(updatedParagraph.content);
+    const sanitizedParagraph = {...updatedParagraph, content: sanitizedContent};
+
     actions.setParagraphs(prevParagraphs => {
-      const exists = prevParagraphs.some(p => p.id === updatedParagraph.id);
+      const exists = prevParagraphs.some(p => p.id === sanitizedParagraph.id);
       if (exists) {
         return prevParagraphs.map(p =>
           p.id === updatedParagraph.id ? updatedParagraph : p

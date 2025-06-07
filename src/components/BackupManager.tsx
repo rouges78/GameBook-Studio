@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { BackupMetadata, BackupSettings } from '../types/electron';
+import { PageType } from '../types';
 
 interface BackupManagerProps {
-  setCurrentPage: (page: string) => void;
+  setCurrentPage: (page: PageType) => void;
   isDarkMode: boolean;
   language: 'it' | 'en';
 }
@@ -135,7 +136,11 @@ const BackupManager: React.FC<BackupManagerProps> = ({ setCurrentPage, isDarkMod
     try {
       const backupList = await window.electron['backup:list']();
       setBackups(backupList);
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Errore backup:', error.message);
+        window.electron.log.error(`Backup error: ${error.message}`);
+      }
       console.error('Error loading backups:', error);
     }
   };
@@ -153,28 +158,59 @@ const BackupManager: React.FC<BackupManagerProps> = ({ setCurrentPage, isDarkMod
 
   const handleCreateBackup = async () => {
     setIsCreatingBackup(true);
+    const startTime = Date.now();
     try {
+      console.timeStamp('Backup started');
+      console.log('Initiating backup process...');
+      
       console.log('Fetching projects for backup...');
       const projects = await window.electron['db:getProjects']();
       if (!projects || projects.length === 0) {
-        throw new Error('No projects found to backup');
+        throw new Error('Nessun progetto trovato per il backup');
+      }
+
+      console.log('Starting backup creation...');
+      const backupResult = await window.electron['backup:create'](projects);
+      
+      if (typeof backupResult === 'string') {
+        throw new Error('Risposta inattesa dal servizio di backup');
       }
       
-      console.log('Creating backup...');
-      const backupResult = await window.electron['backup:create'](projects);
-      if (typeof backupResult === 'string') {
-        throw new Error('Backup creation returned unexpected string');
-      }
       const newBackup = backupResult as BackupMetadata;
       setBackups(prev => [newBackup, ...prev]);
-      
-      alert(t.messages.backupCreated);
+
+      console.log('Backup metrics:', {
+        duration: Date.now() - startTime,
+        memoryUsage: process.memoryUsage(),
+        dbSize: newBackup.size
+      });
+
+      if (newBackup.size > 100 * 1024 * 1024) {
+        alert('Backup completato: L\'operazione ha richiesto più tempo del previsto a causa delle dimensioni del database');
+      } else {
+        alert(t.messages.backupCreated);
+      }
+
     } catch (error: unknown) {
-      console.error('Backup creation failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      alert(`Backup failed: ${errorMessage}`);
+      console.error('Backup failure:', {
+        error: error instanceof Error ? error.stack : error,
+        heap: v8.getHeapStatistics(),
+        systemMemory: os.totalmem() - os.freemem()
+      });
+      
+      const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto';
+      alert(`Errore durante il backup: ${errorMessage}`);
+      
+      window.electron.ipcRenderer.send('save-crash-report', {
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.stack : error,
+        memoryDump: process.memoryUsage(),
+        dbSize: backups.reduce((acc, b) => acc + b.size, 0)
+      });
+      
     } finally {
       setIsCreatingBackup(false);
+      console.timeEnd('Backup process');
     }
   };
 

@@ -13,6 +13,7 @@ GameBook Studio is an advanced desktop application designed for creating and man
   - Automatic backup functionality
   - Backup history management
   - Recovery options for lost work
+  - **File-based Backup Storage**: Backups are now automatically saved as JSON files in the application's `userData` directory (specifically in a `backups` subfolder, e.g., `C:\Users\[YourUser]\Documents\GameBookStudioCache\backups\` on Windows). Each backup file is timestamped for easy identification.
 
 - **Export Options**
   - Multiple export formats support
@@ -20,6 +21,7 @@ GameBook Studio is an advanced desktop application designed for creating and man
   - Preview before export
 
 ### Planned Features
+*(Nota: Questa lista necessita di una revisione per riflettere lo stato attuale del progetto)*
 - [ ] Visual representation of story branches
 - [ ] Drag-and-drop map interface
 - [ ] Connection management between story nodes
@@ -34,9 +36,6 @@ GameBook Studio is an advanced desktop application designed for creating and man
 - [ ] Analytics dashboard
 - [ ] Import from various formats
 - [ ] Plugin system
-- [ ] Multiple export formats support
-- [ ] Customizable export templates
-- [ ] Preview before export
 
 
 ## 🚀 Installation
@@ -75,6 +74,9 @@ yarn build
 ```
 
 The built application will be available in the `dist` directory.
+
+## 📖 Usage
+(Details on how to use GameBook Studio will be added here. Screenshots and GIFs are welcome!)
 
 ## 🛠 Technology Stack
 - **Frontend**: React, TypeScript, Tailwind CSS
@@ -123,9 +125,10 @@ For common issues and solutions, please check our [FAQ](docs/faq.md) or open an 
 ## 📊 Project Status
 - **Current Version**: 0.9.13
 - **Development Stage**: Beta
-- **Last Updated**: December 2024
+- **Last Updated**: June 2025
 
 ## 🎯 Roadmap
+*(Nota: Questa roadmap necessita di una revisione per riflettere lo stato attuale del progetto)*
 ### Phase 1 (Current)
 - [x] Basic editor functionality
 - [ ] Story mapping

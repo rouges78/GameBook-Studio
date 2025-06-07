@@ -21,6 +21,21 @@ interface ChangelogModalProps {
 const changelog = {
   it: [
     {
+      version: '1.3.5',
+      date: '22-01-2025',
+      changes: [
+        {
+          type: 'fixed',
+          items: [
+            'Fixed Electron security warnings by resolving path conflicts',
+            'Addressed CSP violations and unsafe eval warnings',
+            'Resolved preload script loading issues',
+            'Streamlined build configuration'
+          ]
+        }
+      ]
+    },
+    {
       version: '1.3.0',
       date: '07-01-2025',
       changes: [
@@ -134,6 +149,21 @@ const changelog = {
     }
   ],
   en: [
+    {
+      version: '1.3.5',
+      date: '22-01-2025',
+      changes: [
+        {
+          type: 'fixed',
+          items: [
+            'Fixed Electron security warnings by resolving path conflicts',
+            'Addressed CSP violations and unsafe eval warnings',
+            'Resolved preload script loading issues',
+            'Streamlined build configuration'
+          ]
+        }
+      ]
+    },
     {
       version: '1.3.0',
       date: '07-01-2025',

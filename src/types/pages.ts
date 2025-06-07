@@ -1,18 +1,9 @@
-export type PageType = 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 
-                'settings' | 'help' | 'export' | 'backupManager';
+import { PageType as GlobalPageType, Project as GlobalProject } from '../types';
 
-export interface Project {
-  id: string;
-  name: string;
-  bookTitle: string;
-  author: string;
-  description?: string;
-  created: Date;
-  modified: Date;
-  lastEdited: string;
-  paragraphs: any[];
-  mapSettings?: any;
-}
+// Utilizza i tipi globali rinominandoli per evitare conflitti immediati se necessario,
+// o direttamente se non ci sono ambiguità volute.
+export type PageType = GlobalPageType;
+export type Project = GlobalProject;
 
 export interface ComponentProps {
   setCurrentPage: (page: PageType) => void;
@@ -23,29 +14,29 @@ export interface ComponentProps {
 export interface DashboardProps extends ComponentProps {
   setIsDarkMode: (isDark: boolean) => void;
   setLanguage: (lang: 'it' | 'en') => void;
-  projects: Project[];
-  setCurrentProject: (project: Project | null) => void;
+  projects: GlobalProject[]; // Usa GlobalProject
+  setCurrentProject: (project: GlobalProject | null) => void; // Usa GlobalProject
   onLogout: () => void;
 }
 
 export interface LibraryProps extends ComponentProps {
-  books: Project[];
+  books: GlobalProject[]; // Usa GlobalProject
   onEditBook: (bookTitle: string) => void;
   onDeleteBook: (bookTitle: string) => void;
-  onSaveBook: (book: Project) => void;
+  onSaveBook: (book: GlobalProject) => void; // Usa GlobalProject
 }
 
 export interface ParagraphEditorProps extends ComponentProps {
-  bookTitle: string;
-  author: string;
-  onSaveProject: (project: Project) => void;
-  initialParagraphs?: any[];
-  initialMapSettings?: any;
+  bookTitle: string; // Questa proprietà potrebbe derivare da GlobalProject.bookTitle se definito
+  author: string;    // Questa proprietà potrebbe derivare da GlobalProject.author se definito
+  onSaveProject: (project: GlobalProject) => void; // Usa GlobalProject
+  initialParagraphs?: any[]; // Potrebbe usare GlobalProject['paragraphs']
+  initialMapSettings?: any; // Potrebbe usare GlobalProject['mapSettings']
   updateLastBackup: (date: string) => void;
 }
 
 export interface CreateProjectProps extends ComponentProps {
-  onCreateProject: (project: Project) => void;
+  onCreateProject: (project: GlobalProject) => void; // Usa GlobalProject
 }
 
 export interface ThemeEditorProps extends ComponentProps {

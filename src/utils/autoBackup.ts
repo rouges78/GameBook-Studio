@@ -3,7 +3,7 @@ import { saveProject, getProjects } from './storage';
 let backupInterval: NodeJS.Timeout | null = null;
 const isElectron = !!window.electron;
 
-export const startAutoBackup = (intervalMinutes: number = 5) => {
+export const startAutoBackup = (intervalMinutes: number = 0.166) => { // Forzatura intervallo a ~10 secondi per test // Temporaneamente 0.166 minuti = 10 secondi
   if (backupInterval) {
     clearInterval(backupInterval);
   }
@@ -22,16 +22,20 @@ export const startAutoBackup = (intervalMinutes: number = 5) => {
     try {
       // First save all projects to the database
       const projects = await getProjects();
+      const updatedProjects = []; // Array per collezionare i progetti aggiornati
       for (const project of projects) {
-        await saveProject({
+        const updatedProject = {
           ...project,
           lastEdited: new Date().toISOString(),
-        });
+        };
+        await saveProject(updatedProject);
+        updatedProjects.push(updatedProject); // Aggiungi il progetto aggiornato alla nuova lista
       }
 
       // Then create a backup using the Electron IPC if available
       if (isElectron) {
-        const version = await window.electron['backup:create'](projects);
+        // Passa updatedProjects invece di projects
+        const version = await window.electron['backup:create'](updatedProjects);
         console.log('Auto backup completed at', new Date().toLocaleString(), 'Version:', version);
       } else {
         console.log('Auto save completed at', new Date().toLocaleString());

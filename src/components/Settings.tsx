@@ -1,247 +1,102 @@
-import React, { useState, useEffect } from 'react';
-import { buttonClasses } from '../utils/buttonStyles';
-import { 
-  ArrowLeft, Bell, Database, Clock, ToggleLeft, ToggleRight, 
-  Brain, Archive, Settings as SettingsIcon
-} from 'lucide-react';
-import { saveProject, getProjects } from '../utils/storage';
+import React, { useState, useEffect, FC } from 'react';
+import { Settings as SettingsIcon, Bell, Database, Cpu, ArrowLeft, Save } from 'lucide-react';
+import { translations } from '../utils/translations';
 import Notification from './Notification';
 
+// Definiamo i tipi per le props del componente
 interface SettingsProps {
-  setCurrentPage: (page: 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 'settings' | 'help' | 'export' | 'backupManager') => void;
+  setCurrentPage: (page: string) => void;
   isDarkMode: boolean;
-  language: 'it' | 'en';
+  language: 'en' | 'it';
 }
 
-type NotificationStyle = 'modern' | 'minimal' | 'standard';
-type NotificationPosition = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right' | 'center';
-type AIProvider = 'anthropic' | 'openai' | 'openrouter';
-type SettingsTab = 'general' | 'notifications' | 'database' | 'ai';
+// Definiamo i tipi per lo stato delle impostazioni
+interface AppSettings {
+  autoSave: boolean;
+  autoSaveInterval: number;
+  notificationStyle: 'toast' | 'banner';
+  notificationPosition: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+  aiProvider: 'openai' | 'anthropic' | 'openrouter';
+  aiModel: string;
+  apiKey: string;
+}
 
-const PROVIDER_MODELS = {
+const AI_MODELS = {
   anthropic: [
-    'claude-3.5-opus',      // Ultima versione, massima potenza
-    'claude-3.5-sonnet',    // Bilanciato per uso generale
-    'claude-3.5-haiku',     // Veloce e economico
-    'claude-3-opus-20240229',    // Legacy
-    'claude-3-sonnet-20240229',  // Legacy
-    'claude-3-haiku-20240229',   // Legacy
-    'claude-2.1',                // Per compatibilità
-  ] as const,
-  openai: [
-    'gpt-4.5-turbo',           // Ultima versione
-    'gpt-4.5-turbo-preview',   // Preview
-    'gpt-4-0125-preview',      // Legacy
-    'gpt-4-turbo-preview',     // Legacy
-    'gpt-4',                   // Stabile
-    'gpt-3.5-turbo-0125',      // GPT-3.5 aggiornato
-    'gpt-3.5-turbo',           // GPT-3.5 stabile
-  ] as const,
-  openrouter: [
-    // Anthropic Models
-    'anthropic/claude-3.5-opus',
-    'anthropic/claude-3.5-sonnet',
-    'anthropic/claude-3.5-haiku',
-    // OpenAI Models
-    'openai/gpt-4.5-turbo',
-    'openai/gpt-4.5-turbo-preview',
-    // Google Models
-    'google/gemini-pro',
-    'google/gemini-pro-vision',
-    // Mistral Models
-    'mistral/mistral-large-latest',
-    'mistral/mixtral-8x7b-instruct',
-    // Meta Models
-    'meta/llama-3-70b-chat',
-    'meta/llama-2-70b-chat',
-  ] as const
+    'claude-3.5-sonnet-20240620',
+    'claude-3-opus-20240229',
+    'claude-3-sonnet-20240229',
+    'claude-3-haiku-20240307',
+    'claude-2.1',
+  ],
+  openai: ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+  openrouter: ['openrouter/auto'],
 } as const;
 
-type ProviderModels = {
-  [K in AIProvider]: typeof PROVIDER_MODELS[K][number];
-};
+type AiProvider = keyof typeof AI_MODELS;
 
-interface NotificationMessage {
-  message: string;
-  type: 'success' | 'error' | 'info';
-}
-
-const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, language }) => {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('general');
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
-  const [autoSaveInterval, setAutoSaveInterval] = useState(5);
-  const [notification, setNotification] = useState<NotificationMessage | null>(null);
-  const [notificationStyle, setNotificationStyle] = useState<NotificationStyle>('modern');
-  const [notificationPosition, setNotificationPosition] = useState<NotificationPosition>('top-right');
-  const [aiEnabled, setAiEnabled] = useState(false);
-  const [aiProvider, setAiProvider] = useState<AIProvider>('anthropic');
-  const [aiModel, setAiModel] = useState<ProviderModels[AIProvider]>(PROVIDER_MODELS.anthropic[0]);
-  const [apiKey, setApiKey] = useState('');
-
-  const translations = {
-    it: {
-      backToDashboard: "Torna alla Home",
-      settings: "Impostazioni",
-      general: "Generale",
-      notificationSettings: "Notifiche",
-      databaseSettings: "Database",
-      aiSettings: "Impostazioni AI",
-      notificationStyle: "Tipologia Notifica",
-      notificationPosition: "Posizione Notifica",
-      modern: "Moderno",
-      minimal: "Minimal",
-      standard: "Standard",
-      topLeft: "In alto a sinistra",
-      topCenter: "In alto al centro",
-      topRight: "In alto a destra",
-      bottomLeft: "In basso a sinistra",
-      bottomCenter: "In basso al centro",
-      bottomRight: "In basso a destra",
-      center: "Centro schermo",
-      dataManagement: "Gestione Database",
-      exportDatabase: "Esporta database",
-      importDatabase: "Importa database",
-      backupManager: "Gestione Backup",
-      openBackupManager: "Apri Gestione Backup",
-      autoSave: "Salvataggio automatico",
-      autoSaveInterval: "Intervallo di salvataggio automatico (minuti)",
-      databaseExported: "Database esportato con successo",
-      databaseImported: "Database importato con successo",
-      invalidFile: "File non valido. Seleziona un file JSON valido.",
-      settingsSaved: "Impostazioni salvate",
-      enableAI: "Abilita AI",
-      aiProvider: "Provider AI",
-      aiModel: "Modello AI",
-      apiKey: "Chiave API",
-      anthropic: "Anthropic",
-      openai: "OpenAI",
-      openrouter: "OpenRouter"
-    },
-    en: {
-      backToDashboard: "Back to Dashboard",
-      settings: "Settings",
-      general: "General",
-      notificationSettings: "Notifications",
-      databaseSettings: "Database",
-      aiSettings: "AI Settings",
-      notificationStyle: "Notification Type",
-      notificationPosition: "Notification Position",
-      modern: "Modern",
-      minimal: "Minimal",
-      standard: "Standard",
-      topLeft: "Top Left",
-      topCenter: "Top Center",
-      topRight: "Top Right",
-      bottomLeft: "Bottom Left",
-      bottomCenter: "Bottom Center",
-      bottomRight: "Bottom Right",
-      center: "Center Screen",
-      dataManagement: "Database Management",
-      exportDatabase: "Export database",
-      importDatabase: "Import database",
-      backupManager: "Backup Manager",
-      openBackupManager: "Open Backup Manager",
-      autoSave: "Auto-save",
-      autoSaveInterval: "Auto-save interval (minutes)",
-      databaseExported: "Database exported successfully",
-      databaseImported: "Database imported successfully",
-      invalidFile: "Invalid file. Please select a valid JSON file.",
-      settingsSaved: "Settings saved",
-      enableAI: "Enable AI",
-      aiProvider: "AI Provider",
-      aiModel: "AI Model",
-      apiKey: "API Key",
-      anthropic: "Anthropic",
-      openai: "OpenAI",
-      openrouter: "OpenRouter"
-    }
-  };
-
-  const t = translations[language];
+const Settings: FC<SettingsProps> = ({ setCurrentPage, isDarkMode, language }) => {
+  const t = translations[language].settings;
+  const [activeTab, setActiveTab] = useState('general');
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [settings, setSettings] = useState<AppSettings>({
+    autoSave: true,
+    autoSaveInterval: 5,
+    notificationStyle: 'toast',
+    notificationPosition: 'top-right',
+    aiProvider: 'openai',
+    aiModel: 'gpt-4o',
+    apiKey: '',
+  });
 
   useEffect(() => {
-    const savedSettings = localStorage.getItem('gamebookSettings');
-    if (savedSettings) {
-      const settings = JSON.parse(savedSettings);
-      setAutoSaveEnabled(settings.autoSaveEnabled ?? false);
-      setAutoSaveInterval(settings.autoSaveInterval ?? 5);
-      setNotificationStyle(settings.notificationStyle || 'modern');
-      setNotificationPosition(settings.notificationPosition || 'top-right');
-      setAiEnabled(settings.aiEnabled ?? false);
-      setAiProvider(settings.aiProvider || 'anthropic');
-      setAiModel(settings.aiModel || PROVIDER_MODELS.anthropic[0]);
-      setApiKey(settings.apiKey || '');
-    }
-  }, []);
-
-  const saveSettings = (newSettings: any) => {
-    const settings = {
-      autoSaveEnabled,
-      autoSaveInterval,
-      notificationStyle,
-      notificationPosition,
-      aiEnabled,
-      aiProvider,
-      aiModel,
-      apiKey,
-      ...newSettings
-    };
-    localStorage.setItem('gamebookSettings', JSON.stringify(settings));
-
-    if (newSettings.autoSaveEnabled !== undefined || newSettings.autoSaveInterval !== undefined) {
-      window.dispatchEvent(new CustomEvent('autoSaveSettingsChanged', {
-        detail: { 
-          enabled: newSettings.autoSaveEnabled ?? autoSaveEnabled, 
-          interval: newSettings.autoSaveInterval ?? autoSaveInterval 
+    const loadSettings = async () => {
+      try {
+        const savedSettings = await window.electron.settings.get();
+        if (savedSettings) {
+          setSettings(savedSettings);
         }
-      }));
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+        setNotification({ message: t.loadError, type: 'error' });
+      }
+    };
+    loadSettings();
+  }, [t.loadError]);
+
+  const handleSaveSettings = async (newSettings: Partial<AppSettings>) => {
+    try {
+      const updatedSettings = { ...settings, ...newSettings };
+      await window.electron.settings.save(updatedSettings);
+      setSettings(updatedSettings);
+      setNotification({ message: t.saveSuccess, type: 'success' });
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      setNotification({ message: t.saveError, type: 'error' });
     }
-
-    setNotification({
-      message: t.settingsSaved,
-      type: 'success'
-    });
-
-    setTimeout(() => {
-      setNotification(null);
-    }, 3000);
   };
 
   const handleExportDatabase = async () => {
     try {
-      const projects = await getProjects();
+      const projects = await window.electron.getProjects();
       const dataStr = JSON.stringify(projects, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'gamebook-database.json';
+      link.download = 'gamebook-studio-db.json';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
-      setNotification({
-        message: t.databaseExported,
-        type: 'success'
-      });
-      
-      setTimeout(() => {
-        setNotification(null);
-      }, 3000);
+      setNotification({ message: t.exportSuccess, type: 'success' });
     } catch (error) {
-      console.error('Error exporting database:', error);
-      setNotification({
-        message: String(error),
-        type: 'error'
-      });
-      setTimeout(() => {
-        setNotification(null);
-      }, 3000);
+      console.error('Failed to export database:', error);
+      setNotification({ message: t.exportError, type: 'error' });
     }
   };
 
-  const handleImportDatabase = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportDatabase = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -249,114 +104,63 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
         try {
           const content = e.target?.result as string;
           const projects = JSON.parse(content);
-          
-          if (Array.isArray(projects) && projects.every(p => p.bookTitle && p.author)) {
-            for (const project of projects) {
-              await saveProject(project);
-            }
-            setNotification({
-              message: t.databaseImported,
-              type: 'success'
-            });
-          } else {
-            setNotification({
-              message: t.invalidFile,
-              type: 'error'
-            });
-          }
+          // Assumendo che saveProject possa gestire un array di progetti o un singolo progetto
+          await window.electron.saveProject(projects);
+          setNotification({ message: t.importSuccess, type: 'success' });
         } catch (error) {
-          console.error('Error importing database:', error);
-          setNotification({
-            message: t.invalidFile,
-            type: 'error'
-          });
+          console.error('Failed to import database:', error);
+          setNotification({ message: t.importError, type: 'error' });
         }
-        setTimeout(() => {
-          setNotification(null);
-        }, 3000);
       };
       reader.readAsText(file);
     }
   };
 
-  const TabButton: React.FC<{
-    tab: SettingsTab;
-    icon: React.ReactNode;
-    label: string;
-  }> = ({ tab, icon, label }) => (
-    <button
-      onClick={() => setActiveTab(tab)}
-      className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-        activeTab === tab
-          ? isDarkMode
-            ? 'bg-blue-600 text-white'
-            : 'bg-brown-600 text-white'
-          : isDarkMode
-          ? 'hover:bg-gray-700'
-          : 'hover:bg-gray-200'
-      }`}
-      aria-selected={activeTab === tab}
-      role="tab"
-    >
-      {icon}
-      <span className="ml-2">{label}</span>
-    </button>
-  );
+  const buttonClasses = (isActive: boolean) =>
+    `px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ` +
+    (isActive
+      ? 'bg-purple-600 text-white'
+      : isDarkMode
+        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+        : 'bg-gray-200 text-gray-700 hover:bg-gray-300');
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'general':
         return (
           <div className="space-y-6">
-            {/* Auto Save Settings */}
             <section>
-              <h2 className="text-lg font-semibold mb-3 flex items-center justify-between">
-                <div className="flex items-center">
-                  <Clock size={20} className="mr-2" />
-                  {t.autoSave}
-                </div>
-                <button
-                  onClick={() => {
-                    const newValue = !autoSaveEnabled;
-                    setAutoSaveEnabled(newValue);
-                    saveSettings({ autoSaveEnabled: newValue });
-                  }}
-                  className="focus:outline-none"
-                  aria-label={autoSaveEnabled ? "Disable auto-save" : "Enable auto-save"}
-                >
-                  {autoSaveEnabled ? (
-                    <ToggleRight size={20} className="text-green-500" />
-                  ) : (
-                    <ToggleLeft size={20} className="text-gray-500" />
-                  )}
-                </button>
+              <h2 className="text-lg font-semibold mb-3 flex items-center">
+                <Save size={20} className="mr-2" />
+                {t.autoSaveTitle}
               </h2>
-              {autoSaveEnabled && (
-                <div className="flex items-center">
-                  <label htmlFor="autoSaveInterval" className="mr-2 text-sm">
-                    {t.autoSaveInterval}
-                  </label>
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center space-x-2 cursor-pointer">
                   <input
-                    type="number"
-                    id="autoSaveInterval"
-                    value={autoSaveInterval}
-                    onChange={(e) => {
-                      const newValue = parseInt(e.target.value);
-                      setAutoSaveInterval(newValue);
-                      saveSettings({ autoSaveInterval: newValue });
-                    }}
-                    min="1"
-                    max="60"
-                    className={`w-16 px-2 py-1 rounded text-sm ${
-                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                    }`}
+                    type="checkbox"
+                    className="form-checkbox h-5 w-5 text-purple-600 rounded focus:ring-purple-500 bg-gray-700 border-gray-600"
+                    checked={settings.autoSave}
+                    onChange={(e) => handleSaveSettings({ autoSave: e.target.checked })}
                   />
-                </div>
-              )}
+                  <span>{t.enableAutoSave}</span>
+                </label>
+                {settings.autoSave && (
+                  <div className="flex items-center space-x-2">
+                    <span>{t.interval}</span>
+                    <input
+                      type="number"
+                      min="1"
+                      className={`w-20 p-1.5 rounded ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'} border`}
+                      value={settings.autoSaveInterval}
+                      onChange={(e) => handleSaveSettings({ autoSaveInterval: parseInt(e.target.value, 10) || 1 })}
+                    />
+                    <span>{t.minutes}</span>
+                  </div>
+                )}
+              </div>
             </section>
           </div>
         );
-
       case 'notifications':
         return (
           <div className="space-y-6">
@@ -365,52 +169,35 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
                 <Bell size={20} className="mr-2" />
                 {t.notificationSettings}
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div>
-                  <label className="block mb-1 text-sm">{t.notificationStyle}</label>
+                  <label className="block mb-1 font-medium">{t.style}</label>
                   <select
-                    value={notificationStyle}
-                    onChange={(e) => {
-                      const newValue = e.target.value as NotificationStyle;
-                      setNotificationStyle(newValue);
-                      saveSettings({ notificationStyle: newValue });
-                    }}
-                    className={`w-full p-1.5 rounded text-sm ${
-                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                    }`}
+                    className={`w-full p-1.5 rounded ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'} border`}
+                    value={settings.notificationStyle}
+                    onChange={(e) => handleSaveSettings({ notificationStyle: e.target.value as 'toast' | 'banner' })}
                   >
-                    <option value="modern">{t.modern}</option>
-                    <option value="minimal">{t.minimal}</option>
-                    <option value="standard">{t.standard}</option>
+                    <option value="toast">{t.toast}</option>
+                    <option value="banner">{t.banner}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block mb-1 text-sm">{t.notificationPosition}</label>
+                  <label className="block mb-1 font-medium">{t.position}</label>
                   <select
-                    value={notificationPosition}
-                    onChange={(e) => {
-                      const newValue = e.target.value as NotificationPosition;
-                      setNotificationPosition(newValue);
-                      saveSettings({ notificationPosition: newValue });
-                    }}
-                    className={`w-full p-1.5 rounded text-sm ${
-                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                    }`}
+                    className={`w-full p-1.5 rounded ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'} border`}
+                    value={settings.notificationPosition}
+                    onChange={(e) => handleSaveSettings({ notificationPosition: e.target.value as 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' })}
                   >
-                    <option value="top-left">{t.topLeft}</option>
-                    <option value="top-center">{t.topCenter}</option>
                     <option value="top-right">{t.topRight}</option>
-                    <option value="bottom-left">{t.bottomLeft}</option>
-                    <option value="bottom-center">{t.bottomCenter}</option>
+                    <option value="top-left">{t.topLeft}</option>
                     <option value="bottom-right">{t.bottomRight}</option>
-                    <option value="center">{t.center}</option>
+                    <option value="bottom-left">{t.bottomLeft}</option>
                   </select>
                 </div>
               </div>
             </section>
           </div>
         );
-
       case 'database':
         return (
           <div className="space-y-6">
@@ -421,36 +208,24 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
               </h2>
               <div className="space-y-3">
                 <div className="flex gap-3">
-                  <button
-                    onClick={handleExportDatabase}
-                    className={`${
-                      isDarkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'
-                    } text-white font-medium py-1.5 px-3 rounded text-sm`}
-                  >
+                  <button onClick={handleExportDatabase} className={`bg-purple-600 hover:bg-purple-700 text-white font-medium py-1.5 px-3 rounded text-sm`}>
                     {t.exportDatabase}
                   </button>
-                  <label
-                    className={`${
-                      isDarkMode ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-yellow-500 hover:bg-yellow-600'
-                    } text-white font-medium py-1.5 px-3 rounded cursor-pointer text-sm`}
-                  >
+                  <label className={`bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-1.5 px-3 rounded cursor-pointer text-sm`}>
                     {t.importDatabase}
                     <input
                       type="file"
+                      className="hidden"
                       accept=".json"
                       onChange={handleImportDatabase}
-                      className="hidden"
                     />
                   </label>
                 </div>
-                <div>
-                  <button
+                <div className="pt-4">
+                   <button 
                     onClick={() => setCurrentPage('backupManager')}
-                    className={`${
-                      isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'
-                    } text-white font-medium py-1.5 px-3 rounded text-sm flex items-center`}
+                    className={`bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 px-3 rounded text-sm`}
                   >
-                    <Archive size={16} className="mr-2" />
                     {t.openBackupManager}
                   </button>
                 </div>
@@ -458,172 +233,92 @@ const Settings: React.FC<SettingsProps> = ({ setCurrentPage, isDarkMode, languag
             </section>
           </div>
         );
-
       case 'ai':
         return (
           <div className="space-y-6">
             <section>
-              <h2 className="text-lg font-semibold mb-3 flex items-center justify-between">
-                <div className="flex items-center">
-                  <Brain size={20} className="mr-2" />
-                  {t.aiSettings}
-                </div>
-                <button
-                  onClick={() => {
-                    const newValue = !aiEnabled;
-                    setAiEnabled(newValue);
-                    saveSettings({ aiEnabled: newValue });
-                  }}
-                  className="focus:outline-none"
-                  aria-label={aiEnabled ? "Disable AI" : "Enable AI"}
-                >
-                  {aiEnabled ? (
-                    <ToggleRight size={20} className="text-green-500" />
-                  ) : (
-                    <ToggleLeft size={20} className="text-gray-500" />
-                  )}
-                </button>
+              <h2 className="text-lg font-semibold mb-3 flex items-center">
+                <Cpu size={20} className="mr-2" />
+                {t.aiSettings}
               </h2>
-              {aiEnabled && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="block mb-1 text-sm">{t.aiProvider}</label>
-                    <select
-                      value={aiProvider}
-                      onChange={(e) => {
-                        const provider = e.target.value as AIProvider;
-                        const newModel = PROVIDER_MODELS[provider][0];
-                        setAiProvider(provider);
-                        setAiModel(newModel);
-                        saveSettings({ aiProvider: provider, aiModel: newModel });
-                      }}
-                      className={`w-full p-1.5 rounded text-sm ${
-                        isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                      }`}
-                    >
-                      <option value="anthropic">{t.anthropic}</option>
-                      <option value="openai">{t.openai}</option>
-                      <option value="openrouter">{t.openrouter}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block mb-1 text-sm">{t.aiModel}</label>
-                    <select
-                      value={aiModel}
-                      onChange={(e) => {
-                        const newValue = e.target.value as ProviderModels[AIProvider];
-                        setAiModel(newValue);
-                        saveSettings({ aiModel: newValue });
-                      }}
-                      className={`w-full p-1.5 rounded text-sm ${
-                        isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                      }`}
-                    >
-                      {PROVIDER_MODELS[aiProvider].map((model) => (
-                        <option key={model} value={model}>
-                          {model}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block mb-1 text-sm">{t.apiKey}</label>
-                    <input
-                      type="password"
-                      value={apiKey}
-                      onChange={(e) => {
-                        const newValue = e.target.value;
-                        setApiKey(newValue);
-                        saveSettings({ apiKey: newValue });
-                      }}
-                      className={`w-full p-1.5 rounded text-sm ${
-                        isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                      }`}
-                      placeholder="sk-..."
-                    />
-                  </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block mb-1 font-medium">{t.aiProvider}</label>
+                  <select
+                    className={`w-full p-1.5 rounded ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'} border`}
+                    value={settings.aiProvider}
+                    onChange={(e) => {
+                      const newProvider = e.target.value as AiProvider;
+                      const newModel = AI_MODELS[newProvider][0];
+                      handleSaveSettings({ aiProvider: newProvider, aiModel: newModel });
+                    }}
+                  >
+                    {Object.keys(AI_MODELS).map(provider => (
+                      <option key={provider} value={provider}>{provider}</option>
+                    ))}
+                  </select>
                 </div>
-              )}
+                <div>
+                  <label className="block mb-1 font-medium">{t.aiModel}</label>
+                  <select
+                    className={`w-full p-1.5 rounded ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'} border`}
+                    value={settings.aiModel}
+                    onChange={(e) => handleSaveSettings({ aiModel: e.target.value })}
+                  >
+                    {(AI_MODELS[settings.aiProvider] || []).map(model => (
+                      <option key={model} value={model}>{model}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">{t.apiKey}</label>
+                  <input
+                    type="password"
+                    className={`w-full p-1.5 rounded ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'} border`}
+                    placeholder={t.apiKeyPlaceholder}
+                    value={settings.apiKey}
+                    onChange={(e) => handleSaveSettings({ apiKey: e.target.value })}
+                  />
+                </div>
+              </div>
             </section>
           </div>
         );
+      default:
+        return null;
     }
   };
 
   return (
-    <div
-      className={`h-screen flex flex-col ${
-        isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
-      }`}
-    >
-      {/* Header */}
-      <div className="flex-none px-6 py-4">
-        <button
-          onClick={() => setCurrentPage('dashboard')}
-          className={buttonClasses('blue')}
-        >
-          <ArrowLeft size={20} className="h-5 w-5" />
-          <span>Torna alla Home</span>
-        </button>
-        <h1 className="text-2xl font-bold text-center mt-2">{t.settings}</h1>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full flex">
-          {/* Sidebar */}
-          <div
-            className={`w-64 p-4 border-r ${
-              isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
-            }`}
-          >
-            <nav className="space-y-2" role="tablist">
-              <TabButton
-                tab="general"
-                icon={<SettingsIcon size={20} />}
-                label={t.general}
-              />
-              <TabButton
-                tab="notifications"
-                icon={<Bell size={20} />}
-                label={t.notificationSettings}
-              />
-              <TabButton
-                tab="database"
-                icon={<Database size={20} />}
-                label={t.databaseSettings}
-              />
-              <TabButton
-                tab="ai"
-                icon={<Brain size={20} />}
-                label={t.aiSettings}
-              />
-            </nav>
-          </div>
-
-          {/* Content Area */}
-          <div className="flex-1 overflow-y-auto p-6">
-            <div
-              className={`max-w-3xl mx-auto ${
-                isDarkMode ? 'bg-gray-800' : 'bg-white'
-              } rounded-lg p-6`}
-            >
-              {renderTabContent()}
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className={`p-6 h-full overflow-y-auto ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
       {notification && (
         <Notification
           message={notification.message}
           type={notification.type}
           onClose={() => setNotification(null)}
           isDarkMode={isDarkMode}
-          style={notificationStyle}
-          position={notificationPosition}
         />
       )}
+      <div className="flex items-center mb-6">
+        <button onClick={() => setCurrentPage('dashboard')} className={`p-2 rounded-full ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}>
+          <ArrowLeft size={24} />
+        </button>
+        <h1 className="text-2xl font-bold ml-4 flex items-center">
+          <SettingsIcon size={28} className="mr-3" />
+          {t.title}
+        </h1>
+      </div>
+
+      <div className={`flex border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-300'} mb-6 space-x-1`}>
+        <button onClick={() => setActiveTab('general')} className={buttonClasses(activeTab === 'general')}>{t.general}</button>
+        <button onClick={() => setActiveTab('notifications')} className={buttonClasses(activeTab === 'notifications')}>{t.notifications}</button>
+        <button onClick={() => setActiveTab('database')} className={buttonClasses(activeTab === 'database')}>{t.database}</button>
+        <button onClick={() => setActiveTab('ai')} className={buttonClasses(activeTab === 'ai')}>{t.ai}</button>
+      </div>
+
+      <div>
+        {renderTabContent()}
+      </div>
     </div>
   );
 };

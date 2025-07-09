@@ -1,246 +1,246 @@
-# GameBook Studio User Guide
+# Guida Utente di GameBook Studio
 
-Welcome to GameBook Studio! This guide will help you understand how to use all the features of our interactive gamebook creation tool.
+Benvenuto in GameBook Studio! Questa guida ti aiuterà a capire come utilizzare tutte le funzionalità del nostro strumento di creazione di librogame interattivi.
 
-## Table of Contents
-1. [Getting Started](#getting-started)
-2. [Interface Overview](#interface-overview)
-3. [Creating Your First Project](#creating-your-first-project)
-4. [Using the Paragraph Editor](#using-the-paragraph-editor)
-5. [Story Mapping](#story-mapping)
-6. [Managing Assets](#managing-assets)
-7. [Backup and Recovery](#backup-and-recovery)
-8. [Exporting Your Project](#exporting-your-project)
-9. [Tips and Tricks](#tips-and-tricks)
-10. [Troubleshooting](#troubleshooting)
+## Indice
+1. [Per Iniziare](#per-iniziare)
+2. [Panoramica dell'Interfaccia](#panoramica-dellinterfaccia)
+3. [Creare il Tuo Primo Progetto](#creare-il-tuo-primo-progetto)
+4. [Usare l'Editor di Paragrafi](#usare-leditor-di-paragrafi)
+5. [Mappatura della Storia](#mappatura-della-storia)
+6. [Gestione degli Asset](#gestione-degli-asset)
+7. [Backup e Ripristino](#backup-e-ripristino)
+8. [Esportare il Tuo Progetto](#esportare-il-tuo-progetto)
+9. [Consigli e Trucchi](#consigli-e-trucchi)
+10. [Risoluzione dei Problemi](#risoluzione-dei-problemi)
 
-## Getting Started
+## Per Iniziare
 
-### Installation
-1. Download the latest version from our releases page
-2. Run the installer for your operating system
-3. Launch GameBook Studio
-4. Complete the initial setup wizard
+### Installazione
+1. Scarica l'ultima versione dalla nostra pagina delle release
+2. Esegui l'installer per il tuo sistema operativo
+3. Avvia GameBook Studio
+4. Completa la procedura di configurazione iniziale
 
-### First Launch
-- Choose your preferred theme (light/dark)
-- Set up your workspace
-- Configure auto-save settings
-- Review keyboard shortcuts
+### Primo Avvio
+- Scegli il tuo tema preferito (chiaro/scuro)
+- Imposta la tua area di lavoro
+- Configura le impostazioni di salvataggio automatico
+- Rivedi le scorciatoie da tastiera
 
-## Interface Overview
+## Panoramica dell'Interfaccia
 
-### Main Window
-- **Top Bar**: Main menu and global actions
-- **Left Sidebar**: Project navigation and structure
-- **Main Area**: Editor or story map view
-- **Right Sidebar**: Context-sensitive tools and properties
-- **Bottom Bar**: Status information and quick actions
+### Finestra Principale
+- **Barra Superiore**: Menu principale e azioni globali
+- **Barra Laterale Sinistra**: Navigazione e struttura del progetto
+- **Area Principale**: Vista dell'editor o della mappa della storia
+- **Barra Laterale Destra**: Strumenti e proprietà contestuali
+- **Barra Inferiore**: Informazioni di stato e azioni rapide
 
-### Key Areas
-- Paragraph Editor
-- Story Map
-- Asset Library
-- Settings Panel
-- Export Center
+### Aree Chiave
+- Editor di Paragrafi
+- Mappa della Storia
+- Libreria degli Asset
+- Pannello delle Impostazioni
+- Centro di Esportazione
 
-## Creating Your First Project
+## Creare il Tuo Primo Progetto
 
-### New Project Setup
-1. Click "New Project" button
-2. Enter project details:
-   - Title
-   - Description
-   - Initial settings
-3. Choose project template (if desired)
-4. Select project location
-5. Click "Create"
+### Setup Nuovo Progetto
+1. Clicca sul pulsante "Nuovo Progetto"
+2. Inserisci i dettagli del progetto:
+   - Titolo
+   - Descrizione
+   - Impostazioni iniziali
+3. Scegli un modello di progetto (se desiderato)
+4. Seleziona la posizione del progetto
+5. Clicca "Crea"
 
-### Project Structure
-- Story sections
-- Paragraphs
-- Assets
-- Metadata
-- Configuration files
+### Struttura del Progetto
+- Sezioni della storia
+- Paragrafi
+- Asset
+- Metadati
+- File di configurazione
 
-## Using the Paragraph Editor
+## Usare l'Editor di Paragrafi
 
-### Basic Editing
-- Text formatting
-- Paragraph styles
-- Links and connections
-- Tags and metadata
+### Modifiche di Base
+- Formattazione del testo
+- Stili di paragrafo
+- Link e connessioni
+- Tag e metadati
 
-### Advanced Features
-- **Rich Text Editing**
-  - Bold, italic, underline
-  - Headers and lists
-  - Custom styles
+### Funzionalità Avanzate
+- **Editing Rich Text**
+  - Grassetto, corsivo, sottolineato
+  - Intestazioni ed elenchi
+  - Stili personalizzati
   
-- **Variables and Conditions**
-  - Creating variables
-  - Setting conditions
-  - Testing outcomes
+- **Variabili e Condizioni**
+  - Creazione di variabili
+  - Impostazione di condizioni
+  - Test dei risultati
 
-- **Keyboard Shortcuts**
-  - Ctrl+B: Bold
-  - Ctrl+I: Italic
-  - Ctrl+L: Create link
-  - Ctrl+S: Quick save
+- **Scorciatoie da Tastiera**
+  - Ctrl+B: Grassetto
+  - Ctrl+I: Corsivo
+  - Ctrl+L: Crea link
+  - Ctrl+S: Salvataggio rapido
 
-### Best Practices
-- Use consistent formatting
-- Organize with tags
-- Regular saving
-- Test connections
+### Migliori Pratiche
+- Usa una formattazione coerente
+- Organizza con i tag
+- Salva regolarmente
+- Testa le connessioni
 
-## Story Mapping
+## Mappatura della Storia
 
-### Map Interface
-- **Nodes**: Story paragraphs
-- **Connections**: Story paths
-- **Colors**: Node status/type
-- **Labels**: Quick information
+### Interfaccia della Mappa
+- **Nodi**: Paragrafi della storia
+- **Connessioni**: Percorsi della storia
+- **Colori**: Stato/tipo del nodo
+- **Etichette**: Informazioni rapide
 
-### Navigation
-- Pan: Middle mouse button or Space+Click
-- Zoom: Mouse wheel
-- Select: Left click
-- Multi-select: Ctrl+Click
+### Navigazione
+- Panoramica: Tasto centrale del mouse o Spazio+Click
+- Zoom: Rotellina del mouse
+- Seleziona: Click sinistro
+- Selezione multipla: Ctrl+Click
 
-### Organizing Your Story
-- Group related nodes
-- Use color coding
-- Add annotations
-- Create subgroups
+### Organizzare la Tua Storia
+- Raggruppa nodi correlati
+- Usa la codifica a colori
+- Aggiungi annotazioni
+- Crea sottogruppi
 
-### Advanced Mapping
-- Auto-layout
-- Path optimization
-- Node grouping
-- Connection styles
+### Mappatura Avanzata
+- Layout automatico
+- Ottimizzazione dei percorsi
+- Raggruppamento di nodi
+- Stili di connessione
 
-## Managing Assets
+## Gestione degli Asset
 
-### Supported Assets
-- Images
-- Sound effects
-- Music
-- Custom fonts
-- Icons
+### Asset Supportati
+- Immagini
+- Effetti sonori
+- Musica
+- Font personalizzati
+- Icone
 
-### Asset Library
-- Import assets
-- Organize in folders
-- Tag and categorize
-- Quick search
+### Libreria degli Asset
+- Importa asset
+- Organizza in cartelle
+- Tagga e categorizza
+- Ricerca rapida
 
-### Best Practices
-- Use appropriate formats
-- Optimize file sizes
-- Maintain organization
-- Regular cleanup
+### Migliori Pratiche
+- Usa formati appropriati
+- Ottimizza le dimensioni dei file
+- Mantieni l'organizzazione
+- Pulisci regolarmente
 
-## Backup and Recovery
+## Backup e Ripristino
 
-### Automatic Backups
-- Frequency settings
-- Storage location
-- Version management
-- Clean-up policies
+### Backup Automatici
+- Impostazioni di frequenza
+- Posizione di archiviazione
+- Gestione delle versioni
+- Politiche di pulizia
 
-### Manual Backups
-- Creating backups
-- Choosing locations
-- Setting retention
-- Export options
+### Backup Manuali
+- Creazione di backup
+- Scelta delle posizioni
+- Impostazione della conservazione
+- Opzioni di esportazione
 
-### Recovery
-- Browsing backups
-- Comparing versions
-- Selective restoration
-- Emergency recovery
+### Ripristino
+- Sfogliare i backup
+- Confrontare le versioni
+- Ripristino selettivo
+- Ripristino di emergenza
 
-## Exporting Your Project
+## Esportare il Tuo Progetto
 
-### Export Formats
+### Formati di Esportazione
 - HTML
 - PDF
 - EPUB
-- Custom formats
+- Formati personalizzati
 
-### Export Options
-- Styling
-- Navigation
-- Media inclusion
-- Optimization
+### Opzioni di Esportazione
+- Stile
+- Navigazione
+- Inclusione dei media
+- Ottimizzazione
 
-### Publishing
-- Platform preparation
-- Testing
-- Distribution
-- Updates
+### Pubblicazione
+- Preparazione della piattaforma
+- Test
+- Distribuzione
+- Aggiornamenti
 
-## Tips and Tricks
+## Consigli e Trucchi
 
-### Productivity Tips
-- Use keyboard shortcuts
-- Organize with tags
-- Regular backups
-- Test frequently
+### Consigli di Produttività
+- Usa le scorciatoie da tastiera
+- Organizza con i tag
+- Fai backup regolari
+- Testa frequentemente
 
-### Performance Optimization
-- Clean unused assets
-- Regular maintenance
-- Cache management
-- Memory optimization
+### Ottimizzazione delle Prestazioni
+- Pulisci gli asset non utilizzati
+- Manutenzione regolare
+- Gestione della cache
+- Ottimizzazione della memoria
 
-### Advanced Features
-- Custom scripting
-- Style templates
-- Batch operations
-- Advanced conditions
+### Funzionalità Avanzate
+- Scripting personalizzato
+- Modelli di stile
+- Operazioni batch
+- Condizioni avanzate
 
-## Troubleshooting
+## Risoluzione dei Problemi
 
-### Common Issues
-- Loading problems
-- Save errors
-- Export issues
-- Performance problems
+### Problemi Comuni
+- Problemi di caricamento
+- Errori di salvataggio
+- Problemi di esportazione
+- Problemi di prestazioni
 
-### Solutions
-- Clear cache
-- Update software
-- Check resources
-- Contact support
+### Soluzioni
+- Svuota la cache
+- Aggiorna il software
+- Controlla le risorse
+- Contatta il supporto
 
-### Getting Help
-- In-app help
-- Online documentation
-- Community forums
-- Support tickets
+### Ottenere Aiuto
+- Aiuto in-app
+- Documentazione online
+- Forum della community
+- Ticket di supporto
 
-## Additional Resources
+## Risorse Aggiuntive
 
 ### Community
-- Forums
-- Discord server
-- User workshops
-- Feature requests
+- Forum
+- Server Discord
+- Workshop per utenti
+- Richieste di funzionalità
 
-### Updates
-- Version history
-- Update notes
-- Beta features
+### Aggiornamenti
+- Cronologia delle versioni
+- Note di aggiornamento
+- Funzionalità beta
 - Roadmap
 
-### Support
+### Supporto
 - FAQ
 - Knowledge base
-- Technical support
-- Bug reporting
+- Supporto tecnico
+- Segnalazione di bug
 
-Remember to regularly save your work and maintain backups of important projects. For additional help, visit our community forums or contact support.
+Ricorda di salvare regolarmente il tuo lavoro e di mantenere backup dei progetti importanti. Per ulteriore aiuto, visita i nostri forum della community o contatta il supporto.
 
-Happy Creating!
+Buona Creazione!

@@ -1,197 +1,197 @@
-# Frequently Asked Questions (FAQ)
+# Domande Frequenti (FAQ)
 
-## General Questions
+## Domande Generali
 
-### What is GameBook Studio?
-GameBook Studio is a desktop application designed for creating interactive gamebooks and branching narratives. It provides tools for writing, organizing, and visualizing complex story structures.
+### Cos'è GameBook Studio?
+GameBook Studio è un'applicazione desktop progettata per creare librogame interattivi e narrazioni ramificate. Fornisce strumenti per scrivere, organizzare e visualizzare strutture narrative complesse.
 
-### Is GameBook Studio free to use?
-Yes, GameBook Studio is open-source and free to use under the MIT license.
+### GameBook Studio è gratuito?
+Sì, GameBook Studio è open-source e gratuito, rilasciato con licenza MIT.
 
-### Which operating systems are supported?
-- Windows 10 and later
-- macOS 10.13 and later
-- Linux (major distributions)
+### Quali sistemi operativi sono supportati?
+- Windows 10 e successivi
+- macOS 10.13 e successivi
+- Linux (principali distribuzioni)
 
-### Do I need programming knowledge to use GameBook Studio?
-No, GameBook Studio is designed to be user-friendly and doesn't require programming knowledge for basic use. However, some advanced features may benefit from basic scripting knowledge.
+### Ho bisogno di conoscenze di programmazione per usare GameBook Studio?
+No, GameBook Studio è progettato per essere facile da usare e non richiede conoscenze di programmazione per l'uso di base. Tuttavia, alcune funzionalità avanzate possono beneficiare di una conoscenza base di scripting.
 
-## Installation & Setup
+## Installazione e Setup
 
-### What are the minimum system requirements?
-- 4GB RAM
-- 2GB free disk space
-- 1280x720 screen resolution
-- Internet connection for updates
+### Quali sono i requisiti minimi di sistema?
+- 4GB di RAM
+- 2GB di spazio libero su disco
+- Risoluzione schermo 1280x720
+- Connessione internet per gli aggiornamenti
 
-### Why won't the application start?
-Common solutions:
-1. Verify you have the latest version
-2. Check if Node.js is properly installed
-3. Clear application cache
-4. Reinstall the application
+### Perché l'applicazione non si avvia?
+Soluzioni comuni:
+1. Verifica di avere l'ultima versione
+2. Controlla che Node.js sia installato correttamente
+3. Svuota la cache dell'applicazione
+4. Reinstalla l'applicazione
 
-### How do I update GameBook Studio?
-The application checks for updates automatically. You can also:
-1. Check for updates manually in Settings
-2. Download the latest version from GitHub
-3. Install over the existing version
+### Come aggiorno GameBook Studio?
+L'applicazione controlla automaticamente gli aggiornamenti. Puoi anche:
+1. Controllare manualmente gli aggiornamenti nelle Impostazioni
+2. Scaricare l'ultima versione da GitHub
+3. Installare sopra la versione esistente
 
-## Features & Usage
+## Funzionalità e Utilizzo
 
-### How do I start a new project?
-1. Click "New Project" button
-2. Fill in project details
-3. Choose a template (optional)
-4. Select project location
-5. Click "Create"
+### Come inizio un nuovo progetto?
+1. Clicca sul pulsante "Nuovo Progetto"
+2. Compila i dettagli del progetto
+3. Scegli un modello (opzionale)
+4. Seleziona la posizione del progetto
+5. Clicca "Crea"
 
-### Can I import existing stories?
-Yes, GameBook Studio supports importing from:
-- Plain text files
-- Markdown files
-- Twine files
-- Custom JSON format
+### Posso importare storie esistenti?
+Sì, GameBook Studio supporta l'importazione da:
+- File di testo semplice
+- File Markdown
+- File Twine
+- Formato JSON personalizzato
 
-### How does the backup system work?
-- Automatic backups every 5 minutes (configurable)
-- Local backup storage
-- Version history
-- Manual backup option
-- Cloud backup support (coming soon)
+### Come funziona il sistema di backup?
+- Backup automatici ogni 5 minuti (configurabile)
+- Archiviazione dei backup in locale
+- Cronologia delle versioni
+- Opzione di backup manuale
+- Supporto per backup su cloud (in arrivo)
 
-### How do I export my story?
-Export options include:
-- HTML (web-ready)
-- PDF format
-- EPUB format
-- Custom formats
-- Raw data export
+### Come esporto la mia storia?
+Le opzioni di esportazione includono:
+- HTML (pronto per il web)
+- Formato PDF
+- Formato EPUB
+- Formati personalizzati
+- Esportazione dei dati grezzi
 
-## Story Creation
+## Creazione della Storia
 
-### What's the maximum size for a story?
-There's no hard limit, but we recommend:
-- Up to 1000 paragraphs per project
-- Up to 100MB of assets
-- Up to 1000 connections
-For optimal performance
+### Qual è la dimensione massima per una storia?
+Non c'è un limite rigido, ma raccomandiamo:
+- Fino a 1000 paragrafi per progetto
+- Fino a 100MB di asset
+- Fino a 1000 connessioni
+Per prestazioni ottimali
 
-### Can I add images and sounds?
-Yes, supported media includes:
-- Images (PNG, JPG, GIF)
+### Posso aggiungere immagini e suoni?
+Sì, i media supportati includono:
+- Immagini (PNG, JPG, GIF)
 - Audio (MP3, WAV)
-- Custom fonts
-- Icons
+- Font personalizzati
+- Icone
 
-### How do I create story branches?
-1. Use the Story Map view
-2. Create connection points
-3. Link paragraphs
-4. Set conditions (optional)
-5. Test the flow
+### Come creo ramificazioni della storia?
+1. Usa la vista Mappa della Storia
+2. Crea punti di connessione
+3. Collega i paragrafi
+4. Imposta condizioni (opzionale)
+5. Testa il flusso
 
-## Troubleshooting
+## Risoluzione dei Problemi
 
-### How do I recover lost work?
-1. Check the backup folder
-2. Use the version history
-3. Contact support with your backup ID
-4. Restore from local backup
+### Come recupero il lavoro perso?
+1. Controlla la cartella dei backup
+2. Usa la cronologia delle versioni
+3. Contatta il supporto con il tuo ID di backup
+4. Ripristina da un backup locale
 
-### Why is the application running slowly?
-Common causes:
-- Large number of open paragraphs
-- Many unused assets
-- Low system resources
-- Need for cache clearing
+### Perché l'applicazione è lenta?
+Cause comuni:
+- Gran numero di paragrafi aperti
+- Molti asset non utilizzati
+- Scarse risorse di sistema
+- Necessità di svuotare la cache
 
-Solutions:
-1. Close unused paragraphs
-2. Clean up unused assets
-3. Clear application cache
-4. Restart the application
+Soluzioni:
+1. Chiudi i paragrafi non utilizzati
+2. Pulisci gli asset non utilizzati
+3. Svuota la cache dell'applicazione
+4. Riavvia l'applicazione
 
-### What do I do if the Story Map won't load?
-Try these steps:
-1. Refresh the view
-2. Clear browser cache
-3. Check file permissions
-4. Reinstall if necessary
+### Cosa faccio se la Mappa della Storia non si carica?
+Prova questi passaggi:
+1. Aggiorna la vista
+2. Svuota la cache del browser
+3. Controlla i permessi dei file
+4. Reinstalla se necessario
 
-## Data & Security
+## Dati e Sicurezza
 
-### Where is my story data stored?
-- Project files: Your chosen location
-- Backups: Local backup folder
-- Settings: Application data folder
-- Cache: Temporary system location
+### Dove sono salvati i dati della mia storia?
+- File di progetto: Nella posizione da te scelta
+- Backup: Cartella dei backup locale
+- Impostazioni: Cartella dati dell'applicazione
+- Cache: Posizione temporanea di sistema
 
-### Is my work automatically saved?
-Yes:
-- Auto-save every 2 minutes
-- Manual save option
-- Backup system
-- Version history
+### Il mio lavoro viene salvato automaticamente?
+Sì:
+- Salvataggio automatico ogni 2 minuti
+- Opzione di salvataggio manuale
+- Sistema di backup
+- Cronologia delle versioni
 
-### Can I work offline?
-Yes, GameBook Studio works fully offline except for:
-- Updates
-- Cloud backups
-- Online resources
+### Posso lavorare offline?
+Sì, GameBook Studio funziona completamente offline eccetto per:
+- Aggiornamenti
+- Backup su cloud
+- Risorse online
 
-## Advanced Features
+## Funzionalità Avanzate
 
-### Can I create custom templates?
-Yes, you can:
-1. Create a base project
-2. Save as template
-3. Customize settings
-4. Share with others
+### Posso creare modelli personalizzati?
+Sì, puoi:
+1. Creare un progetto base
+2. Salvarlo come modello
+3. Personalizzare le impostazioni
+4. Condividerlo con altri
 
-### Is there a command line interface?
-Yes, advanced users can:
-- Run builds
-- Export projects
-- Manage backups
-- Automate tasks
+### Esiste un'interfaccia a riga di comando?
+Sì, gli utenti avanzati possono:
+- Eseguire build
+- Esportare progetti
+- Gestire i backup
+- Automatizzare attività
 
-### Can I extend the functionality?
-Future updates will include:
-- Plugin system
-- Custom scripts
-- API access
-- Integration options
+### Posso estendere le funzionalità?
+Gli aggiornamenti futuri includeranno:
+- Sistema di plugin
+- Script personalizzati
+- Accesso API
+- Opzioni di integrazione
 
-## Support & Community
+## Supporto e Community
 
-### How do I report bugs?
-1. Check existing issues on GitHub
-2. Create a new issue with:
-   - Bug description
-   - Steps to reproduce
-   - System information
-   - Screenshots if applicable
+### Come segnalo i bug?
+1. Controlla le issue esistenti su GitHub
+2. Crea una nuova issue con:
+   - Descrizione del bug
+   - Passaggi per riprodurlo
+   - Informazioni di sistema
+   - Screenshot se applicabile
 
-### Where can I get help?
-- In-app documentation
-- Online user guide
-- Community forums
-- GitHub issues
-- Email support
+### Dove posso trovare aiuto?
+- Documentazione in-app
+- Guida utente online
+- Forum della community
+- Issue su GitHub
+- Supporto via email
 
-### Can I contribute to the project?
-Yes! You can:
-- Submit bug reports
-- Suggest features
-- Contribute code
-- Improve documentation
-- Help other users
+### Posso contribuire al progetto?
+Sì! Puoi:
+- Inviare segnalazioni di bug
+- Suggerire funzionalità
+- Contribuire con codice
+- Migliorare la documentazione
+- Aiutare altri utenti
 
-### How do I stay updated?
-- Follow on GitHub
-- Join our Discord
-- Subscribe to newsletter
-- Check the blog
+### Come rimango aggiornato?
+- Seguici su GitHub
+- Unisciti al nostro Discord
+- Iscriviti alla newsletter
+- Controlla il blog
 
-For more information, visit our [GitHub repository](https://github.com/rouges78/GameBook-Studio) or join our community discussions.
+Per maggiori informazioni, visita il nostro [repository GitHub](https://github.com/rouges78/GameBook-Studio) o partecipa alle discussioni della nostra community.

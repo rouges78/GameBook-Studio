@@ -1,15 +1,28 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { ParagraphEditorProps, Paragraph, Project } from './types';
 import { translations } from './translations';
 import { useParagraphEditor } from './hooks/useParagraphEditor';
 import ParagraphSidebar from './ParagraphSidebar';
 import EditorMain from './components/EditorMain';
 import StoryMap from '../StoryMap';
-import Notification from '../Notification';
-import CustomPopup from '../CustomPopup';
+
+
 import ImageEditor from '../ImageEditor';
+import DOMPurify from 'dompurify';
+
+// Funzioni di utilità mancanti
+const validateParagraphContent = (_paragraph: Paragraph) => {
+  // Per ora, questa funzione non fa nulla e ritorna un array vuoto.
+  // Aggiungere qui la logica di validazione se necessario.
+  return [];
+};
+
+const sanitizeHTML = (html: string) => {
+  // Usa DOMPurify per pulire l'HTML da potenziali script dannosi
+  return DOMPurify.sanitize(html);
+};
 
 const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
   setCurrentPage, 
@@ -106,8 +119,8 @@ const ParagraphEditor: React.FC<ParagraphEditorProps> = ({
       bookTitle,
       author,
       paragraphs: state.paragraphs,
-      created: now,
-      modified: now,
+      created: now.toISOString(),
+      modified: now.toISOString(),
       lastEdited: now.toISOString(),
       mapSettings
     };

@@ -65,7 +65,7 @@ const App: React.FC = () => {
 
   const transformParagraphsForExport = (paragraphs: Paragraph[]): ExportParagraph[] => {
     return paragraphs.map(p => ({
-      id: p.id, // Assumendo che Paragraph globale abbia 'id: number'
+      id: Number(p.id), // Converti id in numero
       title: p.title,
       content: p.content,
       actions: p.actions, // Assumendo che Paragraph globale abbia 'actions: any[]'
@@ -230,6 +230,7 @@ const App: React.FC = () => {
   }, []);
 
   const renderPage = () => {
+
     switch (currentPage) {
       case 'dashboard':
         return (

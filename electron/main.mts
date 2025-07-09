@@ -32,7 +32,7 @@ ipcMain.handle('db:getProjects', async (event) => {
       created: now,
       modified: now,
       lastEdited: now,
-      paragraphs: [{ id: 'p1', title: 'Paragrafo 1', content: 'Contenuto...' }],
+      paragraphs: [{ id: 'p1', title: 'Paragrafo 1', content: 'Contenuto...', actions: [], type: 'normal' }],
       mapSettings: {}
     });
   }
@@ -73,6 +73,65 @@ ipcMain.handle('backup:create', async (event, projectsToBackup: Project[]) => {
   } catch (error) {
     console.error('Errore durante la creazione del backup:', error);
     return { success: false, message: 'Errore durante la creazione del backup.', error: String(error) };
+  }
+});
+
+// Gestore per elencare i backup disponibili
+ipcMain.handle('backups:list', async () => {
+  const backupsDir = path.join(app.getPath('userData'), 'backups');
+  if (!fs.existsSync(backupsDir)) {
+    console.log('La cartella dei backup non esiste, restituisco un array vuoto.');
+    return []; // Nessuna cartella di backup, nessun backup
+  }
+
+  try {
+    const backupFiles = fs.readdirSync(backupsDir)
+      .filter(file => file.startsWith('backup-') && file.endsWith('.json'))
+      .map(file => {
+        const filePath = path.join(backupsDir, file);
+        const stats = fs.statSync(filePath);
+        return {
+          filename: file,
+          createdAt: stats.mtime.toISOString(),
+        };
+      })
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt)); // Ordina dal più recente al più vecchio
+
+    console.log('Elenco dei backup trovato:', backupFiles);
+    return backupFiles;
+  } catch (error) {
+    console.error('Errore durante la lettura dei backup:', error);
+    return [];
+  }
+});
+
+// Gestore per ripristinare un backup
+ipcMain.handle('backups:restore', async (event, filename: string) => {
+  if (!filename) {
+    console.error('Tentativo di ripristino senza specificare un nome file.');
+    return { success: false, message: 'Nessun nome di file fornito per il ripristino.' };
+  }
+
+  const backupsDir = path.join(app.getPath('userData'), 'backups');
+  const filePath = path.join(backupsDir, filename);
+
+  if (!fs.existsSync(filePath)) {
+    console.error(`File di backup non trovato: ${filePath}`);
+    return { success: false, message: `File di backup non trovato: ${filename}` };
+  }
+
+  try {
+    const backupData = fs.readFileSync(filePath, 'utf-8');
+    const projectsFromBackup: Project[] = JSON.parse(backupData);
+    
+    // Sostituisci il database in memoria con i dati del backup
+    projectsDB = projectsFromBackup;
+
+    console.log(`Backup '${filename}' ripristinato con successo. Il database in memoria è stato aggiornato.`);
+    return { success: true, message: 'Backup ripristinato con successo.' };
+  } catch (error) {
+    console.error(`Errore durante il ripristino del backup '${filename}':`, error);
+    return { success: false, message: 'Errore durante il ripristino del backup.', error: String(error) };
   }
 });
 
@@ -131,4 +190,8 @@ app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });

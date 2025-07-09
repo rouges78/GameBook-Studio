@@ -1,21 +1,21 @@
-# Notification Sounds
+# Suoni di Notifica
 
-This directory contains sound files for different types of notifications in GameBook Studio.
+Questa directory contiene i file audio per diversi tipi di notifiche in GameBook Studio.
 
-## Sound Files
+## File Audio
 
-- `success.mp3`: A short, pleasant chime for successful operations
-- `error.mp3`: A lower-pitched tone for error notifications
-- `warning.mp3`: A medium-pitched alert sound for warnings
-- `info.mp3`: A gentle notification sound for information messages
-- `critical.mp3`: A more urgent, attention-grabbing sound for critical notifications
+- `success.mp3`: Un breve e piacevole suono per le operazioni riuscite con successo.
+- `error.mp3`: Un tono a bassa frequenza per le notifiche di errore.
+- `warning.mp3`: Un suono di avviso a media frequenza per gli avvertimenti.
+- `info.mp3`: Un suono di notifica delicato per i messaggi informativi.
+- `critical.mp3`: Un suono più urgente e che attira l'attenzione per le notifiche critiche.
 
-## Attribution
+## Attribuzione
 
-These sounds are used under license from:
+Questi suoni sono utilizzati su licenza da:
 - [Notification Sounds](https://notificationsounds.com/) - CC BY 4.0
-- Sound effects obtained from [Zapsplat](https://www.zapsplat.com)
+- Effetti sonori ottenuti da [Zapsplat](https://www.zapsplat.com)
 
-## Usage
+## Utilizzo
 
-These sounds are automatically loaded and played by the SoundManager utility when notifications are displayed. The volume and enabling/disabling of sounds can be controlled through the application settings.
+Questi suoni vengono caricati e riprodotti automaticamente dall'utilità SoundManager quando vengono visualizzate le notifiche. Il volume e l'attivazione/disattivazione dei suoni possono essere controllati tramite le impostazioni dell'applicazione.

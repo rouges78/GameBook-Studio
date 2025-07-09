@@ -1,17 +1,45 @@
 export type PageType = 'dashboard' | 'createProject' | 'paragraphEditor' | 'library' | 'themeEditor' | 
-                'settings' | 'help' | 'export' | 'backupManager';
+                'settings' | 'help' | 'export' | 'backupManager' | 'telemetryDashboard';
+
+export interface Paragraph {
+  id: number | string;
+  title: string;
+  content: string;
+  actions: any[];
+  incomingConnections?: number[];
+  outgoingConnections?: string[];
+  type: string;
+  tags?: string[];
+  x?: number;
+  y?: number;
+  locked?: boolean;
+  note?: string;
+}
 
 export interface Project {
   id: string;
   name: string;
-  bookTitle?: string; // Reso opzionale per allineamento con src/types.Project
-  author?: string; // Reso opzionale per allineamento con src/types.Project
+  title?: string;
+  bookTitle?: string;
+  author?: string;
   description?: string;
-  created: Date | string; // Temporaneamente string | Date
-  modified: Date | string; // Temporaneamente string | Date
-  lastEdited?: string; // Reso opzionale per allineamento
-  paragraphs: any[];
-  mapSettings?: any;
+  paragraphs: Paragraph[];
+  created: string;
+  modified: string;
+  createdAt?: string;
+  updatedAt?: string;
+  lastEdited?: string;
+  language?: 'it' | 'en';
+  content?: string;
+  mapSettings?: {
+    backgroundImage?: string;
+    zoomLevel?: number;
+    panOffset?: { x: number; y: number };
+  };
+  coverImage?: string;
+  isArchived?: boolean;
+  lastSync?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface ComponentProps {

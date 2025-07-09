@@ -1,64 +1,64 @@
-# API Documentation
+# Documentazione API
 
-This document provides comprehensive documentation for GameBook Studio's APIs, including IPC communication, database operations, and external integrations.
+Questo documento fornisce una documentazione completa per le API di GameBook Studio, incluse la comunicazione IPC, le operazioni sul database e le integrazioni esterne.
 
-## IPC (Inter-Process Communication) API
+## API IPC (Comunicazione tra Processi)
 
-### Story Operations
+### Operazioni sulla Storia
 
 #### `story:save`
-Saves story content to the database.
+Salva il contenuto della storia nel database.
 ```typescript
-// Main Process Handler
+// Gestore del Processo Principale
 ipcMain.handle('story:save', async (event, storyData: StoryData) => {
-  // Returns: Promise<boolean>
+  // Ritorna: Promise<boolean>
 })
 
-// Renderer Process Usage
+// Utilizzo nel Processo di Rendering
 await window.electron.invoke('story:save', storyData)
 ```
 
 #### `story:load`
-Loads story content from the database.
+Carica il contenuto della storia dal database.
 ```typescript
-// Main Process Handler
+// Gestore del Processo Principale
 ipcMain.handle('story:load', async (event, storyId: string) => {
-  // Returns: Promise<StoryData>
+  // Ritorna: Promise<StoryData>
 })
 
-// Renderer Process Usage
+// Utilizzo nel Processo di Rendering
 await window.electron.invoke('story:load', storyId)
 ```
 
-### Backup Operations
+### Operazioni di Backup
 
 #### `backup:create`
-Creates a backup of the current story.
+Crea un backup della storia corrente.
 ```typescript
-// Main Process Handler
+// Gestore del Processo Principale
 ipcMain.handle('backup:create', async (event, storyId: string) => {
-  // Returns: Promise<BackupMetadata>
+  // Ritorna: Promise<BackupMetadata>
 })
 
-// Renderer Process Usage
+// Utilizzo nel Processo di Rendering
 await window.electron.invoke('backup:create', storyId)
 ```
 
 #### `backup:restore`
-Restores a story from a backup.
+Ripristina una storia da un backup.
 ```typescript
-// Main Process Handler
+// Gestore del Processo Principale
 ipcMain.handle('backup:restore', async (event, backupId: string) => {
-  // Returns: Promise<boolean>
+  // Ritorna: Promise<boolean>
 })
 
-// Renderer Process Usage
+// Utilizzo nel Processo di Rendering
 await window.electron.invoke('backup:restore', backupId)
 ```
 
-## Database API
+## API del Database
 
-### Story Schema
+### Schema della Storia
 ```prisma
 model Story {
   id        String   @id @default(uuid())
@@ -78,84 +78,84 @@ model Backup {
 }
 ```
 
-### Database Operations
+### Operazioni sul Database
 
-#### Story Operations
+#### Operazioni sulla Storia
 ```typescript
-// Create Story
+// Crea Storia
 async function createStory(data: StoryCreateInput): Promise<Story>
 
-// Update Story
+// Aggiorna Storia
 async function updateStory(id: string, data: StoryUpdateInput): Promise<Story>
 
-// Delete Story
+// Elimina Storia
 async function deleteStory(id: string): Promise<boolean>
 
-// Get Story
+// Ottieni Storia
 async function getStory(id: string): Promise<Story | null>
 
-// List Stories
+// Elenca Storie
 async function listStories(): Promise<Story[]>
 ```
 
-#### Backup Operations
+#### Operazioni di Backup
 ```typescript
-// Create Backup
+// Crea Backup
 async function createBackup(storyId: string): Promise<Backup>
 
-// List Backups
+// Elenca Backup
 async function listBackups(storyId: string): Promise<Backup[]>
 
-// Restore Backup
+// Ripristina Backup
 async function restoreBackup(backupId: string): Promise<boolean>
 ```
 
-## File System API
+## API del File System
 
-### Story Export
+### Esportazione della Storia
 ```typescript
-// Export Story
+// Esporta Storia
 async function exportStory(storyId: string, format: ExportFormat): Promise<string>
 
-// Supported Export Formats
+// Formati di Esportazione Supportati
 type ExportFormat = 'json' | 'html' | 'pdf' | 'epub'
 ```
 
-### Asset Management
+### Gestione degli Asset
 ```typescript
-// Save Asset
+// Salva Asset
 async function saveAsset(data: Buffer, metadata: AssetMetadata): Promise<string>
 
-// Get Asset
+// Ottieni Asset
 async function getAsset(assetId: string): Promise<Buffer>
 
-// Delete Asset
+// Elimina Asset
 async function deleteAsset(assetId: string): Promise<boolean>
 ```
 
-## Telemetry API
+## API di Telemetria
 
-### Performance Metrics
+### Metriche di Performance
 ```typescript
-// Record Metric
+// Registra Metrica
 async function recordMetric(metric: PerformanceMetric): Promise<void>
 
-// Get Metrics
+// Ottieni Metriche
 async function getMetrics(timeRange: TimeRange): Promise<PerformanceMetric[]>
 ```
 
-### Error Tracking
+### Tracciamento degli Errori
 ```typescript
-// Log Error
+// Registra Errore
 async function logError(error: ErrorData): Promise<void>
 
-// Get Error Logs
+// Ottieni Log degli Errori
 async function getErrorLogs(timeRange: TimeRange): Promise<ErrorLog[]>
 ```
 
-## Data Types
+## Tipi di Dati
 
-### Story Types
+### Tipi per la Storia
 ```typescript
 interface StoryData {
   id: string;
@@ -185,7 +185,7 @@ interface ConnectionData {
 }
 ```
 
-### Asset Types
+### Tipi per gli Asset
 ```typescript
 interface AssetMetadata {
   id: string;
@@ -198,7 +198,7 @@ interface AssetMetadata {
 type AssetType = 'image' | 'audio' | 'video' | 'document'
 ```
 
-### Performance Types
+### Tipi per la Performance
 ```typescript
 interface PerformanceMetric {
   timestamp: Date;
@@ -210,9 +210,9 @@ interface PerformanceMetric {
 type MetricType = 'memory' | 'cpu' | 'diskIO' | 'renderTime'
 ```
 
-## Error Handling
+## Gestione degli Errori
 
-All API calls should implement proper error handling:
+Tutte le chiamate API dovrebbero implementare una corretta gestione degli errori:
 
 ```typescript
 try {
@@ -220,39 +220,39 @@ try {
   return result
 } catch (error) {
   if (error instanceof DatabaseError) {
-    // Handle database errors
+    // Gestisci errori del database
   } else if (error instanceof ValidationError) {
-    // Handle validation errors
+    // Gestisci errori di validazione
   } else {
-    // Handle unexpected errors
+    // Gestisci errori inaspettati
   }
 }
 ```
 
-## Rate Limiting
+## Limitazione delle Richieste (Rate Limiting)
 
-Some operations may be rate-limited to prevent system overload:
+Alcune operazioni potrebbero essere soggette a limitazione per prevenire il sovraccarico del sistema:
 
-- Backup creation: Max 1 per minute
-- Asset uploads: Max 10 per minute
-- Export operations: Max 2 per minute
+- Creazione backup: Max 1 al minuto
+- Upload asset: Max 10 al minuto
+- Operazioni di esportazione: Max 2 al minuto
 
-## Security Considerations
+## Considerazioni sulla Sicurezza
 
-1. All IPC communications are validated
-2. File system operations are sandboxed
-3. Database queries are parameterized
-4. Assets are scanned for malware
-5. User input is sanitized
+1. Tutte le comunicazioni IPC sono validate
+2. Le operazioni sul file system sono eseguite in un ambiente sandbox
+3. Le query al database sono parametrizzate
+4. Gli asset vengono scansionati per malware
+5. L'input dell'utente viene sanificato
 
-## Version History
+## Cronologia delle Versioni
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 0.1.0   | Nov 2024 | Initial API documentation |
+| Versione | Data | Modifiche |
+|---|---|---|
+| 0.1.0 | Nov 2024 | Documentazione API iniziale |
 
-## Additional Resources
+## Risorse Aggiuntive
 
-- [Development Guide](development.md)
-- [User Guide](user-guide.md)
+- [Guida allo Sviluppo](development.md)
+- [Guida Utente](user-guide.md)
 - [FAQ](faq.md)

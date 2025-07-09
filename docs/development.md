@@ -1,107 +1,107 @@
-# Development Guide
+# Guida allo Sviluppo
 
-This guide provides detailed information for developers who want to contribute to GameBook Studio.
+Questa guida fornisce informazioni dettagliate per gli sviluppatori che vogliono contribuire a GameBook Studio.
 
-## Development Environment Setup
+## Configurazione dell'Ambiente di Sviluppo
 
-### Required Tools
-- Visual Studio Code (recommended)
+### Strumenti Richiesti
+- Visual Studio Code (raccomandato)
 - Node.js v16+
-- npm or yarn
+- npm o yarn
 - Git
 
-### First-Time Setup
-1. **Clone the Repository**
+### Configurazione Iniziale
+1. **Clonare il Repository**
 ```bash
 git clone https://github.com/rouges78/GameBook-Studio.git
 cd GameBook-Studio
 ```
 
-2. **Install Dependencies**
+2. **Installare le Dipendenze**
 ```bash
 npm install
 ```
 
-3. **Setup Database**
+3. **Configurare il Database**
 ```bash
 npx prisma generate
 npx prisma migrate dev
 ```
 
-4. **Start Development Server**
+4. **Avviare il Server di Sviluppo**
 ```bash
 npm run dev
 ```
 
-## Project Architecture
+## Architettura del Progetto
 
-### Core Components
+### Componenti Principali
 
-#### Electron Main Process (`electron/`)
-- `main.js` - Main entry point
-- `preload.js` - Preload scripts
-- `database.js` - Database operations
-- `backup.js` - Backup functionality
+#### Processo Principale di Electron (`electron/`)
+- `main.js` - Punto di ingresso principale
+- `preload.js` - Script di precaricamento
+- `database.js` - Operazioni sul database
+- `backup.js` - Funzionalità di backup
 
-#### React Frontend (`src/`)
-- `components/` - React components
-- `contexts/` - React contexts
-- `hooks/` - Custom React hooks
-- `utils/` - Utility functions
+#### Frontend React (`src/`)
+- `components/` - Componenti React
+- `contexts/` - Contesti React
+- `hooks/` - Hook personalizzati di React
+- `utils/` - Funzioni di utilità
 
-### Key Features Implementation
+### Implementazione delle Funzionalità Chiave
 
-#### Paragraph Editor
-The paragraph editor is built using:
-- React for UI components
-- Custom hooks for state management
-- Event system for real-time updates
+#### Editor di Paragrafi
+L'editor di paragrafi è costruito usando:
+- React per i componenti UI
+- Hook personalizzati per la gestione dello stato
+- Sistema di eventi per aggiornamenti in tempo reale
 
-#### Story Map
-The story map feature uses:
-- Canvas API for rendering
-- Custom drag-and-drop system
-- Path finding algorithms for connections
+#### Mappa della Storia
+La funzionalità della mappa della storia usa:
+- API Canvas per il rendering
+- Sistema di trascinamento (drag-and-drop) personalizzato
+- Algoritmi di ricerca del percorso per le connessioni
 
-#### Backup System
-Implements:
-- Automatic periodic backups
-- Version control
-- Recovery mechanisms
+#### Sistema di Backup
+Implementa:
+- Backup periodici automatici
+- Controllo di versione
+- Meccanismi di ripristino
 
-## Testing
+## Test
 
-### Running Tests
+### Esecuzione dei Test
 ```bash
-# Run all tests
+# Esegui tutti i test
 npm test
 
-# Run specific test file
+# Esegui un file di test specifico
 npm test -- tests/StoryMap.test.tsx
 
-# Run with coverage
+# Esegui con la copertura del codice
 npm test -- --coverage
 ```
 
-### Test Structure
-- Unit tests for components
-- Integration tests for features
-- Performance tests
-- End-to-end tests
+### Struttura dei Test
+- Test unitari per i componenti
+- Test di integrazione per le funzionalità
+- Test di performance
+- Test end-to-end
 
-## Building
+## Build
 
-### Development Build
+### Build di Sviluppo
 ```bash
 npm run build:dev
 ```
 
-### Production Build
+### Build di Produzione
 ```bash
 npm run build
 ```
 
-### Platform-Specific Builds
+### Build Specifiche per Piattaforma
 ```bash
 # Windows
 npm run build:win
@@ -113,125 +113,125 @@ npm run build:mac
 npm run build:linux
 ```
 
-## Code Style Guide
+## Guida allo Stile del Codice
 
 ### TypeScript
-- Use TypeScript for all new code
-- Maintain strict type checking
-- Document complex types
+- Usa TypeScript per tutto il nuovo codice
+- Mantieni un controllo stretto dei tipi
+- Documenta i tipi complessi
 
-### React Components
-- Use functional components
-- Implement proper error boundaries
-- Follow React hooks best practices
+### Componenti React
+- Usa componenti funzionali
+- Implementa Error Boundary appropriati
+- Segui le best practice degli hook di React
 
-### Testing
-- Write tests for new features
-- Maintain high test coverage
-- Use meaningful test descriptions
+### Test
+- Scrivi test per le nuove funzionalità
+- Mantieni un'alta copertura dei test
+- Usa descrizioni significative per i test
 
-## Performance Optimization
+## Ottimizzazione delle Performance
 
-### Key Areas
-- Story map rendering
-- Large document handling
-- Asset management
-- Memory usage
+### Aree Chiave
+- Rendering della mappa della storia
+- Gestione di documenti di grandi dimensioni
+- Gestione degli asset
+- Utilizzo della memoria
 
-### Monitoring
-- Use built-in telemetry
-- Monitor performance metrics
-- Track error rates
+### Monitoraggio
+- Usa la telemetria integrata
+- Monitora le metriche di performance
+- Tieni traccia dei tassi di errore
 
-## Database Management
+## Gestione del Database
 
-### Prisma Setup
-- Schema definitions
-- Migration management
-- Query optimization
+### Configurazione di Prisma
+- Definizioni dello schema
+- Gestione delle migrazioni
+- Ottimizzazione delle query
 
-### Data Models
-- Story structure
-- User preferences
-- Backup metadata
-- Telemetry data
+### Modelli di Dati
+- Struttura della storia
+- Preferenze dell'utente
+- Metadati dei backup
+- Dati di telemetria
 
-## Error Handling
+## Gestione degli Errori
 
-### Guidelines
-- Use proper error boundaries
-- Implement logging
-- Provide user feedback
-- Handle recovery
+### Linee Guida
+- Usa Error Boundary appropriati
+- Implementa il logging
+- Fornisci feedback all'utente
+- Gestisci il ripristino
 
-## Security
+## Sicurezza
 
-### Best Practices
-- Input validation
-- Secure file handling
-- Data encryption
-- Safe IPC communication
+### Best Practice
+- Validazione dell'input
+- Gestione sicura dei file
+- Crittografia dei dati
+- Comunicazione IPC sicura
 
-## Contributing
+## Contribuire
 
-### Process
-1. Fork the repository
-2. Create a feature branch
-3. Implement changes
-4. Write tests
-5. Submit pull request
+### Processo
+1. Fai un fork del repository
+2. Crea un branch per la nuova funzionalità
+3. Implementa le modifiche
+4. Scrivi i test
+5. Invia una pull request
 
-### Pull Request Guidelines
-- Clear description
-- Test coverage
-- Documentation updates
-- Clean commit history
+### Linee Guida per le Pull Request
+- Descrizione chiara
+- Copertura dei test
+- Aggiornamenti della documentazione
+- Cronologia dei commit pulita
 
 ## Debugging
 
-### Tools
+### Strumenti
 - Chrome DevTools
-- VS Code debugger
-- Electron debugger
+- Debugger di VS Code
+- Debugger di Electron
 
-### Common Issues
-- Database connection
-- IPC communication
-- Memory leaks
-- Performance bottlenecks
+### Problemi Comuni
+- Connessione al database
+- Comunicazione IPC
+- Perdite di memoria (memory leak)
+- Colli di bottiglia nelle performance
 
-## Release Process
+## Processo di Rilascio
 
-### Steps
-1. Version bump
-2. Update changelog
-3. Run tests
-4. Build release
-5. Create release notes
-6. Deploy
+### Passaggi
+1. Aumenta il numero di versione
+2. Aggiorna il changelog
+3. Esegui i test
+4. Crea la build di rilascio
+5. Crea le note di rilascio
+6. Esegui il deploy
 
-### Version Control
-- Follow semantic versioning
-- Tag releases
-- Update documentation
+### Controllo di Versione
+- Segui il versionamento semantico
+- Taggare i rilasci
+- Aggiornare la documentazione
 
-## Additional Resources
+## Risorse Aggiuntive
 
-### Documentation
-- [API Reference](api.md)
-- [User Guide](user-guide.md)
+### Documentazione
+- [Riferimento API](api.md)
+- [Guida Utente](user-guide.md)
 - [FAQ](faq.md)
 
-### Tools
-- VS Code extensions
-- Development utilities
-- Testing tools
+### Strumenti
+- Estensioni di VS Code
+- Utilità di sviluppo
+- Strumenti di test
 
-## Support
+## Supporto
 
-### Getting Help
-- GitHub issues
-- Documentation
-- Community channels
+### Ottenere Aiuto
+- Issue su GitHub
+- Documentazione
+- Canali della community
 
-This guide is continuously updated as the project evolves.
+Questa guida viene aggiornata continuamente con l'evolversi del progetto.

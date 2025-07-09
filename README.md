@@ -1,157 +1,157 @@
 # GameBook Studio
 
-GameBook Studio is an advanced desktop application designed for creating and managing interactive gamebooks and story-driven content. Built with Electron and React, it provides a robust platform for writers and game designers to craft branching narratives with rich multimedia elements.
+GameBook Studio è un'applicazione desktop avanzata progettata per creare e gestire librogame interattivi e contenuti narrativi. Costruita con Electron e React, fornisce una solida piattaforma per scrittori e game designer per creare narrazioni ramificate con ricchi elementi multimediali.
 
-## 🎮 Features
+## 🎮 Funzionalità
 
-### Completed Features
-- **Paragraph Editor**
-  - Rich text editing capabilities
-  - Tag system for organizing content
+### Funzionalità Completate
+- **Editor di Paragrafi**
+  - Funzionalità di editing rich text
+  - Sistema di tag per organizzare i contenuti
 
-- **Backup System**
-  - Automatic backup functionality
-  - Backup history management
-  - Recovery options for lost work
-  - **File-based Backup Storage**: Backups are now automatically saved as JSON files in the application's `userData` directory (specifically in a `backups` subfolder, e.g., `C:\Users\[YourUser]\Documents\GameBookStudioCache\backups\` on Windows). Each backup file is timestamped for easy identification.
+- **Sistema di Backup**
+  - Funzionalità di backup automatico
+  - Gestione della cronologia dei backup
+  - Opzioni di ripristino per il lavoro perso
+  - **Salvataggio dei Backup su File**: I backup vengono ora salvati automaticamente come file JSON nella directory `userData` dell'applicazione (specificamente in una sottocartella `backups`, ad esempio, `C:\Users\[TuoUtente]\Documents\GameBookStudioCache\backups\` su Windows). Ogni file di backup ha un timestamp per una facile identificazione.
 
-- **Export Options**
-  - Multiple export formats support
-  - Customizable export templates
-  - Preview before export
+- **Opzioni di Esportazione**
+  - Supporto per molteplici formati di esportazione
+  - Modelli di esportazione personalizzabili
+  - Anteprima prima dell'esportazione
 
-### Planned Features
+### Funzionalità Pianificate
 *(Nota: Questa lista necessita di una revisione per riflettere lo stato attuale del progetto)*
-- [ ] Visual representation of story branches
-- [ ] Drag-and-drop map interface
-- [ ] Connection management between story nodes
-- [ ] Mini-map for easy navigation
-- [ ] Cloud synchronization
-- [ ] Collaborative editing
-- [ ] Version control for story branches
-- [ ] Advanced asset management
-- [X] Custom theme creator
-- [ ] Mobile preview mode
-- [ ] Story testing simulator
-- [ ] Analytics dashboard
-- [ ] Import from various formats
-- [ ] Plugin system
+- [ ] Rappresentazione visuale delle ramificazioni della storia
+- [ ] Interfaccia mappa con drag-and-drop
+- [ ] Gestione delle connessioni tra i nodi della storia
+- [ ] Mini-mappa per una navigazione facile
+- [ ] Sincronizzazione con il cloud
+- [ ] Editing collaborativo
+- [ ] Controllo di versione per le ramificazioni della storia
+- [ ] Gestione avanzata degli asset
+- [X] Creatore di temi personalizzati
+- [ ] Modalità anteprima per dispositivi mobili
+- [ ] Simulatore di test per la storia
+- [ ] Dashboard di analisi
+- [ ] Importazione da vari formati
+- [ ] Sistema di plugin
 
 
-## 🚀 Installation
+## 🚀 Installazione
 
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
+### Prerequisiti
+- Node.js (v16 o superiore)
+- npm o yarn
 - Git
 
-### Development Setup
-1. Clone the repository:
+### Setup per lo Sviluppo
+1. Clona il repository:
 ```bash
 git clone https://github.com/rouges78/GameBook-Studio.git
 cd GameBook-Studio
 ```
 
-2. Install dependencies:
+2. Installa le dipendenze:
 ```bash
 npm install
-# or
+# o
 yarn install
 ```
 
-3. Start the development server:
+3. Avvia il server di sviluppo:
 ```bash
 npm run dev
-# or
+# o
 yarn dev
 ```
 
-### Building for Production
+### Build per la Produzione
 ```bash
 npm run build
-# or
+# o
 yarn build
 ```
 
-The built application will be available in the `dist` directory.
+L'applicazione compilata sarà disponibile nella directory `dist`.
 
-## 📖 Usage
-(Details on how to use GameBook Studio will be added here. Screenshots and GIFs are welcome!)
+## 📖 Utilizzo
+(I dettagli su come usare GameBook Studio verranno aggiunti qui. Screenshot e GIF sono benvenuti!)
 
-## 🛠 Technology Stack
+## 🛠 Stack Tecnologico
 - **Frontend**: React, TypeScript, Tailwind CSS
 - **Backend**: Electron, Node.js
-- **Database**: SQLite (via Prisma)
-- **Testing**: Jest, React Testing Library
-- **Build Tools**: Vite, Electron Forge
+- **Database**: SQLite (tramite Prisma)
+- **Test**: Jest, React Testing Library
+- **Strumenti di Build**: Vite, Electron Forge
 
-## 📦 Project Structure
+## 📦 Struttura del Progetto
 ```
 GameBook-Studio/
-├── electron/          # Electron main process files
-├── src/               # React application source
-│   ├── components/    # React components
-│   ├── contexts/      # React contexts
-│   ├── hooks/         # Custom React hooks
-│   └── utils/         # Utility functions
-├── prisma/            # Database schema and migrations
-└── tests/             # Test files
+├── electron/          # File del processo principale di Electron
+├── src/               # Sorgenti dell'applicazione React
+│   ├── components/    # Componenti React
+│   ├── contexts/      # Contesti React
+│   ├── hooks/         # Hook personalizzati di React
+│   └── utils/         # Funzioni di utilità
+├── prisma/            # Schema del database e migrazioni
+└── tests/             # File di test
 ```
 
-## 🤝 Contributing
-Contributions are welcome! Please read our contributing guidelines before submitting pull requests.
+## 🤝 Contribuire
+I contributi sono benvenuti! Si prega di leggere le nostre linee guida per i contributi prima di inviare pull request.
 
-### Development Guidelines
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+### Linee Guida per lo Sviluppo
+1. Fai un fork del repository
+2. Crea un branch per la nuova funzionalità
+3. Esegui il commit delle tue modifiche
+4. Fai il push al branch
+5. Crea una Pull Request
 
-## 📝 Documentation
-- [User Guide](docs/user-guide.md)
-- [Development Guide](docs/development.md)
-- [API Documentation](docs/api.md)
+## 📝 Documentazione
+- [Guida Utente](docs/user-guide.md)
+- [Guida allo Sviluppo](docs/development.md)
+- [Documentazione API](docs/api.md)
 
-## 🔄 Updates and Versioning
-The project follows Semantic Versioning (SemVer). For the latest changes, see the [CHANGELOG](CHANGELOG.md).
+## 🔄 Aggiornamenti e Versioning
+Il progetto segue il Semantic Versioning (SemVer). Per le ultime modifiche, consulta il [CHANGELOG](CHANGELOG.md).
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 📄 Licenza
+Questo progetto è sotto licenza MIT - vedi il file [LICENSE](LICENSE) per i dettagli.
 
-## 🔧 Troubleshooting
-For common issues and solutions, please check our [FAQ](docs/faq.md) or open an issue on GitHub.
+## 🔧 Risoluzione dei Problemi
+Per problemi comuni e soluzioni, controlla le nostre [FAQ](docs/faq.md) o apri una issue su GitHub.
 
-## 📊 Project Status
-- **Current Version**: 0.9.13
-- **Development Stage**: Beta
-- **Last Updated**: June 2025
+## 📊 Stato del Progetto
+- **Versione Corrente**: 0.9.13
+- **Fase di Sviluppo**: Beta
+- **Ultimo Aggiornamento**: Giugno 2025
 
 ## 🎯 Roadmap
 *(Nota: Questa roadmap necessita di una revisione per riflettere lo stato attuale del progetto)*
-### Phase 1 (Current)
-- [x] Basic editor functionality
-- [ ] Story mapping
-- [x] Backup system
-- [ ] Asset management
+### Fase 1 (Attuale)
+- [x] Funzionalità base dell'editor
+- [ ] Mappatura della storia
+- [x] Sistema di backup
+- [ ] Gestione degli asset
 
-### Phase 2 (Upcoming)
-- [ ] Cloud integration
-- [ ] Collaborative features
-- [ ] Advanced export options
-- [ ] Mobile compatibility
+### Fase 2 (Prossima)
+- [ ] Integrazione con il cloud
+- [ ] Funzionalità collaborative
+- [ ] Opzioni di esportazione avanzate
+- [ ] Compatibilità con dispositivi mobili
 
-### Phase 3 (Future)
-- [ ] Plugin system
-- [ ] Theme marketplace
-- [ ] Analytics tools
-- [ ] AI assistance features
+### Fase 3 (Futura)
+- [ ] Sistema di plugin
+- [ ] Marketplace dei temi
+- [ ] Strumenti di analisi
+- [ ] Funzionalità di assistenza AI
 
-## 💡 Support
-For support, please:
-1. Check the documentation
-2. Search existing issues
-3. Create a new issue if needed
+## 💡 Supporto
+Per supporto, si prega di:
+1. Controllare la documentazione
+2. Cercare tra le issue esistenti
+3. Creare una nuova issue se necessario
 
-## 🌟 Acknowledgments
-Thanks to all contributors who have helped shape GameBook Studio!
+## 🌟 Ringraziamenti
+Grazie a tutti i contributori che hanno aiutato a dare forma a GameBook Studio!
